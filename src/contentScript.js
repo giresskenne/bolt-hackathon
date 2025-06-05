@@ -47,12 +47,23 @@ let underlineState = new Map(); // Track underline state per element
 let scrubberEnabled = true;
 let customRules = []; // Store custom rules
 
-// Initialize: get enabled state and custom rules
-chrome.storage.sync.get(['enabled', 'customRules'], result => {
-  scrubberEnabled = result.hasOwnProperty('enabled') ? result.enabled : true;
-  customRules = result.customRules || [];
-  console.log('[Scrubber] Loaded custom rules:', customRules.length);
-});
+// Initialize: get enabled state and custom rules from both sync and local storage
+async function initializeState() {
+  try {
+    const syncData = await chrome.storage.sync.get(['enabled', 'customRules']);
+    scrubberEnabled = syncData.hasOwnProperty('enabled') ? syncData.enabled : true;
+    customRules = syncData.customRules || [];
+  } catch (error) {
+    console.log('[Scrubber] Falling back to local storage');
+    const localData = await chrome.storage.local.get(['enabled', 'customRules']);
+    scrubberEnabled = localData.hasOwnProperty('enabled') ? localData.enabled : true;
+    customRules = localData.customRules || [];
+  }
+  console.log('[Scrubber] Initialized with', customRules.length, 'custom rules');
+}
+
+// Initialize state
+initializeState();
 
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
@@ -60,8 +71,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
     scrubberEnabled = msg.enabled;
     if (lastActive) autoHighlightSensitive(lastActive);
   }
-  if (msg?.action === 'updateCustomRules') {
-    customRules = msg.rules || [];
+  if (msg?.action === 'updateCustomRules' && Array.isArray(msg.rules)) {
+    customRules = msg.rules;
     console.log('[Scrubber] Updated custom rules:', customRules.length);
     if (lastActive) autoHighlightSensitive(lastActive);
   }
@@ -75,7 +86,7 @@ function injectScrubButton(el){
   const buttonContainer = document.createElement('div');
   buttonContainer.style.cssText = 'display:inline-flex;gap:4px;margin:2px 8px;';
   
-  // Scrub button only (underline button removed)
+  // Scrub button only
   const scrubBtn = document.createElement('button');
   scrubBtn.id = 'scrubSendBtn';
   scrubBtn.type = 'button';
@@ -96,6 +107,16 @@ function injectScrubButton(el){
   buttonContainer.appendChild(scrubBtn);
   el.parentElement.insertBefore(buttonContainer, el.nextSibling);
 }
+
+document.addEventListener('input', e=>{
+  if (!scrubberEnabled) return;
+  if(!isTextInput(e.target)) return;
+  const el=e.target;
+  if(!getRaw(el).trim()){ cleanUp(el); return; }
+  lastActive=el;
+  injectScrubButton(el);
+  autoHighlightSensitive(el);
+}, true);
 
 // Automatically highlight sensitive info in textarea on input
 function autoHighlightSensitive(el) {
@@ -123,38 +144,29 @@ function autoHighlightSensitive(el) {
   }
 }
 
-document.addEventListener('input', e=>{
-  if (!scrubberEnabled) return;
-  if(!isTextInput(e.target)) return;
-  const el=e.target;
-  if(!getRaw(el).trim()){ cleanUp(el); return; }
-  lastActive=el;
-  injectScrubButton(el);
-  autoHighlightSensitive(el); // highlight automatically
-}, true);
-
 /* ───────── Scrub core (enhanced) ───────── */
 function scrubText(target){
-  // Remove underlines before scrubbing
+  if (!scrubberEnabled || !target) return;
+  
+  // Remove underlines if they exist
   if (underlineState.get(target)) {
     removeUnderlines(target);
     underlineState.set(target, false);
-    updateUnderlineButton(target, false);
+    updateUnderlineButton && updateUnderlineButton(target, false);
   }
   
-  let raw = getRaw(target);
-  let totalMasked = 0;
+  const raw = getRaw(target);
   
   // Single pass with both custom and built-in rules
   const { clean, stats } = self.PromptScrubberRedactor.redact(raw, customRules);
-  totalMasked = Object.values(stats).reduce((a,b)=>a+b,0);
+  const totalMasked = Object.values(stats).reduce((a,b)=>a+b,0);
   
   setRaw(target, clean);
   toast(totalMasked ? `${totalMasked} sensitive item${totalMasked>1?'s':''} masked` : 'No sensitive items detected');
   if(!clean.trim()) cleanUp(target);
 }
 
-/* clean-up when box is emptied (enhanced) */
+/* clean-up when box is emptied */
 function cleanUp(el){
   const buttonContainer = el.parentElement?.querySelector('#scrubSendBtn')?.parentElement;
   if(buttonContainer) buttonContainer.remove();

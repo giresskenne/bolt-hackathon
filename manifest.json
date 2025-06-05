@@ -17,7 +17,10 @@
   "background": {
     "service_worker": "dist/src/bg.js"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage",
+    "unlimitedStorage"
+  ],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
@@ -30,7 +33,8 @@
   "web_accessible_resources": [
     {
       "resources": [ 
-        "icons/logo.png" ,
+        "icons/logo.png",
+        "icons/settings.png",
         "src/detectorWorker.js",
         "src/patterns.json"
       ],

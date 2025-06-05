@@ -47,23 +47,23 @@ let underlineState = new Map(); // Track underline state per element
 let scrubberEnabled = true;
 let customRules = []; // Store custom rules
 
-// On load, get the enabled state and custom rules from storage
-chrome.storage && chrome.storage.sync.get(['enabled', 'customRules'], result => {
+// Initialize: get enabled state and custom rules
+chrome.storage.sync.get(['enabled', 'customRules'], result => {
   scrubberEnabled = result.hasOwnProperty('enabled') ? result.enabled : true;
   customRules = result.customRules || [];
+  console.log('[Scrubber] Loaded custom rules:', customRules.length);
 });
 
-// Listen for enable/disable messages and custom rules updates from popup
-chrome.runtime && chrome.runtime.onMessage && chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
-  if (msg && msg.action === 'setState' && typeof msg.enabled === 'boolean') {
+// Listen for messages from popup
+chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
+  if (msg?.action === 'setState' && typeof msg.enabled === 'boolean') {
     scrubberEnabled = msg.enabled;
+    if (lastActive) autoHighlightSensitive(lastActive);
   }
-  if (msg && msg.action === 'updateCustomRules') {
+  if (msg?.action === 'updateCustomRules') {
     customRules = msg.rules || [];
-    // Re-scan active element if exists
-    if (lastActive) {
-      autoHighlightSensitive(lastActive);
-    }
+    console.log('[Scrubber] Updated custom rules:', customRules.length);
+    if (lastActive) autoHighlightSensitive(lastActive);
   }
 });
 
@@ -99,6 +99,8 @@ function injectScrubButton(el){
 
 // Automatically highlight sensitive info in textarea on input
 function autoHighlightSensitive(el) {
+  if (!scrubberEnabled || !el) return;
+  
   if (el.tagName === 'TEXTAREA') {
     const text = getRaw(el);
     if (!text.trim()) {
@@ -142,16 +144,14 @@ function scrubText(target){
   
   let raw = getRaw(target);
   let totalMasked = 0;
-  for(let i=0;i<10;i++){
-    const { clean, stats } = self.PromptScrubberRedactor.redact(raw, customRules);
-    const maskedNow = Object.values(stats).reduce((a,b)=>a+b,0);
-    totalMasked += maskedNow;
-    raw = clean;
-    if(maskedNow === 0) break; // done
-  }
-  setRaw(target, raw);
+  
+  // Single pass with both custom and built-in rules
+  const { clean, stats } = self.PromptScrubberRedactor.redact(raw, customRules);
+  totalMasked = Object.values(stats).reduce((a,b)=>a+b,0);
+  
+  setRaw(target, clean);
   toast(totalMasked ? `${totalMasked} sensitive item${totalMasked>1?'s':''} masked` : 'No sensitive items detected');
-  if(!raw.trim()) cleanUp(target);
+  if(!clean.trim()) cleanUp(target);
 }
 
 /* clean-up when box is emptied (enhanced) */

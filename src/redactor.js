@@ -10,7 +10,7 @@ import { rules } from './gen/redactorRules.js';
 export function redact(src, customRules = []) {
   let out = src, stats = Object.create(null);
   
-  // First apply custom rules (exact string matches only)
+  // First apply custom rules (case-insensitive string matches)
   if (Array.isArray(customRules)) {
     for (const rule of customRules) {
       if (!rule?.value || !rule?.label) continue;
@@ -19,8 +19,8 @@ export function redact(src, customRules = []) {
         const before = out;
         // Escape special regex characters in the value
         const escapedValue = rule.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // Create word boundary pattern to match whole words only
-        const pattern = new RegExp(`\\b${escapedValue}\\b`, 'g');
+        // Create case-insensitive word boundary pattern
+        const pattern = new RegExp(`\\b${escapedValue}\\b`, 'gi');
         out = out.replace(pattern, `<${rule.label}>`);
         if (before !== out) {
           stats[`custom_${rule.label}`] = (stats[`custom_${rule.label}`] || 0) + 1;

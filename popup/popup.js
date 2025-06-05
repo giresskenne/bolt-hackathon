@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // State
   let customRules = [];
+  let activeDropdown = null;
   
   // Initialize
   loadCustomRules();
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   settingsBtn.addEventListener('click', showSettings);
   backBtn.addEventListener('click', showMain);
   addRuleForm.addEventListener('submit', handleAddRule);
+  document.addEventListener('click', handleGlobalClick);
   
   function showSettings() {
     mainView.classList.add('hidden');
@@ -126,23 +128,68 @@ document.addEventListener('DOMContentLoaded', () => {
     rulesList.innerHTML = customRules.map((rule, index) => `
       <div class="rule-item">
         <div class="rule-info">
-          <div class="rule-label">&lt;${rule.label}&gt;</div>
           <div class="rule-value">${rule.value}</div>
+          <div class="rule-label">&lt;${rule.label}&gt;</div>
         </div>
-        <button class="delete-rule" data-index="${index}">×</button>
+        <div class="rule-actions">
+          <div class="dropdown" data-index="${index}">
+            <button class="icon-button">⋮</button>
+            <div class="dropdown-content">
+              <button class="modify-rule">Modify</button>
+              <button class="delete-rule">Delete</button>
+            </div>
+          </div>
+        </div>
       </div>
     `).join('');
     
-    // Add delete handlers
-    rulesList.querySelectorAll('.delete-rule').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const index = parseInt(btn.dataset.index);
-        customRules.splice(index, 1);
-        saveCustomRules();
-        updateRulesList();
-        updateRuleCount();
+    // Add event listeners
+    rulesList.querySelectorAll('.dropdown').forEach(dropdown => {
+      const index = parseInt(dropdown.dataset.index);
+      
+      dropdown.querySelector('button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeDropdowns();
+        dropdown.classList.add('active');
+        activeDropdown = dropdown;
+      });
+      
+      dropdown.querySelector('.modify-rule').addEventListener('click', () => {
+        modifyRule(index);
+      });
+      
+      dropdown.querySelector('.delete-rule').addEventListener('click', () => {
+        deleteRule(index);
       });
     });
+  }
+  
+  function handleGlobalClick() {
+    closeDropdowns();
+  }
+  
+  function closeDropdowns() {
+    if (activeDropdown) {
+      activeDropdown.classList.remove('active');
+      activeDropdown = null;
+    }
+  }
+  
+  function modifyRule(index) {
+    const rule = customRules[index];
+    document.getElementById('ruleValue').value = rule.value;
+    document.getElementById('ruleLabel').value = rule.label;
+    customRules.splice(index, 1);
+    saveCustomRules();
+    updateRulesList();
+    updateRuleCount();
+  }
+  
+  function deleteRule(index) {
+    customRules.splice(index, 1);
+    saveCustomRules();
+    updateRulesList();
+    updateRuleCount();
   }
   
   function updateRuleCount() {
@@ -152,21 +199,24 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleAddRule(e) {
     e.preventDefault();
     
-    const label = document.getElementById('ruleLabel').value.trim();
     const value = document.getElementById('ruleValue').value.trim();
+    const label = document.getElementById('ruleLabel').value.trim();
     
-    if (!label || !value) {
-      alert('Both label and value are required');
+    if (!value || !label) {
+      alert('Both value and label are required');
       return;
     }
     
-    // Check for duplicates
-    if (customRules.some(r => r.label === label || r.value === value)) {
+    // Check for duplicates (case-insensitive)
+    if (customRules.some(r => 
+      r.label.toLowerCase() === label.toLowerCase() || 
+      r.value.toLowerCase() === value.toLowerCase()
+    )) {
       alert('A rule with this label or value already exists');
       return;
     }
     
-    customRules.push({ label, value });
+    customRules.push({ value, label });
     await saveCustomRules();
     updateRulesList();
     updateRuleCount();

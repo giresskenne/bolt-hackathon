@@ -254,12 +254,66 @@ input:checked + .slider:before {
   color: var(--text-light);
 }
 
-.delete-rule {
+.rule-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.rule-actions button {
   background: none;
   border: none;
-  color: var(--alert);
   cursor: pointer;
   padding: 4px;
+  border-radius: 4px;
+  color: var(--text-light);
+}
+
+.rule-actions button:hover {
+  background-color: var(--bg-offset);
+}
+
+.rule-actions .delete-rule {
+  color: var(--alert);
+}
+
+.rule-actions .modify-rule {
+  color: var(--primary);
+}
+
+/* Dropdown menu */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: var(--bg);
+  min-width: 120px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.dropdown-content button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.dropdown-content button:hover {
+  background-color: var(--bg-offset);
+}
+
+.dropdown.active .dropdown-content {
+  display: block;
 }
 
 /* Sync status */

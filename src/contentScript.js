@@ -42,20 +42,28 @@ function setRaw(el,txt){
 }
 
 /* main input handler */
-let lastActive=null;
+let lastActive = null;
 let underlineState = new Map(); // Track underline state per element
-// Track whether the extension is enabled
 let scrubberEnabled = true;
+let customRules = []; // Store custom rules
 
-// On load, get the enabled state from storage
-chrome.storage && chrome.storage.sync.get('enabled', result => {
+// On load, get the enabled state and custom rules from storage
+chrome.storage && chrome.storage.sync.get(['enabled', 'customRules'], result => {
   scrubberEnabled = result.hasOwnProperty('enabled') ? result.enabled : true;
+  customRules = result.customRules || [];
 });
 
-// Listen for enable/disable messages from popup
+// Listen for enable/disable messages and custom rules updates from popup
 chrome.runtime && chrome.runtime.onMessage && chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
   if (msg && msg.action === 'setState' && typeof msg.enabled === 'boolean') {
     scrubberEnabled = msg.enabled;
+  }
+  if (msg && msg.action === 'updateCustomRules') {
+    customRules = msg.rules || [];
+    // Re-scan active element if exists
+    if (lastActive) {
+      autoHighlightSensitive(lastActive);
+    }
   }
 });
 
@@ -99,8 +107,8 @@ function autoHighlightSensitive(el) {
       return;
     }
 
-    // Use the same redactor logic as the scrub function
-    const { stats } = self.PromptScrubberRedactor.redact(text);
+    // Use the redactor with custom rules
+    const { stats } = self.PromptScrubberRedactor.redact(text, customRules);
     const totalSensitive = Object.values(stats).reduce((a,b)=>a+b,0);
     
     if (totalSensitive > 0) {
@@ -135,7 +143,7 @@ function scrubText(target){
   let raw = getRaw(target);
   let totalMasked = 0;
   for(let i=0;i<10;i++){
-    const { clean, stats } = self.PromptScrubberRedactor.redact(raw);
+    const { clean, stats } = self.PromptScrubberRedactor.redact(raw, customRules);
     const maskedNow = Object.values(stats).reduce((a,b)=>a+b,0);
     totalMasked += maskedNow;
     raw = clean;

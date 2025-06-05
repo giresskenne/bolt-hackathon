@@ -1,32 +1,54 @@
 {
   "manifest_version": 3,
   "name": "Prompt-Scrubber",
-  "version": "1.0",
-  "description": "Automatically masks secrets and PII in text fields as you type",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "version": "0.1",
+  "description": "Mask secrets & PII in any AI prompt before sending.",
+  "author": "Giress Kenn <giresskenn@gmail.com>",
+  "content_scripts": [
+    {
+        "matches": [
+        "https://chat.openai.com/*",
+        "<all_urls>"
+      ],
+     "js": ["dist/src/contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "dist/src/bg.js"
+  },
+  "permissions": ["storage"],
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [
+    {
+      "resources": [ 
+        "icons/logo.png" ,
+        "src/detectorWorker.js",
+        "src/patterns.json"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "commands": {
+    "scrub-and-send": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
+      },
+      "description": "Mask secrets and PII in the current prompt without automatically sending it"
     }
   },
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": [
-        "scripts/config.js", 
-        "scripts/patternDetector.js", 
-        "scripts/elementObserver.js", 
-        "scripts/contentScript.js"
-      ],
-      "css": ["styles/content.css"]
-    }
-  ]
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
 }

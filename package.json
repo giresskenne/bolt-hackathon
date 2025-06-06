@@ -1,11 +1,14 @@
 {
   "name": "prompt-scrubber",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "gen": "node src/build.mjs",          
     "build": "npm run gen && webpack",
-    "dev": "webpack --mode development --watch"
+    "dev": "webpack --mode development --watch",
+    "preversion": "npm test",
+    "version": "npm run build && git add -A dist",
+    "postversion": "git push && git push --tags"
   },
   "devDependencies": {
     "webpack": "^5.98.0",

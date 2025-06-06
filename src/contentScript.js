@@ -104,7 +104,7 @@ function injectScrubButton(el) {
   }
   
   // Add margin to textarea
-  el.style.marginBottom = '40px';
+  el.style.marginBottom = '45px';
   
   // Scrub button
   const scrubBtn = document.createElement('button');
@@ -112,7 +112,7 @@ function injectScrubButton(el) {
   scrubBtn.type = 'button';
   scrubBtn.innerHTML = `<img src="${chrome.runtime.getURL('icons/logo.png')}" width="16" height="16" style="vertical-align:middle;margin-right:4px"> Scrub`;
   scrubBtn.style.cssText = `
-    padding: 4px 8px;
+    padding: 2px 8px;
     font-size: 13px;
     border: 1px solid #e0e0e0;
     border-radius: 15px;

@@ -103,6 +103,9 @@ function injectScrubButton(el) {
     el.parentElement.style.position = 'relative';
   }
   
+  // Add margin to textarea
+  el.style.marginBottom = '40px';
+  
   // Scrub button
   const scrubBtn = document.createElement('button');
   scrubBtn.className = 'scrub-button';
@@ -144,6 +147,7 @@ function injectScrubButton(el) {
     if (!document.contains(el)) {
       buttonContainer.remove();
       activeButtons.delete(buttonContainer);
+      el.style.marginBottom = ''; // Reset margin when button is removed
       observer.disconnect();
     }
   });
@@ -179,6 +183,7 @@ async function autoHighlightSensitive(el) {
   const text = getRaw(el);
   if (!text.trim()) {
     el.style.background = '';
+    el.style.marginBottom = ''; // Reset margin when no text
     return;
   }
 
@@ -225,6 +230,7 @@ function cleanUp(el) {
   }
   lastActive = null;
   el.style.background = '';
+  el.style.marginBottom = ''; // Reset margin when cleaning up
 }
 
 // Remove highlighting when text is empty
@@ -233,5 +239,6 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (!getRaw(el).trim()) {
     el.style.background = '';
+    el.style.marginBottom = ''; // Reset margin when text is empty
   }
 }, true);

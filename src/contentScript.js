@@ -78,42 +78,113 @@ chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
   }
 });
 
-function injectScrubButton(el){
-  // only add once per parent node
-  if(el.parentElement.querySelector('#scrubSendBtn')) return;
+function injectScrubButton(el) {
+  // Remove existing button if any
+  const existingContainer = el.parentElement.querySelector('.scrub-button-container');
+  if (existingContainer) existingContainer.remove();
   
-  // Create container for buttons
+  // Create container for buttons with fixed positioning
   const buttonContainer = document.createElement('div');
-  buttonContainer.style.cssText = 'display:inline-flex;gap:4px;margin:2px 8px;';
+  buttonContainer.className = 'scrub-button-container';
+  buttonContainer.style.cssText = `
+    position: absolute;
+    display: inline-flex;
+    gap: 4px;
+    margin: 2px 8px;
+    z-index: 10000;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 4px;
+  `;
+
+  // Position the container based on the textarea
+  const rect = el.getBoundingClientRect();
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
   
-  // Scrub button only
+  // Adjust position based on the platform
+  const host = window.location.hostname;
+  if (host.includes('stackoverflow.com')) {
+    buttonContainer.style.top = `${rect.top + scrollTop + 5}px`;
+    buttonContainer.style.right = `${window.innerWidth - rect.right + 5}px`;
+  } else if (host.includes('perplexity.ai')) {
+    buttonContainer.style.top = `${rect.top + scrollTop + 5}px`;
+    buttonContainer.style.right = '10px';
+  } else {
+    // Default positioning for other platforms
+    buttonContainer.style.top = `${rect.top + scrollTop + 5}px`;
+    buttonContainer.style.right = `${window.innerWidth - rect.right + 5}px`;
+  }
+  
+  // Scrub button
   const scrubBtn = document.createElement('button');
-  scrubBtn.id = 'scrubSendBtn';
+  scrubBtn.className = 'scrub-button';
   scrubBtn.type = 'button';
   scrubBtn.innerHTML = `<img src="${chrome.runtime.getURL('icons/logo.png')}" width="16" height="16" style="vertical-align:middle;margin-right:4px"> Scrub`;
-  Object.assign(scrubBtn.style, {
-    padding: '2px 8px 2px 6px',
-    fontSize: '12px',
-    border: '1px solid #d0d7de',
-    borderRadius: '10px',
-    background: '#fff',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px'
-  });
+  scrubBtn.style.cssText = `
+    padding: 4px 12px;
+    font-size: 13px;
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s;
+    white-space: nowrap;
+    min-width: 80px;
+    height: 28px;
+  `;
+  
+  scrubBtn.onmouseover = () => {
+    scrubBtn.style.background = '#f5f5f5';
+    scrubBtn.style.borderColor = '#ccc';
+  };
+  
+  scrubBtn.onmouseout = () => {
+    scrubBtn.style.background = '#fff';
+    scrubBtn.style.borderColor = '#e0e0e0';
+  };
+  
   scrubBtn.onclick = () => scrubText(el);
   
   buttonContainer.appendChild(scrubBtn);
-  el.parentElement.insertBefore(buttonContainer, el.nextSibling);
+  document.body.appendChild(buttonContainer);
+  
+  // Update button position on scroll and resize
+  const updatePosition = () => {
+    const newRect = el.getBoundingClientRect();
+    const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    buttonContainer.style.top = `${newRect.top + newScrollTop + 5}px`;
+    buttonContainer.style.right = `${window.innerWidth - newRect.right + 5}px`;
+  };
+  
+  window.addEventListener('scroll', updatePosition);
+  window.addEventListener('resize', updatePosition);
+  
+  // Clean up event listeners when the element is removed
+  const observer = new MutationObserver((mutations) => {
+    if (!document.contains(el)) {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+      buttonContainer.remove();
+      observer.disconnect();
+    }
+  });
+  
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
-document.addEventListener('input', e=>{
+document.addEventListener('input', e => {
   if (!scrubberEnabled) return;
-  if(!isTextInput(e.target)) return;
-  const el=e.target;
-  if(!getRaw(el).trim()){ cleanUp(el); return; }
-  lastActive=el;
+  if (!isTextInput(e.target)) return;
+  const el = e.target;
+  if (!getRaw(el).trim()) { 
+    cleanUp(el); 
+    return; 
+  }
+  lastActive = el;
   injectScrubButton(el);
   autoHighlightSensitive(el);
 }, true);
@@ -122,30 +193,36 @@ document.addEventListener('input', e=>{
 function autoHighlightSensitive(el) {
   if (!scrubberEnabled || !el) return;
   
-  if (el.tagName === 'TEXTAREA') {
-    const text = getRaw(el);
-    if (!text.trim()) {
-      el.style.background = '';
-      el.removeAttribute('data-sensitive-count');
-      return;
-    }
+  const text = getRaw(el);
+  if (!text.trim()) {
+    el.style.background = '';
+    el.removeAttribute('data-sensitive-count');
+    return;
+  }
 
-    // Use the redactor with custom rules
-    const { stats } = self.PromptScrubberRedactor.redact(text, customRules);
-    const totalSensitive = Object.values(stats).reduce((a,b)=>a+b,0);
-    
-    if (totalSensitive > 0) {
+  // Use the redactor with custom rules
+  const { stats } = self.PromptScrubberRedactor.redact(text, customRules);
+  const totalSensitive = Object.values(stats).reduce((a,b)=>a+b,0);
+  
+  if (totalSensitive > 0) {
+    // Apply highlighting based on the platform
+    const host = window.location.hostname;
+    if (host.includes('chat.openai.com')) {
       el.style.background = 'linear-gradient(90deg, #fff 0%, #ffebee 100%)';
-      el.setAttribute('data-sensitive-count', totalSensitive);
+    } else if (host.includes('claude.ai')) {
+      el.style.background = 'linear-gradient(90deg, #fff 0%, #ffe0e0 100%)';
     } else {
-      el.style.background = '';
-      el.removeAttribute('data-sensitive-count');
+      el.style.background = 'linear-gradient(90deg, #fff 0%, #fff1f1 100%)';
     }
+    el.setAttribute('data-sensitive-count', totalSensitive);
+  } else {
+    el.style.background = '';
+    el.removeAttribute('data-sensitive-count');
   }
 }
 
 /* ───────── Scrub core (enhanced) ───────── */
-function scrubText(target){
+function scrubText(target) {
   if (!scrubberEnabled || !target) return;
   
   // Remove underlines if they exist
@@ -167,9 +244,20 @@ function scrubText(target){
 }
 
 /* clean-up when box is emptied */
-function cleanUp(el){
-  const buttonContainer = el.parentElement?.querySelector('#scrubSendBtn')?.parentElement;
-  if(buttonContainer) buttonContainer.remove();
+function cleanUp(el) {
+  const buttonContainer = document.querySelector('.scrub-button-container');
+  if (buttonContainer) buttonContainer.remove();
   underlineState.delete(el);
-  lastActive=null;
+  lastActive = null;
+  el.style.background = '';
 }
+
+// Remove highlighting when text is empty
+document.addEventListener('input', e => {
+  if (!isTextInput(e.target)) return;
+  const el = e.target;
+  if (!getRaw(el).trim()) {
+    el.style.background = '';
+    el.removeAttribute('data-sensitive-count');
+  }
+}, true);

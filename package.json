@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "gen": "node src/build.mjs",          
-    "build": "npm run gen && webpack",
-    "dev": "webpack --mode development --watch",
+    "build": "npm run gen && npx webpack",
+    "dev": "npx webpack --mode development --watch",
     "preversion": "npm test",
     "version": "npm run build && git add -A dist",
     "postversion": "git push && git push --tags"

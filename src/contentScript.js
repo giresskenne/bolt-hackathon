@@ -66,8 +66,7 @@ function setRaw(el, txt) {
         selection.removeAllRanges();
         selection.addRange(newRange);
       } catch (e) {
-        // If cursor restoration fails, just continue
-        console.debug('[Scrubber] Could not restore cursor position:', e);
+        // If cursor restoration fails, just continue silently
       }
     }
     
@@ -94,7 +93,6 @@ async function initializeState() {
     scrubberEnabled = syncData.hasOwnProperty('enabled') ? syncData.enabled : true;
     customRules = syncData.customRules || [];
   } catch (error) {
-    console.log('[Scrubber] Falling back to local storage');
     const localData = await chrome.storage.local.get(['enabled', 'customRules']);
     scrubberEnabled = localData.hasOwnProperty('enabled') ? localData.enabled : true;
     customRules = localData.customRules || [];
@@ -293,12 +291,7 @@ function scrubText(target) {
   if (!scrubberEnabled || !target) return;
   
   const raw = getRaw(target);
-  console.log('[Scrubber] Original text:', raw);
-  
   const { clean, stats } = self.PromptScrubberRedactor.redact(raw, customRules);
-  console.log('[Scrubber] Redacted text:', clean);
-  console.log('[Scrubber] Stats:', stats);
-  
   const totalMasked = Object.values(stats).reduce((a,b)=>a+b,0);
   
   if (totalMasked > 0) {

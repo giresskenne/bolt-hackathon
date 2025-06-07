@@ -138,16 +138,30 @@ function injectScrubButton(el) {
   buttonContainer.style.bottom = '10px';
   buttonContainer.style.left = '10px';
 
-  // Platform-specific adjustments
+  // Platform-specific adjustments - NO SPACING MODIFICATIONS
   if (host.includes('perplexity.ai')) {
     el.parentElement.style.position = 'relative';
   } else if (host.includes('gemini.google.com')) {
-    // Special handling for Gemini - use padding instead of margin
-    el.style.paddingBottom = '45px';
-    buttonContainer.style.bottom = '5px';
+    // For Gemini, position relative to the input container
+    const inputContainer = el.closest('[data-test-id="input-container"]') || el.parentElement;
+    inputContainer.style.position = 'relative';
+    inputContainer.appendChild(buttonContainer);
+    
+    // Position at bottom-right of the input container
+    buttonContainer.style.bottom = '8px';
+    buttonContainer.style.right = '8px';
+    buttonContainer.style.left = 'auto';
+    
+    // Don't modify spacing for Gemini
   } else {
-    // Add margin to textarea for other platforms
-    el.style.marginBottom = '40px';
+    // For other platforms, ensure parent has relative positioning
+    el.parentElement.style.position = 'relative';
+    el.parentElement.appendChild(buttonContainer);
+  }
+  
+  // Only add the button container to parent if not already done above
+  if (!host.includes('gemini.google.com')) {
+    el.parentElement.appendChild(buttonContainer);
   }
   
   // Scrub button
@@ -183,7 +197,6 @@ function injectScrubButton(el) {
   };
   
   buttonContainer.appendChild(scrubBtn);
-  el.parentElement.appendChild(buttonContainer);
   activeButtons.add(buttonContainer);
 
   // Clean up when element is removed
@@ -191,9 +204,6 @@ function injectScrubButton(el) {
     if (!document.contains(el)) {
       buttonContainer.remove();
       activeButtons.delete(buttonContainer);
-      // Reset both margin and padding when button is removed
-      el.style.marginBottom = '';
-      el.style.paddingBottom = '';
       observer.disconnect();
     }
   });
@@ -214,7 +224,8 @@ document.addEventListener('input', e => {
   }
   
   // Only inject button if it doesn't exist
-  if (!el.parentElement.querySelector('.scrub-button-container')) {
+  if (!el.parentElement.querySelector('.scrub-button-container') && 
+      !el.closest('[data-test-id="input-container"]')?.querySelector('.scrub-button-container')) {
     lastActive = el;
     injectScrubButton(el);
   }
@@ -229,9 +240,6 @@ async function autoHighlightSensitive(el) {
   const text = getRaw(el);
   if (!text.trim()) {
     el.style.background = '';
-    // Reset both margin and padding when no text
-    el.style.marginBottom = '';
-    el.style.paddingBottom = '';
     return;
   }
 
@@ -279,16 +287,14 @@ function scrubText(target) {
 
 /* clean-up when box is emptied */
 function cleanUp(el) {
-  const buttonContainer = el.parentElement.querySelector('.scrub-button-container');
+  const buttonContainer = el.parentElement.querySelector('.scrub-button-container') ||
+                         el.closest('[data-test-id="input-container"]')?.querySelector('.scrub-button-container');
   if (buttonContainer) {
     buttonContainer.remove();
     activeButtons.delete(buttonContainer);
   }
   lastActive = null;
   el.style.background = '';
-  // Reset both margin and padding when cleaning up
-  el.style.marginBottom = '';
-  el.style.paddingBottom = '';
 }
 
 // Remove highlighting when text is empty
@@ -297,8 +303,33 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (!getRaw(el).trim()) {
     el.style.background = '';
-    // Reset both margin and padding when text is empty
-    el.style.marginBottom = '';
-    el.style.paddingBottom = '';
+  }
+}, true);
+
+// Handle paste events specifically for Gemini
+document.addEventListener('paste', e => {
+  if (!scrubberEnabled || !isTextInput(e.target)) return;
+  
+  const el = e.target;
+  const host = window.location.hostname;
+  
+  if (host.includes('gemini.google.com')) {
+    // For Gemini, wait a bit after paste to ensure content is processed
+    setTimeout(() => {
+      const text = getRaw(el);
+      if (text.trim()) {
+        // Remove any existing button first
+        const existingContainer = el.closest('[data-test-id="input-container"]')?.querySelector('.scrub-button-container');
+        if (existingContainer) {
+          existingContainer.remove();
+          activeButtons.delete(existingContainer);
+        }
+        
+        // Inject new button
+        lastActive = el;
+        injectScrubButton(el);
+        autoHighlightSensitive(el);
+      }
+    }, 100);
   }
 }, true);

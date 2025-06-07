@@ -32,6 +32,40 @@ function getRaw(el){
   return el.tagName==='TEXTAREA' ? el.value : el.innerText;
 }
 
+function getTextAreaBounds(el) {
+  // Get the actual input area bounds, handling both textarea and contenteditable
+  const rect = el.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(el);
+  
+  return {
+    bottom: rect.bottom - parseInt(computedStyle.paddingBottom || 0),
+    left: rect.left + parseInt(computedStyle.paddingLeft || 0),
+    width: rect.width,
+    height: rect.height
+  };
+}
+
+function cleanupExistingButtons() {
+  // Remove any existing buttons
+  Array.from(activeButtons).forEach(button => {
+    button.remove();
+    activeButtons.delete(button);
+  });
+
+  // Clean up any styling we added
+  if (lastActive) {
+    // Clean the textarea
+    lastActive.style.marginBottom = '';
+    lastActive.style.position = '';
+    
+    // Clean the parent if needed
+    if (lastActive.parentElement) {
+      lastActive.parentElement.style.position = '';
+      lastActive.parentElement.style.paddingBottom = '';
+    }
+  }
+}
+
 function setRaw(el, txt) {
   if (el.tagName === 'TEXTAREA') {
     // For textarea elements, use the standard approach
@@ -116,38 +150,45 @@ chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
 });
 
 function injectScrubButton(el) {
-  // Remove existing button if any
-  const existingContainer = el.parentElement.querySelector('.scrub-button-container');
-  if (existingContainer) existingContainer.remove();
+  // Clean up any existing buttons first
+  cleanupExistingButtons();
   
   // Create container for button
   const buttonContainer = document.createElement('div');
   buttonContainer.className = 'scrub-button-container';
-  buttonContainer.style.cssText = `
-    position: absolute;
-    z-index: 10000;
-    margin: 4px;
-  `;
-
-  // Position the container based on the platform
-  const rect = el.getBoundingClientRect();
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  
   const host = window.location.hostname;
-
-  // Default positioning (bottom-left)
-  buttonContainer.style.bottom = '10px';
-  buttonContainer.style.left = '10px';
-
-  // Platform-specific adjustments
-  if (host.includes('perplexity.ai')) {
-    el.parentElement.style.position = 'relative';
-  } else if (host.includes('gemini.google.com')) {
-    // Special handling for Gemini - use padding instead of margin
-    el.style.paddingBottom = '45px';
-    buttonContainer.style.bottom = '5px';
+  
+  // Platform-specific handling
+  if (host.includes('claude.ai') || host.includes('gemini.google.com')) {
+    // For Claude and Gemini, position relative to textarea's parent
+    const wrapper = el.parentElement;
+    wrapper.style.position = 'relative';
+    wrapper.style.paddingBottom = '40px';
+    
+    buttonContainer.style.cssText = `
+      position: absolute;
+      z-index: 10000;
+      bottom: 8px;
+      left: 8px;
+    `;
+    
+    wrapper.appendChild(buttonContainer);
   } else {
-    // Add margin to textarea for other platforms
+    // For ChatGPT, Copilot and others, position relative to textarea
+    el.style.position = 'relative';
     el.style.marginBottom = '40px';
+    
+    buttonContainer.style.cssText = `
+      position: absolute;
+      z-index: 10000;
+      bottom: 8px;
+      left: 8px;
+      pointer-events: auto;
+    `;
+    
+    // Add directly to parent without wrapping
+    el.parentElement.appendChild(buttonContainer);
   }
   
   // Scrub button
@@ -201,8 +242,8 @@ function injectScrubButton(el) {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Handle input events
-document.addEventListener('input', e => {
+// Handle input and paste events
+const handleTextInput = (e) => {
   if (!scrubberEnabled || !isTextInput(e.target)) return;
   
   const el = e.target;
@@ -213,13 +254,25 @@ document.addEventListener('input', e => {
     return;
   }
   
-  // Only inject button if it doesn't exist
-  if (!el.parentElement.querySelector('.scrub-button-container')) {
-    lastActive = el;
-    injectScrubButton(el);
-  }
+  // Always clean up existing buttons first
+  cleanupExistingButtons();
   
+  // Then inject a new button
+  lastActive = el;
+  injectScrubButton(el);
+  
+  // Check for sensitive content
   autoHighlightSensitive(el);
+};  // Handle input, paste, and focus events
+document.addEventListener('input', handleTextInput, true);
+document.addEventListener('paste', handleTextInput, true);
+document.addEventListener('focus', (e) => {
+  if (isTextInput(e.target)) {
+    const text = getRaw(e.target);
+    if (text.trim()) {
+      handleTextInput(e);
+    }
+  }
 }, true);
 
 // Automatically highlight sensitive info

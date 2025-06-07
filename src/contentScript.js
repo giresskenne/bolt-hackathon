@@ -31,16 +31,43 @@ function toast(msg){
 function getRaw(el){
   return el.tagName==='TEXTAREA' ? el.value : el.innerText;
 }
-function setRaw(el,txt){
-  if(el.tagName==='TEXTAREA'){
-    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el,txt);
-    el.dispatchEvent(new Event('input',{bubbles:true}));
-  }else{
-    // For contenteditable elements, use innerText to preserve line breaks without adding extra ones
-    el.innerText = txt;
+
+function setRaw(el, txt) {
+  if (el.tagName === 'TEXTAREA') {
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(el, txt);
+    el.dispatchEvent(new Event('input', {bubbles: true}));
+  } else {
+    // For contenteditable elements, preserve the original structure
+    const originalHTML = el.innerHTML;
+    const originalText = el.innerText;
+    
+    // If the text structure is the same, do a simple replacement
+    if (originalText.split('\n').length === txt.split('\n').length) {
+      // Replace text while preserving HTML structure
+      let newHTML = originalHTML;
+      const originalLines = originalText.split('\n');
+      const newLines = txt.split('\n');
+      
+      for (let i = 0; i < originalLines.length; i++) {
+        if (originalLines[i] !== newLines[i]) {
+          // Escape HTML in the new text
+          const escapedNew = newLines[i].replace(/[&<>"']/g, function(m) {
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+          });
+          const escapedOld = originalLines[i].replace(/[&<>"']/g, function(m) {
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+          });
+          newHTML = newHTML.replace(escapedOld, escapedNew);
+        }
+      }
+      el.innerHTML = newHTML;
+    } else {
+      // Fallback to simple text replacement
+      el.innerText = txt;
+    }
     
     // Trigger input event
-    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('input', {bubbles: true}));
   }
 }
 

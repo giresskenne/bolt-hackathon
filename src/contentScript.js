@@ -36,7 +36,12 @@ function setRaw(el,txt){
     Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el,txt);
     el.dispatchEvent(new Event('input',{bubbles:true}));
   }else{
-    el.innerText = txt;
+    // For contenteditable elements, preserve line breaks properly
+    const lines = txt.split('\n');
+    el.innerHTML = lines.map(line => line || '<br>').join('<br>');
+    
+    // Trigger input event
+    el.dispatchEvent(new Event('input',{bubbles:true}));
   }
 }
 
@@ -101,10 +106,14 @@ function injectScrubButton(el) {
   // Platform-specific adjustments
   if (host.includes('perplexity.ai')) {
     el.parentElement.style.position = 'relative';
+  } else if (host.includes('gemini.google.com')) {
+    // Special handling for Gemini - use padding instead of margin
+    el.style.paddingBottom = '45px';
+    buttonContainer.style.bottom = '5px';
+  } else {
+    // Add margin to textarea for other platforms
+    el.style.marginBottom = '40px';
   }
-  
-  // Add margin to textarea
-  el.style.marginBottom = '45px';
   
   // Scrub button
   const scrubBtn = document.createElement('button');
@@ -147,7 +156,9 @@ function injectScrubButton(el) {
     if (!document.contains(el)) {
       buttonContainer.remove();
       activeButtons.delete(buttonContainer);
-      el.style.marginBottom = ''; // Reset margin when button is removed
+      // Reset both margin and padding when button is removed
+      el.style.marginBottom = '';
+      el.style.paddingBottom = '';
       observer.disconnect();
     }
   });
@@ -183,7 +194,9 @@ async function autoHighlightSensitive(el) {
   const text = getRaw(el);
   if (!text.trim()) {
     el.style.background = '';
-    el.style.marginBottom = ''; // Reset margin when no text
+    // Reset both margin and padding when no text
+    el.style.marginBottom = '';
+    el.style.paddingBottom = '';
     return;
   }
 
@@ -230,7 +243,9 @@ function cleanUp(el) {
   }
   lastActive = null;
   el.style.background = '';
-  el.style.marginBottom = ''; // Reset margin when cleaning up
+  // Reset both margin and padding when cleaning up
+  el.style.marginBottom = '';
+  el.style.paddingBottom = '';
 }
 
 // Remove highlighting when text is empty
@@ -239,6 +254,8 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (!getRaw(el).trim()) {
     el.style.background = '';
-    el.style.marginBottom = ''; // Reset margin when text is empty
+    // Reset both margin and padding when text is empty
+    el.style.marginBottom = '';
+    el.style.paddingBottom = '';
   }
 }, true);

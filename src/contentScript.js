@@ -34,48 +34,40 @@ function getRaw(el){
 
 function setRaw(el, txt) {
   if (el.tagName === 'TEXTAREA') {
-    // For textarea elements, use the standard approach
     Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(el, txt);
     el.dispatchEvent(new Event('input', {bubbles: true}));
   } else {
-    // For contenteditable elements, we need to be more careful
-    // Store cursor position
-    const selection = window.getSelection();
-    const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-    const cursorOffset = range ? range.startOffset : 0;
+    // For contenteditable elements, preserve the original structure
+    const originalHTML = el.innerHTML;
+    const originalText = el.innerText;
     
-    // Get the current text node that contains the cursor
-    let currentNode = null;
-    if (range && range.startContainer.nodeType === Node.TEXT_NODE) {
-      currentNode = range.startContainer;
-    }
-    
-    // Simple approach: replace the entire text content
-    // This works better for complex cases like JSON strings
-    const oldText = el.innerText;
-    el.innerText = txt;
-    
-    // Try to restore cursor position
-    if (currentNode && el.firstChild && el.firstChild.nodeType === Node.TEXT_NODE) {
-      try {
-        const newRange = document.createRange();
-        const textNode = el.firstChild;
-        const newOffset = Math.min(cursorOffset, textNode.textContent.length);
-        newRange.setStart(textNode, newOffset);
-        newRange.setEnd(textNode, newOffset);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
-      } catch (e) {
-        // If cursor restoration fails, just continue silently
+    // If the text structure is the same, do a simple replacement
+    if (originalText.split('\n').length === txt.split('\n').length) {
+      // Replace text while preserving HTML structure
+      let newHTML = originalHTML;
+      const originalLines = originalText.split('\n');
+      const newLines = txt.split('\n');
+      
+      for (let i = 0; i < originalLines.length; i++) {
+        if (originalLines[i] !== newLines[i]) {
+          // Escape HTML in the new text
+          const escapedNew = newLines[i].replace(/[&<>"']/g, function(m) {
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+          });
+          const escapedOld = originalLines[i].replace(/[&<>"']/g, function(m) {
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+          });
+          newHTML = newHTML.replace(escapedOld, escapedNew);
+        }
       }
+      el.innerHTML = newHTML;
+    } else {
+      // Fallback to simple text replacement
+      el.innerText = txt;
     }
     
-    // Trigger input event to notify the application
+    // Trigger input event
     el.dispatchEvent(new Event('input', {bubbles: true}));
-    
-    // Also trigger other events that some applications might listen for
-    el.dispatchEvent(new Event('change', {bubbles: true}));
-    el.dispatchEvent(new Event('keyup', {bubbles: true}));
   }
 }
 
@@ -93,6 +85,7 @@ async function initializeState() {
     scrubberEnabled = syncData.hasOwnProperty('enabled') ? syncData.enabled : true;
     customRules = syncData.customRules || [];
   } catch (error) {
+    console.log('[Scrubber] Falling back to local storage');
     const localData = await chrome.storage.local.get(['enabled', 'customRules']);
     scrubberEnabled = localData.hasOwnProperty('enabled') ? localData.enabled : true;
     customRules = localData.customRules || [];
@@ -114,23 +107,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
 });
 
 function injectScrubButton(el) {
-  const host = window.location.hostname;
-  
-  // For Gemini, check both parent element and input container for existing buttons
-  let existingContainer;
-  if (host.includes('gemini.google.com')) {
-    const inputContainer = el.closest('[data-test-id="input-container"]');
-    existingContainer = el.parentElement.querySelector('.scrub-button-container') ||
-                       (inputContainer && inputContainer.querySelector('.scrub-button-container'));
-  } else {
-    existingContainer = el.parentElement.querySelector('.scrub-button-container');
-  }
-  
   // Remove existing button if any
-  if (existingContainer) {
-    existingContainer.remove();
-    activeButtons.delete(existingContainer);
-  }
+  const existingContainer = el.parentElement.querySelector('.scrub-button-container');
+  if (existingContainer) existingContainer.remove();
   
   // Create container for button
   const buttonContainer = document.createElement('div');
@@ -144,33 +123,22 @@ function injectScrubButton(el) {
   // Position the container based on the platform
   const rect = el.getBoundingClientRect();
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const host = window.location.hostname;
 
   // Default positioning (bottom-left)
   buttonContainer.style.bottom = '10px';
   buttonContainer.style.left = '10px';
 
-  // Platform-specific adjustments - NO SPACING MODIFICATIONS
+  // Platform-specific adjustments
   if (host.includes('perplexity.ai')) {
     el.parentElement.style.position = 'relative';
   } else if (host.includes('gemini.google.com')) {
-    // For Gemini, try to find the input container and position relative to it
-    const inputContainer = el.closest('[data-test-id="input-container"]');
-    if (inputContainer) {
-      inputContainer.style.position = 'relative';
-      inputContainer.appendChild(buttonContainer);
-      
-      // Position at bottom-right of the input container for better visibility
-      buttonContainer.style.bottom = '8px';
-      buttonContainer.style.right = '8px';
-      buttonContainer.style.left = 'auto';
-    } else {
-      // Fallback to parent element
-      el.parentElement.style.position = 'relative';
-      el.parentElement.appendChild(buttonContainer);
-    }
+    // Special handling for Gemini - use padding instead of margin
+    el.style.paddingBottom = '45px';
+    buttonContainer.style.bottom = '5px';
   } else {
-    // For other platforms, ensure parent has relative positioning
-    el.parentElement.style.position = 'relative';
+    // Add margin to textarea for other platforms
+    el.style.marginBottom = '40px';
   }
   
   // Scrub button
@@ -206,12 +174,7 @@ function injectScrubButton(el) {
   };
   
   buttonContainer.appendChild(scrubBtn);
-  
-  // Only add to parent if not already added for Gemini
-  if (!host.includes('gemini.google.com') || !el.closest('[data-test-id="input-container"]')) {
-    el.parentElement.appendChild(buttonContainer);
-  }
-  
+  el.parentElement.appendChild(buttonContainer);
   activeButtons.add(buttonContainer);
 
   // Clean up when element is removed
@@ -219,6 +182,9 @@ function injectScrubButton(el) {
     if (!document.contains(el)) {
       buttonContainer.remove();
       activeButtons.delete(buttonContainer);
+      // Reset both margin and padding when button is removed
+      el.style.marginBottom = '';
+      el.style.paddingBottom = '';
       observer.disconnect();
     }
   });
@@ -232,25 +198,14 @@ document.addEventListener('input', e => {
   
   const el = e.target;
   const text = getRaw(el);
-  const host = window.location.hostname;
   
   if (!text.trim()) {
     cleanUp(el);
     return;
   }
   
-  // Check for existing button in appropriate container
-  let hasButton;
-  if (host.includes('gemini.google.com')) {
-    const inputContainer = el.closest('[data-test-id="input-container"]');
-    hasButton = el.parentElement.querySelector('.scrub-button-container') ||
-               (inputContainer && inputContainer.querySelector('.scrub-button-container'));
-  } else {
-    hasButton = el.parentElement.querySelector('.scrub-button-container');
-  }
-  
   // Only inject button if it doesn't exist
-  if (!hasButton) {
+  if (!el.parentElement.querySelector('.scrub-button-container')) {
     lastActive = el;
     injectScrubButton(el);
   }
@@ -265,6 +220,9 @@ async function autoHighlightSensitive(el) {
   const text = getRaw(el);
   if (!text.trim()) {
     el.style.background = '';
+    // Reset both margin and padding when no text
+    el.style.marginBottom = '';
+    el.style.paddingBottom = '';
     return;
   }
 
@@ -294,36 +252,26 @@ function scrubText(target) {
   const { clean, stats } = self.PromptScrubberRedactor.redact(raw, customRules);
   const totalMasked = Object.values(stats).reduce((a,b)=>a+b,0);
   
-  if (totalMasked > 0) {
-    setRaw(target, clean);
-    target.style.background = ''; // Remove highlighting after scrubbing
-    toast(`${totalMasked} sensitive item${totalMasked>1?'s':''} masked`);
-  } else {
-    toast('No sensitive items detected');
-  }
+  setRaw(target, clean);
+  target.style.background = ''; // Remove highlighting after scrubbing
+  
+  toast(totalMasked ? `${totalMasked} sensitive item${totalMasked>1?'s':''} masked` : 'No sensitive items detected');
   
   if(!clean.trim()) cleanUp(target);
 }
 
 /* clean-up when box is emptied */
 function cleanUp(el) {
-  const host = window.location.hostname;
-  let buttonContainer;
-  
-  if (host.includes('gemini.google.com')) {
-    const inputContainer = el.closest('[data-test-id="input-container"]');
-    buttonContainer = el.parentElement.querySelector('.scrub-button-container') ||
-                     (inputContainer && inputContainer.querySelector('.scrub-button-container'));
-  } else {
-    buttonContainer = el.parentElement.querySelector('.scrub-button-container');
-  }
-  
+  const buttonContainer = el.parentElement.querySelector('.scrub-button-container');
   if (buttonContainer) {
     buttonContainer.remove();
     activeButtons.delete(buttonContainer);
   }
   lastActive = null;
   el.style.background = '';
+  // Reset both margin and padding when cleaning up
+  el.style.marginBottom = '';
+  el.style.paddingBottom = '';
 }
 
 // Remove highlighting when text is empty
@@ -332,35 +280,8 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (!getRaw(el).trim()) {
     el.style.background = '';
-  }
-}, true);
-
-// Handle paste events specifically for Gemini AI
-document.addEventListener('paste', e => {
-  if (!scrubberEnabled || !isTextInput(e.target)) return;
-  
-  const el = e.target;
-  const host = window.location.hostname;
-  
-  if (host.includes('gemini.google.com')) {
-    // For Gemini, wait a bit after paste to ensure content is processed
-    setTimeout(() => {
-      const text = getRaw(el);
-      if (text.trim()) {
-        // Remove any existing button first
-        const inputContainer = el.closest('[data-test-id="input-container"]');
-        const existingContainer = el.parentElement.querySelector('.scrub-button-container') ||
-                                 (inputContainer && inputContainer.querySelector('.scrub-button-container'));
-        if (existingContainer) {
-          existingContainer.remove();
-          activeButtons.delete(existingContainer);
-        }
-        
-        // Inject new button
-        lastActive = el;
-        injectScrubButton(el);
-        autoHighlightSensitive(el);
-      }
-    }, 100);
+    // Reset both margin and padding when text is empty
+    el.style.marginBottom = '';
+    el.style.paddingBottom = '';
   }
 }, true);

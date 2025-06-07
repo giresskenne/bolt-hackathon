@@ -128,8 +128,8 @@ document.addEventListener('DOMContentLoaded', () => {
     rulesList.innerHTML = customRules.map((rule, index) => `
       <div class="rule-item">
         <div class="rule-info">
-          <div class="rule-value">${rule.value}</div>
-          <div class="rule-label">&lt;${rule.label}&gt;</div>
+          <div class="rule-value">${escapeHtml(rule.value)}</div>
+          <div class="rule-label">&lt;${escapeHtml(rule.label)}&gt;</div>
         </div>
         <div class="rule-actions">
           <div class="dropdown" data-index="${index}">
@@ -162,6 +162,12 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteRule(index);
       });
     });
+  }
+  
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   
   function handleGlobalClick() {
@@ -204,6 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (!value || !label) {
       alert('Both value and label are required');
+      return;
+    }
+    
+    // Validate label format (alphanumeric, hyphens, underscores only)
+    if (!/^[a-zA-Z0-9_-]+$/.test(label)) {
+      alert('Label can only contain letters, numbers, hyphens, and underscores');
       return;
     }
     

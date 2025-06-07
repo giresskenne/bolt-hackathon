@@ -10,20 +10,32 @@ import { rules } from './gen/redactorRules.js';
 export function redact(src, customRules = []) {
   let out = src, stats = Object.create(null);
   
-  // First apply custom rules (case-insensitive string matches)
+  // First apply custom rules with improved matching
   if (Array.isArray(customRules)) {
-    for (const rule of customRules) {
+    // Sort custom rules by length (longest first) to handle overlapping matches
+    const sortedRules = [...customRules].sort((a, b) => (b.value?.length || 0) - (a.value?.length || 0));
+    
+    for (const rule of sortedRules) {
       if (!rule?.value || !rule?.label) continue;
       
       try {
         const before = out;
+        
         // Escape special regex characters in the value
         const escapedValue = rule.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // Create case-insensitive word boundary pattern
-        const pattern = new RegExp(`\\b${escapedValue}\\b`, 'gi');
+        
+        // Create a more flexible pattern that works in different contexts
+        // This pattern looks for the exact string but doesn't require word boundaries
+        // which allows it to work inside JSON, URLs, etc.
+        const pattern = new RegExp(escapedValue, 'gi');
+        
+        // Apply replacement
         out = out.replace(pattern, `<${rule.label}>`);
+        
+        // Count replacements
         if (before !== out) {
-          stats[`custom_${rule.label}`] = (stats[`custom_${rule.label}`] || 0) + 1;
+          const matches = before.match(pattern);
+          stats[`custom_${rule.label}`] = matches ? matches.length : 1;
         }
       } catch (error) {
         console.error('[Scrubber] Error applying custom rule:', error);
@@ -37,7 +49,10 @@ export function redact(src, customRules = []) {
     try {
       const before = out;
       out = out.replace(r.pattern, r.replacer);
-      if (before !== out) stats[r.id] = (stats[r.id] || 0) + 1;
+      if (before !== out) {
+        const matches = before.match(r.pattern);
+        stats[r.id] = matches ? matches.length : 1;
+      }
     } catch (error) {
       console.error('[Scrubber] Error applying rule:', r.id, error);
       continue;

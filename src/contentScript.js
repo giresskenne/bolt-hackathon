@@ -116,9 +116,23 @@ chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
 });
 
 function injectScrubButton(el) {
+  const host = window.location.hostname;
+  
+  // For Gemini, check both parent element and input container for existing buttons
+  let existingContainer;
+  if (host.includes('gemini.google.com')) {
+    const inputContainer = el.closest('[data-test-id="input-container"]');
+    existingContainer = el.parentElement.querySelector('.scrub-button-container') ||
+                       (inputContainer && inputContainer.querySelector('.scrub-button-container'));
+  } else {
+    existingContainer = el.parentElement.querySelector('.scrub-button-container');
+  }
+  
   // Remove existing button if any
-  const existingContainer = el.parentElement.querySelector('.scrub-button-container');
-  if (existingContainer) existingContainer.remove();
+  if (existingContainer) {
+    existingContainer.remove();
+    activeButtons.delete(existingContainer);
+  }
   
   // Create container for button
   const buttonContainer = document.createElement('div');
@@ -132,7 +146,6 @@ function injectScrubButton(el) {
   // Position the container based on the platform
   const rect = el.getBoundingClientRect();
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  const host = window.location.hostname;
 
   // Default positioning (bottom-left)
   buttonContainer.style.bottom = '10px';
@@ -142,26 +155,24 @@ function injectScrubButton(el) {
   if (host.includes('perplexity.ai')) {
     el.parentElement.style.position = 'relative';
   } else if (host.includes('gemini.google.com')) {
-    // For Gemini, position relative to the input container
-    const inputContainer = el.closest('[data-test-id="input-container"]') || el.parentElement;
-    inputContainer.style.position = 'relative';
-    inputContainer.appendChild(buttonContainer);
-    
-    // Position at bottom-right of the input container
-    buttonContainer.style.bottom = '8px';
-    buttonContainer.style.right = '8px';
-    buttonContainer.style.left = 'auto';
-    
-    // Don't modify spacing for Gemini
+    // For Gemini, try to find the input container and position relative to it
+    const inputContainer = el.closest('[data-test-id="input-container"]');
+    if (inputContainer) {
+      inputContainer.style.position = 'relative';
+      inputContainer.appendChild(buttonContainer);
+      
+      // Position at bottom-right of the input container for better visibility
+      buttonContainer.style.bottom = '8px';
+      buttonContainer.style.right = '8px';
+      buttonContainer.style.left = 'auto';
+    } else {
+      // Fallback to parent element
+      el.parentElement.style.position = 'relative';
+      el.parentElement.appendChild(buttonContainer);
+    }
   } else {
     // For other platforms, ensure parent has relative positioning
     el.parentElement.style.position = 'relative';
-    el.parentElement.appendChild(buttonContainer);
-  }
-  
-  // Only add the button container to parent if not already done above
-  if (!host.includes('gemini.google.com')) {
-    el.parentElement.appendChild(buttonContainer);
   }
   
   // Scrub button
@@ -197,6 +208,12 @@ function injectScrubButton(el) {
   };
   
   buttonContainer.appendChild(scrubBtn);
+  
+  // Only add to parent if not already added for Gemini
+  if (!host.includes('gemini.google.com') || !el.closest('[data-test-id="input-container"]')) {
+    el.parentElement.appendChild(buttonContainer);
+  }
+  
   activeButtons.add(buttonContainer);
 
   // Clean up when element is removed
@@ -217,15 +234,25 @@ document.addEventListener('input', e => {
   
   const el = e.target;
   const text = getRaw(el);
+  const host = window.location.hostname;
   
   if (!text.trim()) {
     cleanUp(el);
     return;
   }
   
+  // Check for existing button in appropriate container
+  let hasButton;
+  if (host.includes('gemini.google.com')) {
+    const inputContainer = el.closest('[data-test-id="input-container"]');
+    hasButton = el.parentElement.querySelector('.scrub-button-container') ||
+               (inputContainer && inputContainer.querySelector('.scrub-button-container'));
+  } else {
+    hasButton = el.parentElement.querySelector('.scrub-button-container');
+  }
+  
   // Only inject button if it doesn't exist
-  if (!el.parentElement.querySelector('.scrub-button-container') && 
-      !el.closest('[data-test-id="input-container"]')?.querySelector('.scrub-button-container')) {
+  if (!hasButton) {
     lastActive = el;
     injectScrubButton(el);
   }
@@ -287,8 +314,17 @@ function scrubText(target) {
 
 /* clean-up when box is emptied */
 function cleanUp(el) {
-  const buttonContainer = el.parentElement.querySelector('.scrub-button-container') ||
-                         el.closest('[data-test-id="input-container"]')?.querySelector('.scrub-button-container');
+  const host = window.location.hostname;
+  let buttonContainer;
+  
+  if (host.includes('gemini.google.com')) {
+    const inputContainer = el.closest('[data-test-id="input-container"]');
+    buttonContainer = el.parentElement.querySelector('.scrub-button-container') ||
+                     (inputContainer && inputContainer.querySelector('.scrub-button-container'));
+  } else {
+    buttonContainer = el.parentElement.querySelector('.scrub-button-container');
+  }
+  
   if (buttonContainer) {
     buttonContainer.remove();
     activeButtons.delete(buttonContainer);
@@ -306,7 +342,7 @@ document.addEventListener('input', e => {
   }
 }, true);
 
-// Handle paste events specifically for Gemini
+// Handle paste events specifically for Gemini AI
 document.addEventListener('paste', e => {
   if (!scrubberEnabled || !isTextInput(e.target)) return;
   
@@ -319,7 +355,9 @@ document.addEventListener('paste', e => {
       const text = getRaw(el);
       if (text.trim()) {
         // Remove any existing button first
-        const existingContainer = el.closest('[data-test-id="input-container"]')?.querySelector('.scrub-button-container');
+        const inputContainer = el.closest('[data-test-id="input-container"]');
+        const existingContainer = el.parentElement.querySelector('.scrub-button-container') ||
+                                 (inputContainer && inputContainer.querySelector('.scrub-button-container'));
         if (existingContainer) {
           existingContainer.remove();
           activeButtons.delete(existingContainer);

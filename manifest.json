@@ -15,7 +15,8 @@
     }
   ],
   "background": {
-    "service_worker": "dist/src/bg.js"
+    "service_worker": "dist/src/bg.js",
+    "scripts": ["dist/src/bg.js"]
   },
   "permissions": [
     "storage",
@@ -54,5 +55,10 @@
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "prompt-scrubber@giresskenn.com"
+    }
   }
 }

@@ -36,9 +36,8 @@ function setRaw(el,txt){
     Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el,txt);
     el.dispatchEvent(new Event('input',{bubbles:true}));
   }else{
-    // For contenteditable elements, preserve line breaks properly
-    const lines = txt.split('\n');
-    el.innerHTML = lines.map(line => line || '<br>').join('<br>');
+    // For contenteditable elements, use innerText to preserve line breaks without adding extra ones
+    el.innerText = txt;
     
     // Trigger input event
     el.dispatchEvent(new Event('input',{bubbles:true}));

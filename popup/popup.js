@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await chrome.storage.local.get('maskedCount');
       const count = result.maskedCount || 0;
       maskedCount.textContent = count.toLocaleString();
+      console.log('[Popup] Loaded masked count:', count);
     } catch (error) {
       console.error('Error loading masked count:', error);
       maskedCount.textContent = '0';
@@ -202,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newCount = currentCount + amount;
       await chrome.storage.local.set({ maskedCount: newCount });
       maskedCount.textContent = newCount.toLocaleString();
+      console.log('[Popup] Incremented masked count from', currentCount, 'to', newCount);
     } catch (error) {
       console.error('Error incrementing masked count:', error);
     }
@@ -398,9 +400,20 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Listen for messages from content script about masked items
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('[Popup] Received message:', message);
     if (message.action === 'incrementMaskedCount') {
       incrementMaskedCount(message.count || 1);
       sendResponse({ success: true });
+      return true; // Keep the message channel open for async response
+    }
+  });
+  
+  // Also listen for storage changes to update the count in real-time
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'local' && changes.maskedCount) {
+      const newCount = changes.maskedCount.newValue || 0;
+      maskedCount.textContent = newCount.toLocaleString();
+      console.log('[Popup] Storage changed, updated count to:', newCount);
     }
   });
 });

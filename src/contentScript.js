@@ -341,12 +341,28 @@ function scrubText(target) {
     toast(`${totalMasked} sensitive item${totalMasked>1?'s':''} masked`);
     
     // Send message to popup to increment the masked count
+    // Use both chrome.runtime.sendMessage (for popup) and storage (for persistence)
+    console.log('[Scrubber] Sending increment message for', totalMasked, 'items');
+    
+    // First, update local storage directly (this ensures persistence)
+    chrome.storage.local.get('maskedCount').then(result => {
+      const currentCount = result.maskedCount || 0;
+      const newCount = currentCount + totalMasked;
+      chrome.storage.local.set({ maskedCount: newCount });
+      console.log('[Scrubber] Updated masked count from', currentCount, 'to', newCount);
+    }).catch(error => {
+      console.error('[Scrubber] Error updating masked count in storage:', error);
+    });
+    
+    // Then try to notify popup if it's open
     chrome.runtime.sendMessage({
       action: 'incrementMaskedCount',
       count: totalMasked
-    }).catch(() => {
-      // If popup is not open, the message will fail silently
-      console.debug('[Scrubber] Could not send message to popup (popup may be closed)');
+    }).then(response => {
+      console.log('[Scrubber] Popup responded:', response);
+    }).catch(error => {
+      // This is expected when popup is closed
+      console.debug('[Scrubber] Could not send message to popup (popup may be closed):', error.message);
     });
   } else {
     toast('No sensitive items detected');

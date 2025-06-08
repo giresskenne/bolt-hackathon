@@ -31,7 +31,7 @@ body {
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   color: var(--text);
   background-color: var(--bg);
-  width: 320px;
+  width: 350px;
   height: 600px;
   overflow: hidden;
 }
@@ -159,15 +159,11 @@ section:last-child {
   background-color: var(--bg-offset);
 }
 
-.settings-link svg:first-child {
-  margin-right: -2px;
-}
-
-.settings-link svg:last-child {
+.arrow-icon {
   transition: transform 0.2s;
 }
 
-.settings-link:hover svg:last-child {
+.settings-link:hover .arrow-icon {
   transform: translate(1px, -1px);
 }
 
@@ -681,17 +677,18 @@ footer {
   border-top: 1px solid var(--border-light);
   flex-shrink: 0;
   background: var(--bg);
+  padding: 12px 16px;
 }
 
 .footer-content {
-  padding: 12px 16px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  margin-bottom: 8px;
 }
 
 .footer-stats {
-  flex: 1;
+  text-align: center;
 }
 
 .footer-text {
@@ -701,7 +698,7 @@ footer {
 }
 
 .footer-version {
-  flex-shrink: 0;
+  text-align: center;
 }
 
 .version-text {

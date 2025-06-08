@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="rule-item">
         <div class="rule-info">
           <div class="rule-value">${escapeHtml(rule.value)}</div>
-          <div class="rule-label"><${escapeHtml(rule.label)}></div>
+          <div class="rule-label">${escapeHtml(rule.label)}</div>
         </div>
         <div class="rule-actions">
           <div class="dropdown" data-index="${index}">

@@ -339,6 +339,15 @@ function scrubText(target) {
     setRaw(target, clean);
     target.style.background = ''; // Remove highlighting after scrubbing
     toast(`${totalMasked} sensitive item${totalMasked>1?'s':''} masked`);
+    
+    // Send message to popup to increment the masked count
+    chrome.runtime.sendMessage({
+      action: 'incrementMaskedCount',
+      count: totalMasked
+    }).catch(() => {
+      // If popup is not open, the message will fail silently
+      console.debug('[Scrubber] Could not send message to popup (popup may be closed)');
+    });
   } else {
     toast('No sensitive items detected');
   }
@@ -371,3 +380,25 @@ document.addEventListener('input', e => {
     el.style.paddingBottom = '';
   }
 }, true);
+
+// Listen for keyboard shortcut (Alt+Shift+S)
+document.addEventListener('keydown', (e) => {
+  if (e.altKey && e.shiftKey && e.key === 'S') {
+    e.preventDefault();
+    
+    // Find the currently focused text input
+    const activeElement = document.activeElement;
+    if (isTextInput(activeElement)) {
+      scrubText(activeElement);
+      autoHighlightSensitive(activeElement);
+    } else {
+      // If no text input is focused, try to find the last active one
+      if (lastActive && document.contains(lastActive)) {
+        scrubText(lastActive);
+        autoHighlightSensitive(lastActive);
+      } else {
+        toast('No active text field found');
+      }
+    }
+  }
+});

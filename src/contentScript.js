@@ -114,6 +114,28 @@ function setRaw(el, txt) {
   }
 }
 
+/* Smart theme detection function */
+function getThemeAwareBackground() {
+  // Check if user prefers dark mode
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  // Also check for common dark mode indicators in the DOM
+  const bodyClasses = document.body.className.toLowerCase();
+  const htmlClasses = document.documentElement.className.toLowerCase();
+  const isDarkMode = prefersDark || 
+                     bodyClasses.includes('dark') || 
+                     htmlClasses.includes('dark') ||
+                     bodyClasses.includes('theme-dark') ||
+                     htmlClasses.includes('theme-dark');
+  
+  // Return appropriate gradient based on theme
+  if (isDarkMode) {
+    return 'linear-gradient(90deg, #2a2a2a 0%, #3a1a1a 100%)';
+  } else {
+    return 'linear-gradient(90deg, #fff 0%, #fff5f5 100%)';
+  }
+}
+
 /* main input handler */
 let lastActive = null;
 let underlineState = new Map();
@@ -275,7 +297,7 @@ document.addEventListener('focus', (e) => {
   }
 }, true);
 
-// Automatically highlight sensitive info
+// Automatically highlight sensitive info with theme-aware background
 async function autoHighlightSensitive(el) {
   if (!scrubberEnabled || !el) return;
   
@@ -293,14 +315,8 @@ async function autoHighlightSensitive(el) {
   
   // Apply highlighting only if sensitive data is found
   if (totalSensitive > 0) {
-    const host = window.location.hostname;
-    if (host.includes('chat.openai.com')) {
-      el.style.background = 'linear-gradient(90deg, #fff 0%, #fff5f5 100%)';
-    } else if (host.includes('claude.ai')) {
-      el.style.background = 'linear-gradient(90deg, #fff 0%, #fff5f5 100%)';
-    } else {
-      el.style.background = 'linear-gradient(90deg, #fff 0%, #fff5f5 100%)';
-    }
+    // Use smart theme detection for background
+    el.style.background = getThemeAwareBackground();
   } else {
     el.style.background = '';
   }

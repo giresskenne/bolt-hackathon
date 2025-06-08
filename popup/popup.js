@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // State
   let customRules = [];
   let activeDropdown = null;
+  let isInitialized = false;
+  
+  // Debug logging
+  console.log('[Popup] DOM loaded, initializing...');
+  console.log('[Popup] Toggle element found:', !!toggleElement);
   
   // Initialize
   loadCustomRules();
@@ -91,55 +96,94 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('onboardingDismissed', 'true');
   }
   
-  function initializeProtectionToggle() {
+  async function initializeProtectionToggle() {
     console.log('[Popup] Initializing protection toggle...');
     
-    // Load current state from storage
-    chrome.storage.sync.get('enabled').then(result => {
-      const enabled = result.hasOwnProperty('enabled') ? result.enabled : true;
-      console.log('[Popup] Loaded enabled state:', enabled);
-      toggleElement.checked = enabled;
-    }).catch(error => {
-      console.log('[Popup] Sync storage not available, trying local storage');
-      // Fallback to local storage
-      chrome.storage.local.get('enabled').then(result => {
-        const enabled = result.hasOwnProperty('enabled') ? result.enabled : true;
-        console.log('[Popup] Loaded enabled state from local:', enabled);
-        toggleElement.checked = enabled;
-      });
-    });
+    if (!toggleElement) {
+      console.error('[Popup] Toggle element not found!');
+      return;
+    }
     
-    // Add change event listener
-    toggleElement.addEventListener('change', handleToggleChange);
+    try {
+      // Load current state from storage (try sync first)
+      let enabled = true; // default value
+      
+      try {
+        const syncResult = await chrome.storage.sync.get('enabled');
+        enabled = syncResult.hasOwnProperty('enabled') ? syncResult.enabled : true;
+        console.log('[Popup] Loaded enabled state from sync:', enabled);
+      } catch (syncError) {
+        console.log('[Popup] Sync storage not available, trying local storage');
+        try {
+          const localResult = await chrome.storage.local.get('enabled');
+          enabled = localResult.hasOwnProperty('enabled') ? localResult.enabled : true;
+          console.log('[Popup] Loaded enabled state from local:', enabled);
+        } catch (localError) {
+          console.error('[Popup] Both sync and local storage failed:', localError);
+          enabled = true; // fallback to default
+        }
+      }
+      
+      // Set the toggle state
+      toggleElement.checked = enabled;
+      console.log('[Popup] Set toggle checked to:', enabled);
+      
+      // Add change event listener (remove any existing ones first)
+      toggleElement.removeEventListener('change', handleToggleChange);
+      toggleElement.addEventListener('change', handleToggleChange);
+      console.log('[Popup] Added toggle change listener');
+      
+      isInitialized = true;
+      
+    } catch (error) {
+      console.error('[Popup] Error initializing toggle:', error);
+    }
   }
   
-  function handleToggleChange() {
+  async function handleToggleChange(event) {
+    if (!isInitialized) {
+      console.log('[Popup] Toggle not initialized yet, ignoring change');
+      return;
+    }
+    
     const enabled = toggleElement.checked;
     console.log('[Popup] Toggle changed to:', enabled);
     
-    // Save to storage (try sync first, fallback to local)
-    chrome.storage.sync.set({ enabled }).then(() => {
-      console.log('[Popup] Saved enabled state to sync storage:', enabled);
-    }).catch(error => {
-      console.log('[Popup] Sync storage failed, using local storage');
-      chrome.storage.local.set({ enabled });
-    });
-    
-    // Notify all content scripts
-    chrome.tabs.query({}).then(tabs => {
+    try {
+      // Save to storage (try sync first, fallback to local)
+      try {
+        await chrome.storage.sync.set({ enabled });
+        console.log('[Popup] Saved enabled state to sync storage:', enabled);
+      } catch (syncError) {
+        console.log('[Popup] Sync storage failed, using local storage');
+        await chrome.storage.local.set({ enabled });
+        console.log('[Popup] Saved enabled state to local storage:', enabled);
+      }
+      
+      // Notify all content scripts
+      const tabs = await chrome.tabs.query({});
       console.log('[Popup] Notifying', tabs.length, 'tabs of state change');
-      tabs.forEach(tab => {
-        chrome.tabs.sendMessage(tab.id, { 
-          action: 'setState', 
-          enabled 
-        }).then(response => {
+      
+      let notifiedCount = 0;
+      for (const tab of tabs) {
+        try {
+          const response = await chrome.tabs.sendMessage(tab.id, { 
+            action: 'setState', 
+            enabled 
+          });
           console.log('[Popup] Tab', tab.id, 'responded:', response);
-        }).catch(error => {
+          notifiedCount++;
+        } catch (error) {
           // This is expected for tabs where content script isn't loaded
           console.debug('[Popup] Could not notify tab', tab.id, ':', error.message);
-        });
-      });
-    });
+        }
+      }
+      
+      console.log('[Popup] Successfully notified', notifiedCount, 'tabs');
+      
+    } catch (error) {
+      console.error('[Popup] Error handling toggle change:', error);
+    }
   }
   
   async function loadBuiltInPatternCount() {
@@ -448,9 +492,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((namespace === 'sync' || namespace === 'local') && changes.enabled) {
       const newEnabled = changes.enabled.newValue;
       console.log('[Popup] Enabled state changed in storage:', newEnabled);
-      if (toggleElement.checked !== newEnabled) {
+      if (toggleElement && toggleElement.checked !== newEnabled) {
         toggleElement.checked = newEnabled;
       }
     }
   });
+  
+  // Add a test function to debug the toggle
+  window.testToggle = function() {
+    console.log('[Popup] Testing toggle...');
+    console.log('Toggle element:', toggleElement);
+    console.log('Toggle checked:', toggleElement?.checked);
+    console.log('Is initialized:', isInitialized);
+    
+    if (toggleElement) {
+      // Manually trigger a change
+      toggleElement.checked = !toggleElement.checked;
+      handleToggleChange();
+    }
+  };
 });

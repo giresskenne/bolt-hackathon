@@ -12,43 +12,78 @@
       <div class="logo">
         <img src="../icons/logo.png" alt="Security shield icon with alert symbol" width="24" height="24">
         <h1>Prompt-Scrubber</h1>
-        <button id="settingsBtn" class="icon-button" aria-label="Custom Rules" title="Custom Rules">
-          <img src="../icons/settings.png" alt="" width="16" height="16">
-        </button>
+        <div class="plan-badge">Free</div>
       </div>
     </header>
     
     <main>
       <div id="mainView">
-        <div class="status">
-          <p>Automatically hide confidential information as you type, while offering you the freedom to set your own custom rules </p>
-        </div>
-
-        <div class="spacer" style="height: 12px"></div>
-        
-        <div class="toggle-container">
-          <label for="toggle" class="toggle-label">
-            <span>Protection</span>
+        <!-- Quick Settings Section -->
+        <section class="quick-settings">
+          <div class="section-header">
+            <h2>Quick Settings</h2>
+            <button id="settingsBtn" class="settings-link" aria-label="Custom Rules">
+              All Settings
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M7 17L17 7M17 7H7M17 7V17"/>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-title">Mask secrets and PII as you type</div>
+              <div class="setting-description">on chat.openai.com, claude.ai, and other sites</div>
+            </div>
             <div class="toggle-switch">
               <input type="checkbox" id="toggle" checked>
               <span class="slider"></span>
             </div>
-            <span id="toggle-status">Enabled</span>
-          </label>
-        </div>
-        
-        <div class="spacer" style="height: 5px"></div>
+          </div>
+        </section>
 
-        <div class="protection-info">
-          <h2>Protected Patterns:</h2>
-          <ul>
-            <li>API Keys (AWS, OpenAI)</li>
-            <li>Auth Tokens</li>
-            <li>Email Addresses</li>
-            <li>Credit Card Numbers</li>
-            <li>Custom Rules: <span id="customRuleCount">0</span></li>
-          </ul>
-        </div>
+        <!-- Protection Summary -->
+        <section class="protection-summary">
+          <h3>Protection Summary</h3>
+          <div class="protection-stats">
+            <div class="stat-item">
+              <div class="stat-number">5</div>
+              <div class="stat-label">Built-in patterns</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <div class="stat-number" id="customRuleCount">0</div>
+              <div class="stat-label">Custom mappings</div>
+            </div>
+          </div>
+          
+          <div class="protected-patterns">
+            <div class="pattern-category">
+              <h4>Protected Information:</h4>
+              <ul class="pattern-list">
+                <li>API Keys & Tokens</li>
+                <li>Email Addresses</li>
+                <li>Credit Card Numbers</li>
+                <li>Custom Mappings</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Shortcuts Section -->
+        <section class="shortcuts-section">
+          <h3>Shortcuts</h3>
+          <p class="shortcuts-description">Use keyboard shortcuts to quickly mask sensitive content while typing.</p>
+          
+          <div class="shortcut-item">
+            <div class="shortcut-info">
+              <div class="shortcut-title">Scrub Current Text</div>
+            </div>
+            <div class="shortcut-keys">
+              <kbd>Alt</kbd> <kbd>Shift</kbd> <kbd>S</kbd>
+            </div>
+          </div>
+        </section>
       </div>
 
       <div id="settingsView" class="hidden">
@@ -92,7 +127,26 @@
     </main>
     
     <footer>
-      <p>Version 1.0</p>
+      <div class="footer-content">
+        <div class="footer-stats">
+          <span class="footer-text">Prompt-Scrubber has been protecting your data since installation.</span>
+        </div>
+        <div class="footer-actions">
+          <button class="footer-button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6"/>
+            </svg>
+            New Document
+          </button>
+          <button class="footer-button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            </svg>
+            My Prompt-Scrubber
+          </button>
+        </div>
+      </div>
     </footer>
   </div>
   

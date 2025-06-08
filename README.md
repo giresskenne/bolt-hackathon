@@ -1,51 +1,178 @@
 # Prompt-Scrubber
 
-Masks secrets/PII inside chat and textarea fields in real time.
+A powerful Chrome extension that automatically detects and masks sensitive information like API keys, tokens, emails, credit card numbers, and personally identifiable information (PII) in text input fields as you type.
 
-Prompt-Scrubber is a Chrome extension that automatically detects and masks sensitive information like API keys, tokens, emails, and credit card numbers in text input fields as you type.
+## 🚀 Features
 
-## Installation
+### Real-Time Protection
+- **Automatic Detection**: Instantly identifies sensitive data as you type in any text field
+- **Visual Feedback**: Smart theme-aware highlighting that adapts to light and dark modes
+- **One-Click Scrubbing**: Clean button to mask all detected sensitive information
+- **Universal Compatibility**: Works across all major AI platforms (ChatGPT, Claude, Gemini, Copilot) and any website
 
-To install the extension in development mode:
+### Comprehensive Pattern Detection
 
-1. Clone or download this repository
-2. Open Chrome and navigate to `chrome://extensions`
-3. Enable "Developer mode" in the top-right corner
-4. Click "Load unpacked" and select the extension directory
-5. The extension should now be active
+**Cloud & API Secrets:**
+- AWS Access Keys, Secret Keys, Account IDs, ARNs, VPC/EC2 IDs
+- GitHub & GitLab Personal Access Tokens
+- Stripe API Keys (live & test)
+- Slack Bot Tokens
+- Google API Keys
+- JWT Tokens
+- Basic Auth Headers
 
-## Features
+**Personal Identifiers:**
+- Email addresses (all formats)
+- Phone numbers (US/Canada with dots, dashes, spaces, parentheses)
+- Social Security Numbers (US format)
+- Social Insurance Numbers (Canadian format)
+- Passport numbers
+- Credit card numbers (Visa, MasterCard, AmEx, Discover)
+- IBAN bank account numbers
 
-- Real-time detection and masking of sensitive information
-- Works with textarea elements and contenteditable fields (like chat boxes)
-- Toggle to enable/disable protection
-- Visual feedback when sensitive content is detected
+**Network & Infrastructure:**
+- IPv4 and IPv6 addresses
+- Private network ranges (RFC1918)
+- Internal FQDNs (.corp, .internal, .local, .lan)
+- URLs with embedded credentials
+- RDS endpoints
+- CloudWatch log group ARNs
 
-## Protected Patterns
+**System Identifiers:**
+- UUIDs (v4 format)
+- Kubernetes secrets
+- Environment variable exports
+- Database connection strings
 
-The extension currently detects and masks the following patterns:
+### Smart Features
+- **Theme Detection**: Automatically adapts highlighting colors for light and dark modes
+- **Custom Rules**: Add your own patterns for organization-specific sensitive data
+- **Keyboard Shortcuts**: Alt+Shift+S to quickly scrub current text
+- **Privacy First**: All processing happens locally - no data sent to servers
+- **Statistics Tracking**: Monitor how many sensitive items have been protected
 
-1. **AWS API Keys**: `AKIA[0-9A-Z]{16}`
-2. **API Tokens**: `\b[0-9a-fA-F]{32,}\b`
-3. **Email Addresses**: `\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`
-4. **Credit Card Numbers**: `\b(?:\d[ -]*?){13,16}\b`
-5. **OpenAI API Keys**: `sk-[a-zA-Z0-9]{32,}`
+### User Interface
+- **Popup Dashboard**: View protection summary and manage settings
+- **Custom Mappings**: Create personalized rules for your specific use cases
+- **Toggle Control**: Easily enable/disable protection
+- **Visual Indicators**: Clear feedback when sensitive content is detected
 
-## Customization
+## 🛠 Installation
 
-To add or modify the patterns:
+### For Development
+1. Clone this repository
+2. Run `npm install` to install dependencies
+3. Run `npm run build` to build the extension
+4. Open Chrome and navigate to `chrome://extensions`
+5. Enable "Developer mode" in the top-right corner
+6. Click "Load unpacked" and select the extension directory
+7. The extension will be active and ready to protect your sensitive data
 
-1. Open `scripts/config.js`
-2. Add or modify entries in the `patterns` array
-3. Each pattern should include:
-   - `name`: A descriptive name
-   - `regex`: The regular expression to match
-   - `replacement`: The text to replace matches with
+### For Production
+*Coming soon to Chrome Web Store*
 
-## Privacy
+## 🎯 How It Works
 
-All detection and masking happens locally in your browser. No data is sent to any server.
+1. **Detection**: As you type in any text field, the extension scans for sensitive patterns
+2. **Highlighting**: Detected sensitive content triggers subtle visual feedback
+3. **Protection**: Click the "Scrub" button to instantly mask all sensitive information
+4. **Customization**: Add custom rules for organization-specific patterns
 
-## License
+## 🔧 Customization
 
-MIT
+### Adding Custom Rules
+1. Click the extension icon in your browser toolbar
+2. Navigate to "All Settings" → "Custom PII Rules"
+3. Add your custom patterns:
+   - **Value to Replace**: The exact text you want masked
+   - **Label**: A friendly name for the replacement (e.g., "my-api-key")
+
+Example:
+- Value: `my-secret-token-12345`
+- Label: `company-token`
+- Result: `<company-token>` replaces the original value
+
+### Keyboard Shortcuts
+- **Alt+Shift+S**: Scrub sensitive content in the currently focused text field
+
+## 🔒 Privacy & Security
+
+- **100% Local Processing**: All detection and masking happens in your browser
+- **No Data Collection**: We never see, store, or transmit your sensitive information
+- **Open Source**: Full transparency - review the code yourself
+- **Secure Storage**: Custom rules are stored locally using Chrome's secure storage APIs
+
+## 🌐 Supported Platforms
+
+**AI Platforms:**
+- ChatGPT (chat.openai.com)
+- Claude (claude.ai)
+- Google Gemini (gemini.google.com)
+- GitHub Copilot
+- And any other website with text inputs
+
+**Input Types:**
+- Textarea elements
+- Contenteditable fields
+- Rich text editors
+- Chat interfaces
+
+## 📊 Pattern Examples
+
+The extension detects patterns like:
+```
+AWS Keys: AKIAIOSFODNN7EXAMPLE
+Emails: user@company.com
+Phones: 555.123.4567, (555) 123-4567, +1-555-123-4567
+SSNs: 123-45-6789
+Credit Cards: 4111-1111-1111-1111
+IPs: 192.168.1.100
+JWTs: eyJhbGciOiJIUzI1NiIs...
+```
+
+## 🚧 Development
+
+### Build Commands
+```bash
+npm run build    # Production build
+npm run dev      # Development build with watch mode
+npm run gen      # Generate pattern rules from JSON
+```
+
+### Project Structure
+```
+src/
+├── contentScript.js    # Main content script
+├── bg.js              # Background service worker
+├── redactor.js        # Pattern matching engine
+├── patterns.json      # Sensitive data patterns
+└── gen/               # Generated files
+
+popup/
+├── popup.html         # Extension popup interface
+├── popup.js           # Popup functionality
+└── popup.css          # Popup styling
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please feel free to:
+- Report bugs and issues
+- Suggest new patterns or features
+- Submit pull requests
+- Improve documentation
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🔄 Version History
+
+- **v0.2.0**: Enhanced phone number detection, theme-aware highlighting
+- **v0.1.0**: Initial release with core pattern detection
+
+---
+
+**Stay Safe, Stay Private** 🛡️
+
+Prompt-Scrubber helps you maintain privacy and security when working with AI tools and web applications. Never accidentally share sensitive information again!

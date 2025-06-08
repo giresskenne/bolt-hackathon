@@ -3,7 +3,7 @@
  */
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
-  const toggleElement = document.getElementById('toggle');
+  const toggleElement = document.getElementById('protectionToggle');
   const settingsBtn = document.getElementById('settingsBtn');
   const backBtn = document.getElementById('backBtn');
   const mainView = document.getElementById('mainView');
@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Debug logging
   console.log('[Popup] DOM loaded, initializing...');
   console.log('[Popup] Toggle element found:', !!toggleElement);
+  console.log('[Popup] Toggle element ID:', toggleElement?.id);
   
   // Initialize
   loadCustomRules();
@@ -100,7 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[Popup] Initializing protection toggle...');
     
     if (!toggleElement) {
-      console.error('[Popup] Toggle element not found!');
+      console.error('[Popup] Toggle element not found! Looking for ID: protectionToggle');
+      console.log('[Popup] Available elements with IDs:', 
+        Array.from(document.querySelectorAll('[id]')).map(el => el.id));
       return;
     }
     
@@ -134,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('[Popup] Added toggle change listener');
       
       isInitialized = true;
+      console.log('[Popup] Toggle initialization complete');
       
     } catch (error) {
       console.error('[Popup] Error initializing toggle:', error);
@@ -141,6 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   async function handleToggleChange(event) {
+    console.log('[Popup] Toggle change event triggered');
+    console.log('[Popup] Event target:', event.target);
+    console.log('[Popup] Is initialized:', isInitialized);
+    
     if (!isInitialized) {
       console.log('[Popup] Toggle not initialized yet, ignoring change');
       return;
@@ -193,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       const count = data.identifiers ? data.identifiers.length : 0;
       builtInPatternCount.textContent = count;
+      console.log('[Popup] Loaded built-in pattern count:', count);
     } catch (error) {
       console.error('Error loading built-in pattern count:', error);
       // Fallback to a reasonable default
@@ -508,7 +517,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleElement) {
       // Manually trigger a change
       toggleElement.checked = !toggleElement.checked;
-      handleToggleChange();
+      handleToggleChange({ target: toggleElement });
+    }
+  };
+  
+  // Add manual click test
+  window.clickToggle = function() {
+    console.log('[Popup] Manually clicking toggle...');
+    if (toggleElement) {
+      toggleElement.click();
     }
   };
 });

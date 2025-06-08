@@ -367,39 +367,50 @@ input:checked + .slider:before {
   background-color: var(--primary-dark);
 }
 
-/* Rules list */
+/* Rules list - Updated styling to match design */
 .rule-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  margin-bottom: 8px;
-  flex-shrink: 0; /* Prevent rule items from shrinking */
+  padding: 12px 0;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.rule-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background-color: var(--border);
 }
 
 .rule-item .rule-info {
   flex-grow: 1;
-  min-width: 0; /* Allow text to wrap/truncate */
-}
-
-.rule-item .rule-label {
-  font-weight: 500;
-  font-size: 14px;
-  word-break: break-word; /* Handle long labels */
+  min-width: 0;
 }
 
 .rule-item .rule-value {
-  font-size: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text);
+  word-break: break-word;
+  margin-bottom: 2px;
+}
+
+.rule-item .rule-label {
+  font-size: 13px;
   color: var(--text-light);
-  word-break: break-word; /* Handle long values */
+  word-break: break-word;
 }
 
 .rule-actions {
   display: flex;
   gap: 4px;
-  flex-shrink: 0; /* Prevent actions from shrinking */
+  flex-shrink: 0;
+  margin-left: 12px;
 }
 
 .rule-actions button {

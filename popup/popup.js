@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const rulesList = document.getElementById('rulesList');
   const addRuleForm = document.getElementById('addRuleForm');
   const customRuleCount = document.getElementById('customRuleCount');
+  const builtInPatternCount = document.getElementById('builtInPatternCount');
   const syncStatus = document.getElementById('syncStatus');
   const onboardingBanner = document.getElementById('onboardingBanner');
   const onboardingAddBtn = document.getElementById('onboardingAddBtn');
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCustomRules();
   initializeProtectionToggle();
   loadMaskedCount();
+  loadBuiltInPatternCount();
   
   // Event Listeners
   settingsBtn.addEventListener('click', showSettings);
@@ -110,6 +112,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     });
+  }
+  
+  async function loadBuiltInPatternCount() {
+    try {
+      // Load the patterns.json file to count built-in patterns
+      const response = await fetch(chrome.runtime.getURL('src/patterns.json'));
+      const data = await response.json();
+      const count = data.identifiers ? data.identifiers.length : 0;
+      builtInPatternCount.textContent = count;
+    } catch (error) {
+      console.error('Error loading built-in pattern count:', error);
+      // Fallback to a reasonable default
+      builtInPatternCount.textContent = '30+';
+    }
   }
   
   async function loadCustomRules() {

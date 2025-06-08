@@ -4,7 +4,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
   const toggleElement = document.getElementById('toggle');
-  const toggleStatus = document.getElementById('toggle-status');
   const settingsBtn = document.getElementById('settingsBtn');
   const backBtn = document.getElementById('backBtn');
   const mainView = document.getElementById('mainView');
@@ -20,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const labelError = document.getElementById('labelError');
   const ruleValueInput = document.getElementById('ruleValue');
   const ruleLabelInput = document.getElementById('ruleLabel');
+  const maskedCount = document.getElementById('maskedCount');
   
   // State
   let customRules = [];
@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize
   loadCustomRules();
   initializeProtectionToggle();
+  loadMaskedCount();
   
   // Event Listeners
   settingsBtn.addEventListener('click', showSettings);
@@ -92,12 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.sync.get('enabled', result => {
       const enabled = result.hasOwnProperty('enabled') ? result.enabled : true;
       toggleElement.checked = enabled;
-      updateToggleStatus(enabled);
     });
     
     toggleElement.addEventListener('change', () => {
       const enabled = toggleElement.checked;
-      updateToggleStatus(enabled);
       chrome.storage.sync.set({ enabled });
       
       chrome.tabs.query({}, tabs => {
@@ -111,11 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
     });
-  }
-  
-  function updateToggleStatus(enabled) {
-    toggleStatus.textContent = enabled ? 'Enabled' : 'Disabled';
-    toggleStatus.className = enabled ? '' : 'disabled';
   }
   
   async function loadCustomRules() {
@@ -171,6 +165,29 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Error checking storage quota:', error);
+    }
+  }
+  
+  async function loadMaskedCount() {
+    try {
+      const result = await chrome.storage.local.get('maskedCount');
+      const count = result.maskedCount || 0;
+      maskedCount.textContent = count.toLocaleString();
+    } catch (error) {
+      console.error('Error loading masked count:', error);
+      maskedCount.textContent = '0';
+    }
+  }
+  
+  async function incrementMaskedCount(amount = 1) {
+    try {
+      const result = await chrome.storage.local.get('maskedCount');
+      const currentCount = result.maskedCount || 0;
+      const newCount = currentCount + amount;
+      await chrome.storage.local.set({ maskedCount: newCount });
+      maskedCount.textContent = newCount.toLocaleString();
+    } catch (error) {
+      console.error('Error incrementing masked count:', error);
     }
   }
   
@@ -360,6 +377,13 @@ document.addEventListener('DOMContentLoaded', () => {
     addRuleForm.reset();
     clearAllErrors();
     
-    showToast('Mappings synced');
+    showToast('Mapping added successfully');
   }
+  
+  // Listen for messages from content script about masked items
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'incrementMaskedCount') {
+      incrementMaskedCount(message.count || 1);
+    }
+  });
 });

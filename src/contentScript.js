@@ -145,28 +145,65 @@ let activeButtons = new Set();
 
 // Initialize state
 async function initializeState() {
+  console.log('[Scrubber] Initializing content script state...');
   try {
     const syncData = await chrome.storage.sync.get(['enabled', 'customRules']);
     scrubberEnabled = syncData.hasOwnProperty('enabled') ? syncData.enabled : true;
     customRules = syncData.customRules || [];
+    console.log('[Scrubber] Loaded from sync storage - enabled:', scrubberEnabled, 'rules:', customRules.length);
   } catch (error) {
     console.log('[Scrubber] Falling back to local storage');
     const localData = await chrome.storage.local.get(['enabled', 'customRules']);
     scrubberEnabled = localData.hasOwnProperty('enabled') ? localData.enabled : true;
     customRules = localData.customRules || [];
+    console.log('[Scrubber] Loaded from local storage - enabled:', scrubberEnabled, 'rules:', customRules.length);
   }
 }
 
 initializeState();
 
 // Listen for messages from popup
-chrome.runtime.onMessage.addListener((msg, _sender, _sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  console.log('[Scrubber] Received message:', msg);
+  
   if (msg?.action === 'setState' && typeof msg.enabled === 'boolean') {
+    console.log('[Scrubber] Setting enabled state to:', msg.enabled);
     scrubberEnabled = msg.enabled;
     if (lastActive) autoHighlightSensitive(lastActive);
+    sendResponse({ success: true, enabled: scrubberEnabled });
+    return true;
   }
+  
   if (msg?.action === 'updateCustomRules' && Array.isArray(msg.rules)) {
+    console.log('[Scrubber] Updating custom rules:', msg.rules.length);
     customRules = msg.rules;
+    if (lastActive) autoHighlightSensitive(lastActive);
+    sendResponse({ success: true, rulesCount: customRules.length });
+    return true;
+  }
+  
+  // Send back current state if requested
+  if (msg?.action === 'getState') {
+    sendResponse({ enabled: scrubberEnabled, rulesCount: customRules.length });
+    return true;
+  }
+});
+
+// Listen for storage changes
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  console.log('[Scrubber] Storage changed:', changes, 'namespace:', namespace);
+  
+  if ((namespace === 'sync' || namespace === 'local') && changes.enabled) {
+    const newEnabled = changes.enabled.newValue;
+    console.log('[Scrubber] Enabled state changed to:', newEnabled);
+    scrubberEnabled = newEnabled;
+    if (lastActive) autoHighlightSensitive(lastActive);
+  }
+  
+  if ((namespace === 'sync' || namespace === 'local') && changes.customRules) {
+    const newRules = changes.customRules.newValue || [];
+    console.log('[Scrubber] Custom rules changed:', newRules.length);
+    customRules = newRules;
     if (lastActive) autoHighlightSensitive(lastActive);
   }
 });

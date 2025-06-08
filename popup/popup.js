@@ -92,23 +92,51 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function initializeProtectionToggle() {
-    chrome.storage.sync.get('enabled', result => {
+    console.log('[Popup] Initializing protection toggle...');
+    
+    // Load current state from storage
+    chrome.storage.sync.get('enabled').then(result => {
       const enabled = result.hasOwnProperty('enabled') ? result.enabled : true;
+      console.log('[Popup] Loaded enabled state:', enabled);
       toggleElement.checked = enabled;
+    }).catch(error => {
+      console.log('[Popup] Sync storage not available, trying local storage');
+      // Fallback to local storage
+      chrome.storage.local.get('enabled').then(result => {
+        const enabled = result.hasOwnProperty('enabled') ? result.enabled : true;
+        console.log('[Popup] Loaded enabled state from local:', enabled);
+        toggleElement.checked = enabled;
+      });
     });
     
-    toggleElement.addEventListener('change', () => {
-      const enabled = toggleElement.checked;
-      chrome.storage.sync.set({ enabled });
-      
-      chrome.tabs.query({}, tabs => {
-        tabs.forEach(tab => {
-          chrome.tabs.sendMessage(tab.id, { 
-            action: 'setState', 
-            enabled 
-          }).catch(() => {
-            // Ignore errors for tabs where content script isn't loaded
-          });
+    // Add change event listener
+    toggleElement.addEventListener('change', handleToggleChange);
+  }
+  
+  function handleToggleChange() {
+    const enabled = toggleElement.checked;
+    console.log('[Popup] Toggle changed to:', enabled);
+    
+    // Save to storage (try sync first, fallback to local)
+    chrome.storage.sync.set({ enabled }).then(() => {
+      console.log('[Popup] Saved enabled state to sync storage:', enabled);
+    }).catch(error => {
+      console.log('[Popup] Sync storage failed, using local storage');
+      chrome.storage.local.set({ enabled });
+    });
+    
+    // Notify all content scripts
+    chrome.tabs.query({}).then(tabs => {
+      console.log('[Popup] Notifying', tabs.length, 'tabs of state change');
+      tabs.forEach(tab => {
+        chrome.tabs.sendMessage(tab.id, { 
+          action: 'setState', 
+          enabled 
+        }).then(response => {
+          console.log('[Popup] Tab', tab.id, 'responded:', response);
+        }).catch(error => {
+          // This is expected for tabs where content script isn't loaded
+          console.debug('[Popup] Could not notify tab', tab.id, ':', error.message);
         });
       });
     });
@@ -414,6 +442,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const newCount = changes.maskedCount.newValue || 0;
       maskedCount.textContent = newCount.toLocaleString();
       console.log('[Popup] Storage changed, updated count to:', newCount);
+    }
+    
+    // Listen for enabled state changes
+    if ((namespace === 'sync' || namespace === 'local') && changes.enabled) {
+      const newEnabled = changes.enabled.newValue;
+      console.log('[Popup] Enabled state changed in storage:', newEnabled);
+      if (toggleElement.checked !== newEnabled) {
+        toggleElement.checked = newEnabled;
+      }
     }
   });
 });

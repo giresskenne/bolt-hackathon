@@ -167,12 +167,21 @@ section:last-child {
   transform: translate(1px, -1px);
 }
 
-/* Setting item */
-.setting-item {
+/* Toggle container styles */
+.toggle-container {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+}
+
+.toggle-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex: 1;
+  cursor: pointer;
 }
 
 .setting-info {
@@ -243,6 +252,18 @@ input:focus + .slider {
 
 input:checked + .slider:before {
   transform: translateX(20px);
+}
+
+/* Toggle status */
+#toggle-status {
+  font-size: 13px;
+  color: var(--text-light);
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+#toggle-status.disabled {
+  color: var(--alert);
 }
 
 /* Protection Summary */

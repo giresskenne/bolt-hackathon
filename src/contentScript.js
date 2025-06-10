@@ -114,19 +114,55 @@ function setRaw(el, txt) {
   }
 }
 
-/* Smart theme detection function */
+/* Enhanced theme detection function with automatic updates */
 function getThemeAwareBackground() {
-  // Check if user prefers dark mode
+  // Primary detection: system preference
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   
-  // Also check for common dark mode indicators in the DOM
+  // Secondary detection: check DOM for dark mode indicators
   const bodyClasses = document.body.className.toLowerCase();
   const htmlClasses = document.documentElement.className.toLowerCase();
+  const bodyStyle = window.getComputedStyle(document.body);
+  const htmlStyle = window.getComputedStyle(document.documentElement);
+  
+  // Check for common dark mode class patterns
+  const hasDarkClass = bodyClasses.includes('dark') || 
+                       htmlClasses.includes('dark') ||
+                       bodyClasses.includes('theme-dark') ||
+                       htmlClasses.includes('theme-dark') ||
+                       bodyClasses.includes('dark-mode') ||
+                       htmlClasses.includes('dark-mode');
+  
+  // Check background colors to detect dark themes
+  const bodyBg = bodyStyle.backgroundColor;
+  const htmlBg = htmlStyle.backgroundColor;
+  
+  // Parse RGB values to detect dark backgrounds
+  const isDarkBackground = (bgColor) => {
+    if (!bgColor || bgColor === 'transparent' || bgColor === 'rgba(0, 0, 0, 0)') return false;
+    
+    const rgb = bgColor.match(/\d+/g);
+    if (rgb && rgb.length >= 3) {
+      const [r, g, b] = rgb.map(Number);
+      // Calculate luminance - if it's low, it's a dark background
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance < 0.5;
+    }
+    return false;
+  };
+  
   const isDarkMode = prefersDark || 
-                     bodyClasses.includes('dark') || 
-                     htmlClasses.includes('dark') ||
-                     bodyClasses.includes('theme-dark') ||
-                     htmlClasses.includes('theme-dark');
+                     hasDarkClass || 
+                     isDarkBackground(bodyBg) || 
+                     isDarkBackground(htmlBg);
+  
+  console.log('[Scrubber] Theme detection:', {
+    prefersDark,
+    hasDarkClass,
+    bodyBg,
+    htmlBg,
+    isDarkMode
+  });
   
   // Return appropriate gradient based on theme
   if (isDarkMode) {
@@ -134,6 +170,58 @@ function getThemeAwareBackground() {
   } else {
     return 'linear-gradient(90deg, #fff 0%, #fff5f5 100%)';
   }
+}
+
+// Set up theme change listener for automatic updates
+let themeMediaQuery = null;
+
+function setupThemeListener() {
+  // Listen for system theme changes
+  if (window.matchMedia) {
+    themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleThemeChange = (e) => {
+      console.log('[Scrubber] System theme changed to:', e.matches ? 'dark' : 'light');
+      // Re-apply highlighting to current active element if any
+      if (lastActive && scrubberEnabled) {
+        autoHighlightSensitive(lastActive);
+      }
+    };
+    
+    // Modern browsers
+    if (themeMediaQuery.addEventListener) {
+      themeMediaQuery.addEventListener('change', handleThemeChange);
+    } else {
+      // Fallback for older browsers
+      themeMediaQuery.addListener(handleThemeChange);
+    }
+  }
+  
+  // Also listen for class changes on body/html that might indicate theme changes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && 
+          (mutation.attributeName === 'class' || mutation.attributeName === 'style')) {
+        // Debounce theme updates
+        clearTimeout(observer.themeTimeout);
+        observer.themeTimeout = setTimeout(() => {
+          if (lastActive && scrubberEnabled) {
+            autoHighlightSensitive(lastActive);
+          }
+        }, 100);
+      }
+    });
+  });
+  
+  observer.observe(document.body, { 
+    attributes: true, 
+    attributeFilter: ['class', 'style'] 
+  });
+  
+  observer.observe(document.documentElement, { 
+    attributes: true, 
+    attributeFilter: ['class', 'style'] 
+  });
 }
 
 /* main input handler */
@@ -158,6 +246,9 @@ async function initializeState() {
     customRules = localData.customRules || [];
     console.log('[Scrubber] Loaded from local storage - enabled:', scrubberEnabled, 'rules:', customRules.length);
   }
+  
+  // Set up theme change listener
+  setupThemeListener();
 }
 
 initializeState();

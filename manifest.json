@@ -23,16 +23,10 @@
   "permissions": [
     "storage",
     "unlimitedStorage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
-  "action": {
-    "default_popup": "popup/popup.html",
-    "default_icon": {
-      "16": "icons/icon-16.png",
-      "48": "icons/icon-48.png",
-      "128": "icons/icon-128.png"
-    }
-  },
+  "action": {},
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
     {
@@ -40,7 +34,8 @@
         "icons/logo.png",
         "icons/settings.png",
         "src/detectorWorker.js",
-        "src/patterns.json"
+        "src/patterns.json",
+        "src/roundedPopup.js"
       ],
       "matches": ["<all_urls>"]
     }

@@ -3,7 +3,7 @@
   "name": "Prompt-Scrubber",
   "version": "1.0.0",
   "description": "Mask secrets & PII in any AI prompt before sending.",
-  "author": "Giress Kenn <giresskenn@gmail.com>",
+  "author": "Giress Kenn",
   "content_scripts": [
     {
       "matches": [

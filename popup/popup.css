@@ -30,9 +30,9 @@
 html {
   border-radius: 12px !important;
   overflow: hidden !important;
-  background: transparent !important;
-  width: 335px;
-  height: 600px;
+  background: var(--bg) !important;
+  width: 335px !important;
+  height: 600px !important;
 }
 
 body {
@@ -85,13 +85,14 @@ h1 {
 }
 
 .plan-badge {
-  background: var(--bg-offset);
-  color: var(--text-light);
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+  color: white;
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 13px;
   font-weight: 500;
-  border: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Main content styles */

@@ -471,13 +471,18 @@ document.addEventListener('focus', (e) => {
 
 // Automatically highlight sensitive info with theme-aware background
 async function autoHighlightSensitive(el) {
-  // CRITICAL: If scrubber is disabled, clear any highlighting and return
-  if (!scrubberEnabled || !el) {
+  // CRITICAL: If scrubber is disabled, clear any highlighting and return IMMEDIATELY
+  if (!scrubberEnabled) {
     if (el) {
       el.style.background = '';
       el.style.marginBottom = '';
       el.style.paddingBottom = '';
     }
+    return;
+  }
+  
+  // If no element provided, also return
+  if (!el) {
     return;
   }
   
@@ -490,7 +495,7 @@ async function autoHighlightSensitive(el) {
     return;
   }
 
-  // Only run detection if scrubber is enabled
+  // Only run detection if scrubber is enabled (this check is now redundant but kept for safety)
   const { clean, stats } = self.PromptScrubberRedactor.redact(text, customRules);
   const totalSensitive = Object.values(stats).reduce((a,b)=>a+b,0);
   

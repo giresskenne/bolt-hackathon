@@ -28,11 +28,21 @@
 
 /* Critical: Apply rounded corners to the popup window itself */
 html {
-  border-radius: 12px !important;
+  border-radius: 16px !important;
   overflow: hidden !important;
   background: var(--bg) !important;
   width: 335px !important;
   height: 600px !important;
+  /* Force the browser to respect our border radius */
+  -webkit-border-radius: 16px !important;
+  -moz-border-radius: 16px !important;
+  /* Ensure no scrollbars interfere with corners */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -43,9 +53,15 @@ body {
   width: 335px;
   height: 600px;
   overflow: hidden;
-  border-radius: 12px !important;
+  border-radius: 16px !important;
   margin: 0;
   padding: 0;
+  /* Ensure body fills the rounded container */
+  -webkit-border-radius: 16px !important;
+  -moz-border-radius: 16px !important;
+  /* Clip content to rounded corners */
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
 }
 
 .container {
@@ -53,9 +69,12 @@ body {
   flex-direction: column;
   height: 100vh;
   max-height: 600px;
-  border-radius: 12px !important;
+  border-radius: 16px !important;
   overflow: hidden !important;
   background: var(--bg) !important;
+  /* Ensure container respects rounded corners */
+  -webkit-border-radius: 16px !important;
+  -moz-border-radius: 16px !important;
 }
 
 /* Header styles */
@@ -64,6 +83,9 @@ header {
   border-bottom: 1px solid var(--border-light);
   flex-shrink: 0;
   background: var(--bg);
+  /* Ensure header corners match container */
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 }
 
 .logo {
@@ -744,6 +766,9 @@ footer {
   flex-shrink: 0;
   background: var(--bg);
   padding: 12px 16px;
+  /* Ensure footer corners match container */
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
 
 .footer-content {

@@ -57,6 +57,7 @@ function cleanupExistingButtons() {
     // Clean the textarea
     lastActive.style.marginBottom = '';
     lastActive.style.position = '';
+    lastActive.style.background = ''; // Clear any highlighting
     
     // Clean the parent if needed
     if (lastActive.parentElement) {
@@ -260,7 +261,24 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.action === 'setState' && typeof msg.enabled === 'boolean') {
     console.log('[Scrubber] Setting enabled state to:', msg.enabled);
     scrubberEnabled = msg.enabled;
-    if (lastActive) autoHighlightSensitive(lastActive);
+    
+    // When disabled, clean up everything immediately
+    if (!scrubberEnabled) {
+      cleanupExistingButtons();
+      // Clear highlighting from all text inputs on the page
+      document.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]').forEach(el => {
+        el.style.background = '';
+        el.style.marginBottom = '';
+        el.style.paddingBottom = '';
+      });
+      lastActive = null;
+    } else {
+      // When re-enabled, check current active element
+      if (lastActive) {
+        handleTextInput({ target: lastActive });
+      }
+    }
+    
     sendResponse({ success: true, enabled: scrubberEnabled });
     return true;
   }
@@ -268,7 +286,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.action === 'updateCustomRules' && Array.isArray(msg.rules)) {
     console.log('[Scrubber] Updating custom rules:', msg.rules.length);
     customRules = msg.rules;
-    if (lastActive) autoHighlightSensitive(lastActive);
+    if (lastActive && scrubberEnabled) autoHighlightSensitive(lastActive);
     sendResponse({ success: true, rulesCount: customRules.length });
     return true;
   }
@@ -288,18 +306,39 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     const newEnabled = changes.enabled.newValue;
     console.log('[Scrubber] Enabled state changed to:', newEnabled);
     scrubberEnabled = newEnabled;
-    if (lastActive) autoHighlightSensitive(lastActive);
+    
+    // When disabled, clean up everything immediately
+    if (!scrubberEnabled) {
+      cleanupExistingButtons();
+      // Clear highlighting from all text inputs on the page
+      document.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]').forEach(el => {
+        el.style.background = '';
+        el.style.marginBottom = '';
+        el.style.paddingBottom = '';
+      });
+      lastActive = null;
+    } else {
+      // When re-enabled, check current active element
+      if (lastActive) {
+        handleTextInput({ target: lastActive });
+      }
+    }
   }
   
   if ((namespace === 'sync' || namespace === 'local') && changes.customRules) {
     const newRules = changes.customRules.newValue || [];
     console.log('[Scrubber] Custom rules changed:', newRules.length);
     customRules = newRules;
-    if (lastActive) autoHighlightSensitive(lastActive);
+    if (lastActive && scrubberEnabled) autoHighlightSensitive(lastActive);
   }
 });
 
 function injectScrubButton(el) {
+  // Don't inject button if scrubber is disabled
+  if (!scrubberEnabled) {
+    return;
+  }
+  
   // Clean up any existing buttons first
   cleanupExistingButtons();
   
@@ -394,7 +433,10 @@ function injectScrubButton(el) {
 
 // Handle input and paste events
 const handleTextInput = (e) => {
-  if (!scrubberEnabled || !isTextInput(e.target)) return;
+  // CRITICAL: If scrubber is disabled, do nothing at all
+  if (!scrubberEnabled || !isTextInput(e.target)) {
+    return;
+  }
   
   const el = e.target;
   const text = getRaw(el);
@@ -413,7 +455,9 @@ const handleTextInput = (e) => {
   
   // Check for sensitive content
   autoHighlightSensitive(el);
-};  // Handle input, paste, and focus events
+};
+
+// Handle input, paste, and focus events
 document.addEventListener('input', handleTextInput, true);
 document.addEventListener('paste', handleTextInput, true);
 document.addEventListener('focus', (e) => {
@@ -427,7 +471,15 @@ document.addEventListener('focus', (e) => {
 
 // Automatically highlight sensitive info with theme-aware background
 async function autoHighlightSensitive(el) {
-  if (!scrubberEnabled || !el) return;
+  // CRITICAL: If scrubber is disabled, clear any highlighting and return
+  if (!scrubberEnabled || !el) {
+    if (el) {
+      el.style.background = '';
+      el.style.marginBottom = '';
+      el.style.paddingBottom = '';
+    }
+    return;
+  }
   
   const text = getRaw(el);
   if (!text.trim()) {
@@ -438,6 +490,7 @@ async function autoHighlightSensitive(el) {
     return;
   }
 
+  // Only run detection if scrubber is enabled
   const { clean, stats } = self.PromptScrubberRedactor.redact(text, customRules);
   const totalSensitive = Object.values(stats).reduce((a,b)=>a+b,0);
   
@@ -452,7 +505,13 @@ async function autoHighlightSensitive(el) {
 
 /* scrub core */
 function scrubText(target) {
-  if (!scrubberEnabled || !target) return;
+  // CRITICAL: If scrubber is disabled, show message and return
+  if (!scrubberEnabled) {
+    toast('Scrubber is disabled. Enable it in the extension popup.');
+    return;
+  }
+  
+  if (!target) return;
   
   const raw = getRaw(target);
   console.log('[Scrubber] Original text:', raw);
@@ -529,6 +588,12 @@ document.addEventListener('input', e => {
 document.addEventListener('keydown', (e) => {
   if (e.altKey && e.shiftKey && e.key === 'S') {
     e.preventDefault();
+    
+    // CRITICAL: Check if scrubber is enabled before processing shortcut
+    if (!scrubberEnabled) {
+      toast('Scrubber is disabled. Enable it in the extension popup.');
+      return;
+    }
     
     // Find the currently focused text input
     const activeElement = document.activeElement;

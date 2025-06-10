@@ -2,8 +2,7 @@
   Prompt-Scrubber – src/bg.js   (MV3 background Service Worker)
   • Static import of detectorWorker.js at initial eval
   • Then fetch patterns.json and call prepareDetector()
-  • Replies to "scan" & "ping" messages
-  • Handles popup injection for rounded corners
+  • Replies to “scan” & “ping” messages
 ─────────────────────────────────────────────────────────────*/
 
 'use strict';
@@ -30,25 +29,5 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'ping') {
     sendResponse({ ready: typeof self.scanDetector === 'function' });
     return true;
-  }
-});
-
-// 4) Handle extension icon click to inject rounded popup
-chrome.action.onClicked.addListener(async (tab) => {
-  console.log('[Scrubber] Extension icon clicked, injecting rounded popup');
-  
-  try {
-    // Get the current tab ID
-    const tabId = tab.id;
-    
-    // Inject the rounded popup content script
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      files: ['src/roundedPopup.js']
-    });
-    
-    console.log(`[Scrubber] Rounded popup injected into tab ${tabId}`);
-  } catch (error) {
-    console.error('[Scrubber] Error injecting rounded popup:', error);
   }
 });

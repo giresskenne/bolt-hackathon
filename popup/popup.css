@@ -26,9 +26,13 @@
   box-sizing: border-box;
 }
 
+/* Critical: Apply rounded corners to the popup window itself */
 html {
-  border-radius: 12px; /* Added rounded corners to html element */
-  overflow: hidden; /* Ensure content respects rounded corners */
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  width: 335px;
+  height: 600px;
 }
 
 body {
@@ -39,7 +43,9 @@ body {
   width: 335px;
   height: 600px;
   overflow: hidden;
-  border-radius: 12px; /* Added rounded corners to popup frame */
+  border-radius: 12px !important;
+  margin: 0;
+  padding: 0;
 }
 
 .container {
@@ -47,8 +53,9 @@ body {
   flex-direction: column;
   height: 100vh;
   max-height: 600px;
-  border-radius: 12px; /* Added rounded corners to container */
-  overflow: hidden; /* Ensure content respects rounded corners */
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: var(--bg) !important;
 }
 
 /* Header styles */

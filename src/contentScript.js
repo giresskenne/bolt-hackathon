@@ -380,11 +380,11 @@ function injectScrubButton(el) {
     el.parentElement.appendChild(buttonContainer);
   }
   
-  // Scrub button
+  // Scrub button - Updated logo path for dist structure
   const scrubBtn = document.createElement('button');
   scrubBtn.className = 'scrub-button';
   scrubBtn.type = 'button';
-  scrubBtn.innerHTML = `<img src="${chrome.runtime.getURL('icons/logo.png')}" width="16" height="16" style="vertical-align:middle;margin-right:4px"> Scrub`;
+  scrubBtn.innerHTML = `<img src="${chrome.runtime.getURL('icons/Logo.png')}" width="16" height="16" style="vertical-align:middle;margin-right:4px"> Scrub`;
   scrubBtn.style.cssText = `
     padding: 2px 8px;
     font-size: 13px;

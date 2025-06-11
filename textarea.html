@@ -40,18 +40,18 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
     <style>
-        /* Beautiful Blue Gradient Background - Fixed and Visible */
+        /* Discord-Style Dark Blue to Black Gradient Background */
         .gradient-bg {
             background: linear-gradient(135deg, 
-                #60A5FA 0%,     /* Light blue start */
-                #3B82F6 20%,    /* Primary blue */
-                #2563EB 40%,    /* Medium blue */
-                #1D4ED8 60%,    /* Primary dark */
-                #1E40AF 80%,    /* Deep blue */
-                #1E3A8A 100%    /* Darker blue end */
+                #404EED 0%,     /* Discord blurple */
+                #36459A 25%,   /* Darker blurple */
+                #2C3E50 50%,   /* Dark blue-gray */
+                #1A1A2E 75%,   /* Very dark blue */
+                #16213E 90%,   /* Almost black blue */
+                #0F0F23 100%   /* Deep black-blue */
             );
-            background-size: 300% 300%;
-            animation: gradientShift 12s ease infinite;
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
         }
         
         @keyframes gradientShift {
@@ -60,15 +60,38 @@
             100% { background-position: 0% 50%; }
         }
         
-        /* Light overlay for better text readability without making it too dark */
+        /* Subtle overlay for depth without affecting readability */
         .gradient-overlay {
-            background: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(64, 78, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(54, 69, 154, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(26, 26, 46, 0.3) 0%, transparent 50%);
+        }
+        
+        /* Add some sparkle effects like Discord */
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                radial-gradient(circle at 50% 10%, rgba(64, 78, 237, 0.2) 2px, transparent 2px);
+            background-size: 100px 100px, 150px 150px, 200px 200px;
+            animation: sparkle 30s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes sparkle {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-100px) rotate(360deg); }
         }
     </style>
 </head>
-<body class="gradient-bg gradient-overlay min-h-screen text-white">
+<body class="gradient-bg gradient-overlay min-h-screen text-white relative">
     <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div class="max-w-7xl mx-auto px-6 py-4">
@@ -92,7 +115,7 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="pt-24 pb-12 px-6">
+    <div class="pt-24 pb-12 px-6 relative z-10">
         <div class="max-w-6xl mx-auto">
             <!-- Header -->
             <div class="text-center mb-12">

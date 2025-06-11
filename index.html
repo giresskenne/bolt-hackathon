@@ -13,9 +13,6 @@
                         primary: '#3B82F6',
                         'primary-light': '#60A5FA',
                         'primary-dark': '#1D4ED8',
-                        'bg-gradient-start': '#0f172a',
-                        'bg-gradient-mid': '#1e3a8a',
-                        'bg-gradient-end': '#1d4ed8'
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
@@ -47,17 +44,18 @@
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
     <style>
-        /* Enhanced gradient background */
+        /* Beautiful Blue Gradient Background - Fixed and Visible */
         .gradient-bg {
             background: linear-gradient(135deg, 
-                #0f172a 0%,     /* Very dark blue */
-                #1e3a8a 25%,    /* Dark blue */
-                #1d4ed8 50%,    /* Primary blue */
-                #3b82f6 75%,    /* Lighter blue */
-                #60a5fa 100%    /* Light blue */
+                #60A5FA 0%,     /* Light blue start */
+                #3B82F6 20%,    /* Primary blue */
+                #2563EB 40%,    /* Medium blue */
+                #1D4ED8 60%,    /* Primary dark */
+                #1E40AF 80%,    /* Deep blue */
+                #1E3A8A 100%    /* Darker blue end */
             );
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            background-size: 300% 300%;
+            animation: gradientShift 12s ease infinite;
         }
         
         @keyframes gradientShift {
@@ -66,11 +64,11 @@
             100% { background-position: 0% 50%; }
         }
         
-        /* Additional gradient overlays for depth */
+        /* Light overlay for better text readability without making it too dark */
         .gradient-overlay {
-            background: radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(29, 78, 216, 0.3) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 40%, rgba(96, 165, 250, 0.2) 0%, transparent 50%);
+            background: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
         }
     </style>
 </head>
@@ -120,20 +118,20 @@
                 <div class="animate-slide-up">
                     <h1 class="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
                         Protect Your
-                        <span class="bg-gradient-to-r from-primary-light to-blue-400 bg-clip-text text-transparent">
+                        <span class="bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                             Sensitive Data
                         </span>
                     </h1>
-                    <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                    <p class="text-xl text-blue-100 mb-8 leading-relaxed">
                         Automatically detect confidential information as you type or paste
                         while offering you the freedom to set your own custom rules
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4">
-                        <button class="bg-primary hover:bg-primary-dark px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 animate-glow">
+                        <button class="bg-white text-primary hover:bg-blue-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
                             <i data-lucide="download" class="w-5 h-5 inline mr-2"></i>
                             Get Started
                         </button>
-                        <button class="border border-white/30 hover:border-primary px-8 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center">
+                        <button class="border border-white/30 hover:border-white hover:bg-white/10 px-8 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center">
                             <i data-lucide="play" class="w-5 h-5 mr-2"></i>
                             Watch Demo
                         </button>
@@ -151,45 +149,45 @@
                         />
                         
                         <!-- Floating Protection Badge -->
-                        <div class="absolute top-4 right-4 bg-primary/90 backdrop-blur-lg rounded-full px-4 py-2 border border-white/20 animate-glow">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-lg rounded-full px-4 py-2 border border-white/20 shadow-lg">
                             <div class="flex items-center space-x-2">
-                                <i data-lucide="shield-check" class="w-4 h-4 text-white"></i>
-                                <span class="text-sm font-semibold text-white">Protected</span>
+                                <i data-lucide="shield-check" class="w-4 h-4 text-green-600"></i>
+                                <span class="text-sm font-semibold text-gray-800">Protected</span>
                             </div>
                         </div>
                         
                         <!-- Floating Stats -->
-                        <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                        <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-lg rounded-2xl p-4 border border-white/20 shadow-lg">
                             <div class="flex items-center space-x-4">
                                 <div class="text-center">
                                     <div class="text-lg font-bold text-primary">30+</div>
-                                    <div class="text-xs text-gray-300">Patterns</div>
+                                    <div class="text-xs text-gray-600">Patterns</div>
                                 </div>
-                                <div class="w-px h-8 bg-white/20"></div>
+                                <div class="w-px h-8 bg-gray-300"></div>
                                 <div class="text-center">
-                                    <div class="text-lg font-bold text-green-400">100%</div>
-                                    <div class="text-xs text-gray-300">Local</div>
+                                    <div class="text-lg font-bold text-green-600">100%</div>
+                                    <div class="text-xs text-gray-600">Local</div>
                                 </div>
-                                <div class="w-px h-8 bg-white/20"></div>
+                                <div class="w-px h-8 bg-gray-300"></div>
                                 <div class="text-center">
-                                    <div class="text-lg font-bold text-yellow-400">Real-time</div>
-                                    <div class="text-xs text-gray-300">Detection</div>
+                                    <div class="text-lg font-bold text-orange-600">Real-time</div>
+                                    <div class="text-xs text-gray-600">Detection</div>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Floating Feature Highlights -->
-                        <div class="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle">
+                        <div class="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle shadow-lg">
                             <div class="flex items-center space-x-2">
                                 <i data-lucide="eye" class="w-4 h-4 text-primary"></i>
-                                <span class="text-sm font-medium">Auto-detect</span>
+                                <span class="text-sm font-medium text-gray-800">Auto-detect</span>
                             </div>
                         </div>
                         
-                        <div class="absolute -right-4 top-1/3 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle" style="animation-delay: 1s;">
+                        <div class="absolute -right-4 top-1/3 bg-white/90 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle shadow-lg" style="animation-delay: 1s;">
                             <div class="flex items-center space-x-2">
-                                <i data-lucide="zap" class="w-4 h-4 text-yellow-400"></i>
-                                <span class="text-sm font-medium">One-click</span>
+                                <i data-lucide="zap" class="w-4 h-4 text-yellow-600"></i>
+                                <span class="text-sm font-medium text-gray-800">One-click</span>
                             </div>
                         </div>
                     </div>
@@ -203,66 +201,66 @@
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-16">
                 <h2 class="text-4xl lg:text-5xl font-bold mb-6">
-                    Powerful <span class="text-primary-light">Protection</span> Features
+                    Powerful <span class="text-white">Protection</span> Features
                 </h2>
-                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                <p class="text-xl text-blue-100 max-w-3xl mx-auto">
                     Advanced detection algorithms protect your sensitive information across all platforms
                 </p>
             </div>
 
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-primary/30 transition-all group">
-                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/30 transition-colors">
-                        <i data-lucide="eye" class="w-6 h-6 text-primary"></i>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all group hover:bg-white/15">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-white/30 transition-colors">
+                        <i data-lucide="eye" class="w-6 h-6 text-white"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Real-Time Detection</h3>
-                    <p class="text-gray-300">Instantly identifies sensitive data as you type in any text field across all websites and AI platforms.</p>
+                    <p class="text-blue-100">Instantly identifies sensitive data as you type in any text field across all websites and AI platforms.</p>
                 </div>
 
                 <!-- Feature 2 -->
-                <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-primary/30 transition-all group">
-                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/30 transition-colors">
-                        <i data-lucide="palette" class="w-6 h-6 text-primary"></i>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all group hover:bg-white/15">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-white/30 transition-colors">
+                        <i data-lucide="palette" class="w-6 h-6 text-white"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Smart Theme Detection</h3>
-                    <p class="text-gray-300">Automatically adapts highlighting colors for perfect visibility in both light and dark modes.</p>
+                    <p class="text-blue-100">Automatically adapts highlighting colors for perfect visibility in both light and dark modes.</p>
                 </div>
 
                 <!-- Feature 3 -->
-                <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-primary/30 transition-all group">
-                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/30 transition-colors">
-                        <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-primary"></i>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all group hover:bg-white/15">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-white/30 transition-colors">
+                        <i data-lucide="mouse-pointer-click" class="w-6 h-6 text-white"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">One-Click Scrubbing</h3>
-                    <p class="text-gray-300">Clean button to instantly mask all detected sensitive information with a single click.</p>
+                    <p class="text-blue-100">Clean button to instantly mask all detected sensitive information with a single click.</p>
                 </div>
 
                 <!-- Feature 4 -->
-                <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-primary/30 transition-all group">
-                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/30 transition-colors">
-                        <i data-lucide="settings" class="w-6 h-6 text-primary"></i>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all group hover:bg-white/15">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-white/30 transition-colors">
+                        <i data-lucide="settings" class="w-6 h-6 text-white"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Custom Rules</h3>
-                    <p class="text-gray-300">Add your own patterns for organization-specific sensitive data with simple value-to-label mapping.</p>
+                    <p class="text-blue-100">Add your own patterns for organization-specific sensitive data with simple value-to-label mapping.</p>
                 </div>
 
                 <!-- Feature 5 -->
-                <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-primary/30 transition-all group">
-                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/30 transition-colors">
-                        <i data-lucide="shield" class="w-6 h-6 text-primary"></i>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all group hover:bg-white/15">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-white/30 transition-colors">
+                        <i data-lucide="shield" class="w-6 h-6 text-white"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">100% Local Processing</h3>
-                    <p class="text-gray-300">All detection happens in your browser. No data is ever sent to external servers.</p>
+                    <p class="text-blue-100">All detection happens in your browser. No data is ever sent to external servers.</p>
                 </div>
 
                 <!-- Feature 6 -->
-                <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-primary/30 transition-all group">
-                    <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/30 transition-colors">
-                        <i data-lucide="globe" class="w-6 h-6 text-primary"></i>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all group hover:bg-white/15">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-white/30 transition-colors">
+                        <i data-lucide="globe" class="w-6 h-6 text-white"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Universal Compatibility</h3>
-                    <p class="text-gray-300">Works across ChatGPT, Claude, Gemini, Copilot, and any website with text inputs.</p>
+                    <p class="text-blue-100">Works across ChatGPT, Claude, Gemini, Copilot, and any website with text inputs.</p>
                 </div>
             </div>
         </div>
@@ -272,50 +270,50 @@
     <section id="demo" class="py-20 px-6 bg-black/20">
         <div class="max-w-7xl mx-auto text-center">
             <h2 class="text-4xl lg:text-5xl font-bold mb-6">
-                See It In <span class="text-primary-light">Action</span>
+                See It In <span class="text-white">Action</span>
             </h2>
-            <p class="text-xl text-gray-300 mb-12 max-w-3xl mx-auto">
+            <p class="text-xl text-blue-100 mb-12 max-w-3xl mx-auto">
                 Experience how Prompt-Scrubber protects your sensitive data in real-time
             </p>
             
-            <div class="bg-gradient-to-br from-primary/20 to-blue-600/20 backdrop-blur-lg rounded-3xl p-12 border border-white/20">
+            <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20">
                 <div class="grid lg:grid-cols-2 gap-12 items-center">
                     <div class="text-left">
                         <h3 class="text-2xl font-bold mb-6">Protected Data Types</h3>
                         <div class="space-y-4">
                             <div class="flex items-center space-x-3">
-                                <i data-lucide="key" class="w-5 h-5 text-primary"></i>
+                                <i data-lucide="key" class="w-5 h-5 text-white"></i>
                                 <span>API Keys & Tokens</span>
                             </div>
                             <div class="flex items-center space-x-3">
-                                <i data-lucide="mail" class="w-5 h-5 text-primary"></i>
+                                <i data-lucide="mail" class="w-5 h-5 text-white"></i>
                                 <span>Email Addresses</span>
                             </div>
                             <div class="flex items-center space-x-3">
-                                <i data-lucide="credit-card" class="w-5 h-5 text-primary"></i>
+                                <i data-lucide="credit-card" class="w-5 h-5 text-white"></i>
                                 <span>Credit Card Numbers</span>
                             </div>
                             <div class="flex items-center space-x-3">
-                                <i data-lucide="phone" class="w-5 h-5 text-primary"></i>
+                                <i data-lucide="phone" class="w-5 h-5 text-white"></i>
                                 <span>Phone Numbers</span>
                             </div>
                             <div class="flex items-center space-x-3">
-                                <i data-lucide="id-card" class="w-5 h-5 text-primary"></i>
+                                <i data-lucide="id-card" class="w-5 h-5 text-white"></i>
                                 <span>Social Security Numbers</span>
                             </div>
                             <div class="flex items-center space-x-3">
-                                <i data-lucide="network" class="w-5 h-5 text-primary"></i>
+                                <i data-lucide="network" class="w-5 h-5 text-white"></i>
                                 <span>IP Addresses</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="text-center">
-                        <a href="textarea.html" class="inline-block bg-primary hover:bg-primary-dark px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 animate-glow">
+                        <a href="textarea.html" class="inline-block bg-white text-primary hover:bg-blue-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 shadow-lg">
                             <i data-lucide="play" class="w-5 h-5 inline mr-2"></i>
                             Try Interactive Demo
                         </a>
-                        <p class="text-sm text-gray-400 mt-4">Test with your own text in a safe environment</p>
+                        <p class="text-sm text-blue-200 mt-4">Test with your own text in a safe environment</p>
                     </div>
                 </div>
             </div>
@@ -326,32 +324,32 @@
     <section id="download" class="py-20 px-6">
         <div class="max-w-4xl mx-auto text-center">
             <h2 class="text-4xl lg:text-5xl font-bold mb-6">
-                Ready to <span class="text-primary-light">Protect</span> Your Data?
+                Ready to <span class="text-white">Protect</span> Your Data?
             </h2>
-            <p class="text-xl text-gray-300 mb-12">
+            <p class="text-xl text-blue-100 mb-12">
                 Install Prompt-Scrubber and never worry about accidentally sharing sensitive information again
             </p>
             
-            <div class="bg-gradient-to-br from-primary/20 to-blue-600/20 backdrop-blur-lg rounded-3xl p-12 border border-white/20">
+            <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20">
                 <div class="grid md:grid-cols-2 gap-8">
                     <div class="text-center">
-                        <div class="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <i data-lucide="chrome" class="w-8 h-8 text-primary"></i>
+                        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="chrome" class="w-8 h-8 text-white"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-4">Chrome Web Store</h3>
-                        <p class="text-gray-300 mb-6">Install directly from the official Chrome Web Store</p>
-                        <button class="bg-primary hover:bg-primary-dark px-6 py-3 rounded-lg font-semibold transition-all">
+                        <p class="text-blue-100 mb-6">Install directly from the official Chrome Web Store</p>
+                        <button class="bg-white text-primary hover:bg-blue-50 px-6 py-3 rounded-lg font-semibold transition-all shadow-lg">
                             Add to Chrome
                         </button>
                     </div>
                     
                     <div class="text-center">
-                        <div class="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                            <i data-lucide="github" class="w-8 h-8 text-primary"></i>
+                        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <i data-lucide="github" class="w-8 h-8 text-white"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-4">Open Source</h3>
-                        <p class="text-gray-300 mb-6">View the source code and contribute on GitHub</p>
-                        <button class="border border-white/30 hover:border-primary px-6 py-3 rounded-lg font-semibold transition-all">
+                        <p class="text-blue-100 mb-6">View the source code and contribute on GitHub</p>
+                        <button class="border border-white/30 hover:border-white hover:bg-white/10 px-6 py-3 rounded-lg font-semibold transition-all">
                             View on GitHub
                         </button>
                     </div>
@@ -365,20 +363,20 @@
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="flex items-center space-x-3 mb-4 md:mb-0">
-                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                        <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+                    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-primary"></i>
                     </div>
                     <span class="text-xl font-bold">Prompt-Scrubber</span>
                 </div>
                 
-                <div class="flex items-center space-x-6 text-gray-400">
-                    <a href="#" class="hover:text-primary-light transition-colors">Privacy Policy</a>
-                    <a href="#" class="hover:text-primary-light transition-colors">Terms of Service</a>
-                    <a href="#" class="hover:text-primary-light transition-colors">Support</a>
+                <div class="flex items-center space-x-6 text-blue-200">
+                    <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                    <a href="#" class="hover:text-white transition-colors">Support</a>
                 </div>
             </div>
             
-            <div class="mt-8 pt-8 border-t border-white/10 text-center text-gray-400">
+            <div class="mt-8 pt-8 border-t border-white/10 text-center text-blue-200">
                 <p>&copy; 2025 Prompt-Scrubber. All rights reserved. Stay Safe, Stay Private 🛡️</p>
             </div>
         </div>

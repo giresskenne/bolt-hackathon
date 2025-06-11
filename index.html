@@ -14,10 +14,10 @@
           primary:         '#3B82F6',
           'primary-light': '#60A5FA',
           'primary-dark':  '#1D4ED8',
-          /*  top-left    →       middle        →   bottom-right  */
-          'bg-gradient-start': '#000003', // near-black
-          'bg-gradient-mid':   '#1e1b4b', // dark navy
-          'bg-gradient-end':   '#1D4ED8'  // indigo / dark blue
+          /* Discord-style gradient */
+          'bg-gradient-start': '#050505', // top-left: near-black
+          'bg-gradient-mid':   '#0E144C', // mid-stop: deep navy
+          'bg-gradient-end':   '#203D9C'  // bottom-right: indigo/blue
         },
 
         animation: {
@@ -52,7 +52,10 @@
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-br from-bg-gradient-start via-bg-gradient-mid to-bg-gradient-end
+<body class="bg-gradient-to-br
+             from-bg-gradient-start
+             via-bg-gradient-mid
+             to-bg-gradient-end
              min-h-screen text-white overflow-x-hidden">
     <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">

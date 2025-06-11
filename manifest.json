@@ -13,12 +13,12 @@
         "https://copilot.microsoft.com/*",
         "<all_urls>"
       ],
-      "js": ["dist/src/contentScript.js"],
+      "js": ["src/contentScript.js"],
       "run_at": "document_idle"
     }
   ],
   "background": {
-    "service_worker": "dist/src/bg.js"
+    "service_worker": "src/bg.js"
   },
   "permissions": [
     "storage",
@@ -37,7 +37,7 @@
   "web_accessible_resources": [
     {
       "resources": [ 
-        "icons/logo.png",
+        "icons/Logo.png",
         "icons/settings.png",
         "src/detectorWorker.js",
         "src/patterns.json"

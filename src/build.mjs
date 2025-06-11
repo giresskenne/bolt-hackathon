@@ -1,8 +1,8 @@
 /**
  * build.mjs
  * ----------
- * Generates src/gen/redactorRules.js from src/patterns.json.
- * Run:  node src/build.mjs    (automatically executed by “npm run build”)
+ * Generates src/gen/redactorRules.js from src/patterns.json and copies files to dist/
+ * Run:  node src/build.mjs    (automatically executed by "npm run build")
  */
 
 import fs from 'fs';
@@ -15,7 +15,9 @@ const __dirname  = path.dirname(__filename);
 const PATTERN_FILE = path.join(__dirname, 'patterns.json');
 const GEN_DIR      = path.join(__dirname, 'gen');
 const OUT_FILE     = path.join(GEN_DIR, 'redactorRules.js');
+const DIST_DIR     = path.join(__dirname, '..', 'dist');
 
+// Read patterns and generate redactor rules
 const { identifiers } = JSON.parse(fs.readFileSync(PATTERN_FILE, 'utf8'));
 
 /* ------------------------------------------------------------
@@ -65,7 +67,79 @@ ${ruleLines}
 ];
 `;
 
-/* write file */
+/* write redactor rules file */
 fs.mkdirSync(GEN_DIR, { recursive: true });
 fs.writeFileSync(OUT_FILE, out, 'utf8');
 console.log('[build] redactorRules.js written ->', path.relative(process.cwd(), OUT_FILE));
+
+/* ------------------------------------------------------------
+   Copy files to dist/ directory structure
+------------------------------------------------------------- */
+
+// Clean and create dist directory
+if (fs.existsSync(DIST_DIR)) {
+  fs.rmSync(DIST_DIR, { recursive: true, force: true });
+}
+fs.mkdirSync(DIST_DIR, { recursive: true });
+
+// Create subdirectories
+const distDirs = [
+  path.join(DIST_DIR, 'icons'),
+  path.join(DIST_DIR, 'popup'),
+  path.join(DIST_DIR, 'src')
+];
+
+distDirs.forEach(dir => {
+  fs.mkdirSync(dir, { recursive: true });
+});
+
+// Copy manifest.json
+const manifestSource = path.join(__dirname, '..', 'manifest.json');
+const manifestDest = path.join(DIST_DIR, 'manifest.json');
+fs.copyFileSync(manifestSource, manifestDest);
+console.log('[build] Copied manifest.json to dist/');
+
+// Copy icons
+const iconsSource = path.join(__dirname, '..', 'icons');
+const iconsDest = path.join(DIST_DIR, 'icons');
+if (fs.existsSync(iconsSource)) {
+  const iconFiles = fs.readdirSync(iconsSource);
+  iconFiles.forEach(file => {
+    fs.copyFileSync(
+      path.join(iconsSource, file),
+      path.join(iconsDest, file)
+    );
+  });
+  console.log('[build] Copied', iconFiles.length, 'icon files to dist/icons/');
+}
+
+// Copy popup files
+const popupSource = path.join(__dirname, '..', 'popup');
+const popupDest = path.join(DIST_DIR, 'popup');
+if (fs.existsSync(popupSource)) {
+  const popupFiles = fs.readdirSync(popupSource);
+  popupFiles.forEach(file => {
+    fs.copyFileSync(
+      path.join(popupSource, file),
+      path.join(popupDest, file)
+    );
+  });
+  console.log('[build] Copied', popupFiles.length, 'popup files to dist/popup/');
+}
+
+// Copy src files that need to be web accessible
+const srcFiles = [
+  { src: 'detectorWorker.js', dest: 'detectorWorker.js' },
+  { src: 'patterns.json', dest: 'patterns.json' }
+];
+
+srcFiles.forEach(({ src, dest }) => {
+  const srcPath = path.join(__dirname, src);
+  const destPath = path.join(DIST_DIR, 'src', dest);
+  if (fs.existsSync(srcPath)) {
+    fs.copyFileSync(srcPath, destPath);
+    console.log(`[build] Copied ${src} to dist/src/${dest}`);
+  }
+});
+
+console.log('[build] Build preparation complete! Webpack will add compiled JS files.');

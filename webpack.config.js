@@ -15,9 +15,9 @@ export default {
     bg:            './src/bg.js'             // MV3 service-worker
   },
   output: {
-    path:    path.resolve(__dirname, 'dist'),
-    filename:'src/[name].js',                // keeps folder structure
-    iife:    true                            // produce classic scripts
+    path:    path.resolve(__dirname, 'dist/src'),  // Output to dist/src/
+    filename:'[name].js',                          // contentScript.js, bg.js
+    iife:    true                                  // produce classic scripts
   },
   devtool: false,
   module: {

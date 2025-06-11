@@ -14,7 +14,11 @@
                         'primary-light': '#60A5FA',
                         'primary-dark': '#1D4ED8',
                         'bg-gradient-start': '#1e1b4b',
-                        'bg-gradient-end': '#312e81'
+                        'bg-gradient-end': '#312e81',
+                        'chatgpt-bg': '#212121',
+                        'chatgpt-input': '#2f2f2f',
+                        'chatgpt-border': '#565869',
+                        'chatgpt-text': '#ececf1'
                     },
                     animation: {
                         'glow': 'glow 2s ease-in-out infinite alternate',
@@ -76,71 +80,80 @@
 
             <!-- Demo Interface -->
             <div class="grid lg:grid-cols-3 gap-8">
-                <!-- Chat Interface -->
+                <!-- ChatGPT-Style Chat Interface -->
                 <div class="lg:col-span-2">
-                    <div class="bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10 overflow-hidden">
+                    <div class="bg-chatgpt-bg rounded-2xl border border-chatgpt-border overflow-hidden shadow-2xl">
                         <!-- Chat Header -->
-                        <div class="bg-white/5 px-6 py-4 border-b border-white/10">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                                    <i data-lucide="bot" class="w-5 h-5 text-white"></i>
+                        <div class="bg-chatgpt-bg px-6 py-4 border-b border-chatgpt-border">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                                        <span class="text-white font-bold text-sm">AI</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-chatgpt-text">ChatGPT</h3>
+                                        <p class="text-xs text-gray-400">Protected by Prompt-Scrubber</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-semibold">AI Assistant</h3>
-                                    <p class="text-sm text-gray-400">Protected by Prompt-Scrubber</p>
-                                </div>
-                                <div class="ml-auto flex items-center space-x-2">
+                                <div class="flex items-center space-x-2">
                                     <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow"></div>
-                                    <span class="text-sm text-green-400">Protected</span>
+                                    <span class="text-xs text-green-400 font-medium">Protected</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Chat Messages -->
-                        <div class="p-6 space-y-4 min-h-[300px]" id="chatMessages">
+                        <div class="p-6 space-y-6 min-h-[400px] max-h-[500px] overflow-y-auto" id="chatMessages">
                             <div class="flex items-start space-x-3">
-                                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+                                <div class="w-7 h-7 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-white font-bold text-xs">AI</span>
                                 </div>
-                                <div class="bg-white/10 rounded-2xl px-4 py-3 max-w-md">
-                                    <p class="text-sm">Hello! I'm here to help. Feel free to share any information - Prompt-Scrubber will protect your sensitive data automatically.</p>
+                                <div class="flex-1">
+                                    <div class="text-chatgpt-text text-sm leading-relaxed">
+                                        Hello! I'm ChatGPT. Feel free to share any information with me - Prompt-Scrubber will automatically detect and protect your sensitive data before it's sent.
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Input Area -->
-                        <div class="p-6 border-t border-white/10">
+                        <!-- ChatGPT-Style Input Area -->
+                        <div class="p-4 border-t border-chatgpt-border">
                             <div class="relative">
-                                <textarea 
-                                    id="chatInput" 
-                                    placeholder="Type your message here... Try entering an email, phone number, or API key to see the protection in action!"
-                                    class="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 pr-20 text-white placeholder-gray-400 resize-none focus:outline-none focus:border-primary transition-colors min-h-[100px]"
-                                    rows="3"
-                                ></textarea>
-                                
-                                <!-- Scrub Button (appears when sensitive data detected) -->
-                                <button 
-                                    id="scrubBtn" 
-                                    class="absolute bottom-3 right-3 bg-primary hover:bg-primary-dark px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-2 opacity-0 pointer-events-none animate-glow"
-                                >
-                                    <i data-lucide="shield-check" class="w-4 h-4"></i>
-                                    <span>Scrub</span>
-                                </button>
+                                <!-- Input Container -->
+                                <div class="relative bg-chatgpt-input border border-chatgpt-border rounded-3xl overflow-hidden focus-within:border-gray-500 transition-colors">
+                                    <textarea 
+                                        id="chatInput" 
+                                        placeholder="Message ChatGPT..."
+                                        class="w-full bg-transparent px-4 py-3 pr-16 text-chatgpt-text placeholder-gray-400 resize-none focus:outline-none text-sm leading-relaxed"
+                                        rows="1"
+                                        style="min-height: 52px; max-height: 200px;"
+                                    ></textarea>
+                                    
+                                    <!-- Send Button Container -->
+                                    <div class="absolute right-2 bottom-2 flex items-center space-x-2">
+                                        <!-- Scrub Button (appears when sensitive data detected) -->
+                                        <button 
+                                            id="scrubBtn" 
+                                            class="bg-primary hover:bg-primary-dark p-2 rounded-full text-white transition-all opacity-0 pointer-events-none animate-glow"
+                                            title="Scrub sensitive data"
+                                        >
+                                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                                        </button>
 
-                                <!-- Send Button -->
-                                <button 
-                                    id="sendBtn" 
-                                    class="absolute bottom-3 right-3 bg-primary hover:bg-primary-dark px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-2"
-                                >
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                    <span>Send</span>
-                                </button>
-                            </div>
+                                        <!-- Send Button -->
+                                        <button 
+                                            id="sendBtn" 
+                                            class="bg-white hover:bg-gray-100 text-black p-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled
+                                        >
+                                            <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
 
-                            <!-- Detection Status -->
-                            <div id="detectionStatus" class="mt-3 text-sm text-gray-400 opacity-0 transition-opacity">
-                                <div class="flex items-center space-x-2">
-                                    <i data-lucide="shield-alert" class="w-4 h-4 text-yellow-400"></i>
+                                <!-- Detection Status -->
+                                <div id="detectionStatus" class="mt-2 text-xs text-yellow-400 opacity-0 transition-opacity flex items-center space-x-1">
+                                    <i data-lucide="shield-alert" class="w-3 h-3"></i>
                                     <span id="statusText">Sensitive data detected</span>
                                 </div>
                             </div>
@@ -254,6 +267,13 @@
         const scrubbedCountEl = document.getElementById('scrubbedCount');
         const clearBtn = document.getElementById('clearBtn');
 
+        // Auto-resize textarea
+        function autoResize() {
+            chatInput.style.height = 'auto';
+            const newHeight = Math.min(chatInput.scrollHeight, 200);
+            chatInput.style.height = newHeight + 'px';
+        }
+
         // Sensitive data patterns (simplified for demo)
         const patterns = [
             { regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, type: 'email', mask: '<EMAIL>' },
@@ -303,20 +323,21 @@
             const text = chatInput.value;
             const detections = detectSensitiveData(text);
             
+            // Enable/disable send button based on content
+            sendBtn.disabled = !text.trim();
+            
             if (detections.length > 0) {
                 scrubBtn.classList.remove('opacity-0', 'pointer-events-none');
-                sendBtn.classList.add('opacity-0', 'pointer-events-none');
                 detectionStatus.classList.remove('opacity-0');
                 statusText.textContent = `${detections.length} sensitive item${detections.length > 1 ? 's' : ''} detected`;
-                chatInput.style.background = 'linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)';
+                chatInput.parentElement.style.background = 'linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(47, 47, 47, 1) 100%)';
                 
                 detectedCount = Math.max(detectedCount, detections.length);
                 detectedCountEl.textContent = detectedCount;
             } else {
                 scrubBtn.classList.add('opacity-0', 'pointer-events-none');
-                sendBtn.classList.remove('opacity-0', 'pointer-events-none');
                 detectionStatus.classList.add('opacity-0');
-                chatInput.style.background = '';
+                chatInput.parentElement.style.background = '';
             }
         }
 
@@ -324,20 +345,28 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `flex items-start space-x-3 ${isUser ? 'justify-end' : ''}`;
             
-            const avatar = isUser ? 
-                '<div class="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="user" class="w-4 h-4 text-white"></i></div>' :
-                '<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="w-4 h-4 text-white"></i></div>';
-            
-            const messageClass = isUser ? 'bg-primary/20 border border-primary/30' : 'bg-white/10';
-            
-            messageDiv.innerHTML = `
-                ${!isUser ? avatar : ''}
-                <div class="${messageClass} rounded-2xl px-4 py-3 max-w-md">
-                    <p class="text-sm">${content}</p>
-                    ${isHighlighted ? '<div class="flex items-center mt-2 text-xs text-yellow-400"><i data-lucide="shield-alert" class="w-3 h-3 mr-1"></i>Contains sensitive data</div>' : ''}
-                </div>
-                ${isUser ? avatar : ''}
-            `;
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    <div class="flex-1 flex justify-end">
+                        <div class="bg-gray-700 rounded-3xl px-4 py-3 max-w-md">
+                            <p class="text-chatgpt-text text-sm leading-relaxed">${content}</p>
+                            ${isHighlighted ? '<div class="flex items-center mt-2 text-xs text-yellow-400"><i data-lucide="shield-alert" class="w-3 h-3 mr-1"></i>Contains sensitive data</div>' : ''}
+                        </div>
+                    </div>
+                    <div class="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="user" class="w-4 h-4 text-white"></i>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-7 h-7 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white font-bold text-xs">AI</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-chatgpt-text text-sm leading-relaxed">${content}</div>
+                    </div>
+                `;
+            }
             
             chatMessages.appendChild(messageDiv);
             lucide.createIcons();
@@ -345,7 +374,21 @@
         }
 
         // Event listeners
-        chatInput.addEventListener('input', updateDetectionUI);
+        chatInput.addEventListener('input', () => {
+            autoResize();
+            updateDetectionUI();
+        });
+
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!scrubBtn.classList.contains('opacity-0')) {
+                    scrubBtn.click();
+                } else if (!sendBtn.disabled) {
+                    sendBtn.click();
+                }
+            }
+        });
 
         scrubBtn.addEventListener('click', () => {
             const text = chatInput.value;
@@ -353,13 +396,14 @@
             chatInput.value = scrubbedText;
             scrubbedCount += count;
             scrubbedCountEl.textContent = scrubbedCount;
+            autoResize();
             updateDetectionUI();
             
             // Show success message
             const originalText = statusText.textContent;
             statusText.textContent = `${count} item${count > 1 ? 's' : ''} scrubbed successfully!`;
             statusText.parentElement.querySelector('i').setAttribute('data-lucide', 'shield-check');
-            statusText.parentElement.querySelector('i').className = 'w-4 h-4 text-green-400';
+            statusText.parentElement.querySelector('i').className = 'w-3 h-3 text-green-400';
             lucide.createIcons();
             
             setTimeout(() => {
@@ -376,6 +420,7 @@
             
             addMessage(highlightedText, true, detections.length > 0);
             chatInput.value = '';
+            autoResize();
             updateDetectionUI();
             
             // Bot response
@@ -392,11 +437,13 @@
             chatInput.value = '';
             chatMessages.innerHTML = `
                 <div class="flex items-start space-x-3">
-                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                        <i data-lucide="bot" class="w-4 h-4 text-white"></i>
+                    <div class="w-7 h-7 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white font-bold text-xs">AI</span>
                     </div>
-                    <div class="bg-white/10 rounded-2xl px-4 py-3 max-w-md">
-                        <p class="text-sm">Hello! I'm here to help. Feel free to share any information - Prompt-Scrubber will protect your sensitive data automatically.</p>
+                    <div class="flex-1">
+                        <div class="text-chatgpt-text text-sm leading-relaxed">
+                            Hello! I'm ChatGPT. Feel free to share any information with me - Prompt-Scrubber will automatically detect and protect your sensitive data before it's sent.
+                        </div>
                     </div>
                 </div>
             `;
@@ -404,6 +451,7 @@
             scrubbedCount = 0;
             detectedCountEl.textContent = '0';
             scrubbedCountEl.textContent = '0';
+            autoResize();
             updateDetectionUI();
             lucide.createIcons();
         });
@@ -412,22 +460,15 @@
         document.querySelectorAll('.sample-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 chatInput.value = btn.dataset.sample;
+                autoResize();
                 updateDetectionUI();
                 chatInput.focus();
             });
         });
 
-        // Enter key to send
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                if (!scrubBtn.classList.contains('opacity-0')) {
-                    scrubBtn.click();
-                } else {
-                    sendBtn.click();
-                }
-            }
-        });
+        // Initialize
+        autoResize();
+        updateDetectionUI();
     </script>
 </body>
 </html>

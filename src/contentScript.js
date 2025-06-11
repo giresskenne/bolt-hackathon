@@ -115,18 +115,69 @@ function setRaw(el, txt) {
   }
 }
 
-/* Enhanced theme detection function with automatic updates */
-function getThemeAwareBackground() {
-  // Primary detection: system preference
+/* Enhanced theme detection function with better background analysis */
+function getThemeAwareBackground(element) {
+  // Get the actual background color of the element and its parents
+  let currentElement = element;
+  let elementBg = 'transparent';
+  
+  // Walk up the DOM tree to find the actual background color
+  while (currentElement && elementBg === 'transparent') {
+    const computedStyle = window.getComputedStyle(currentElement);
+    const bgColor = computedStyle.backgroundColor;
+    
+    if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
+      elementBg = bgColor;
+      break;
+    }
+    currentElement = currentElement.parentElement;
+  }
+  
+  // If we still don't have a background, check body and html
+  if (elementBg === 'transparent') {
+    const bodyStyle = window.getComputedStyle(document.body);
+    const htmlStyle = window.getComputedStyle(document.documentElement);
+    
+    elementBg = bodyStyle.backgroundColor !== 'transparent' ? bodyStyle.backgroundColor : htmlStyle.backgroundColor;
+  }
+  
+  // Parse RGB values to determine if background is dark
+  const isDarkBackground = (bgColor) => {
+    if (!bgColor || bgColor === 'transparent' || bgColor === 'rgba(0, 0, 0, 0)') {
+      return false;
+    }
+    
+    // Handle different color formats
+    let r, g, b;
+    
+    if (bgColor.startsWith('rgb')) {
+      const matches = bgColor.match(/\d+/g);
+      if (matches && matches.length >= 3) {
+        [r, g, b] = matches.map(Number);
+      }
+    } else if (bgColor.startsWith('#')) {
+      // Handle hex colors
+      const hex = bgColor.slice(1);
+      r = parseInt(hex.substr(0, 2), 16);
+      g = parseInt(hex.substr(2, 2), 16);
+      b = parseInt(hex.substr(4, 2), 16);
+    }
+    
+    if (r !== undefined && g !== undefined && b !== undefined) {
+      // Calculate luminance using the standard formula
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance < 0.5;
+    }
+    
+    return false;
+  };
+  
+  // Check system preference as fallback
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   
-  // Secondary detection: check DOM for dark mode indicators
+  // Check for common dark mode class patterns
   const bodyClasses = document.body.className.toLowerCase();
   const htmlClasses = document.documentElement.className.toLowerCase();
-  const bodyStyle = window.getComputedStyle(document.body);
-  const htmlStyle = window.getComputedStyle(document.documentElement);
-  
-  // Check for common dark mode class patterns
   const hasDarkClass = bodyClasses.includes('dark') || 
                        htmlClasses.includes('dark') ||
                        bodyClasses.includes('theme-dark') ||
@@ -134,42 +185,24 @@ function getThemeAwareBackground() {
                        bodyClasses.includes('dark-mode') ||
                        htmlClasses.includes('dark-mode');
   
-  // Check background colors to detect dark themes
-  const bodyBg = bodyStyle.backgroundColor;
-  const htmlBg = htmlStyle.backgroundColor;
-  
-  // Parse RGB values to detect dark backgrounds
-  const isDarkBackground = (bgColor) => {
-    if (!bgColor || bgColor === 'transparent' || bgColor === 'rgba(0, 0, 0, 0)') return false;
-    
-    const rgb = bgColor.match(/\d+/g);
-    if (rgb && rgb.length >= 3) {
-      const [r, g, b] = rgb.map(Number);
-      // Calculate luminance - if it's low, it's a dark background
-      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      return luminance < 0.5;
-    }
-    return false;
-  };
-  
-  const isDarkMode = prefersDark || 
-                     hasDarkClass || 
-                     isDarkBackground(bodyBg) || 
-                     isDarkBackground(htmlBg);
+  // Determine if we're in a dark environment
+  const isDarkMode = isDarkBackground(elementBg) || hasDarkClass || prefersDark;
   
   console.log('[Scrubber] Theme detection:', {
-    prefersDark,
+    elementBg,
+    isDarkBackground: isDarkBackground(elementBg),
     hasDarkClass,
-    bodyBg,
-    htmlBg,
-    isDarkMode
+    prefersDark,
+    finalIsDarkMode: isDarkMode
   });
   
-  // Return appropriate gradient based on theme
+  // Return appropriate highlighting based on the detected theme
+  // For dark backgrounds, use a subtle red tint that doesn't interfere with text
+  // For light backgrounds, use a very light red tint
   if (isDarkMode) {
-    return 'linear-gradient(90deg, #2a2a2a 0%, #3a1a1a 100%)';
+    return 'linear-gradient(90deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%)';
   } else {
-    return 'linear-gradient(90deg, #fff 0%, #fff5f5 100%)';
+    return 'linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 245, 245, 0.6) 100%)';
   }
 }
 
@@ -469,7 +502,7 @@ document.addEventListener('focus', (e) => {
   }
 }, true);
 
-// Automatically highlight sensitive info with theme-aware background
+// Automatically highlight sensitive info with improved theme-aware background
 async function autoHighlightSensitive(el) {
   // CRITICAL: If scrubber is disabled, clear any highlighting and return IMMEDIATELY
   if (!scrubberEnabled) {
@@ -501,8 +534,8 @@ async function autoHighlightSensitive(el) {
   
   // Apply highlighting only if sensitive data is found
   if (totalSensitive > 0) {
-    // Use smart theme detection for background
-    el.style.background = getThemeAwareBackground();
+    // Use improved theme detection for background
+    el.style.background = getThemeAwareBackground(el);
   } else {
     el.style.background = '';
   }

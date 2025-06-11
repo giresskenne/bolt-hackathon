@@ -4,59 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prompt-Scrubber - Protect Your Sensitive Data</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-      extend: {
-        colors: {
-          /* primary palette (unchanged) */
-          primary:         '#3B82F6',
-          'primary-light': '#60A5FA',
-          'primary-dark':  '#1D4ED8',
-          /* Discord-style gradient */
-          'bg-gradient-start': '#0B0E27', // deep charcoal-blue
-          'bg-gradient-mid':   '#122C7A', // rich royal-blue
-          'bg-gradient-end':   '#60A5FA'  // bright indigo/blue
-        },
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-        animation: {
-          'float':    'float 6s ease-in-out infinite',
-          'glow':     'glow 2s ease-in-out infinite alternate',
-          'slide-up': 'slideUp 0.8s ease-out',
-          'fade-in':  'fadeIn 1s ease-out'
-        },
+  <!-- Tailwind customisation -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          /* brand colours – unchanged */
+          colors: {
+            primary:         '#3B82F6',
+            'primary-light': '#60A5FA',
+            'primary-dark':  '#1D4ED8'
+          },
 
-        keyframes: {
-          float: {
-            '0%, 100%': { transform: 'translateY(0px)' },
-            '50%':      { transform: 'translateY(-20px)' }
+          /* 👉 exact ColorZilla gradient */
+          backgroundImage: {
+            'discord-hero': 'linear-gradient(135deg, #0b143a 23%, #0b143a 23%, #2857ff 100%)'
           },
-          glow: {
-            '0%':   { boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' },
-            '100%': { boxShadow: '0 0 30px rgba(59, 130, 246, 0.6)' }
+
+          /* existing animations & keyframes */
+          animation: {
+            float:    'float 6s ease-in-out infinite',
+            glow:     'glow 2s ease-in-out infinite alternate',
+            'slide-up': 'slideUp 0.8s ease-out',
+            'fade-in':  'fadeIn 1s ease-out'
           },
-          slideUp: {
-            '0%':   { transform: 'translateY(50px)', opacity: '0' },
-            '100%': { transform: 'translateY(0)',   opacity: '1' }
-          },
-          fadeIn: {
-            '0%':   { opacity: '0' },
-            '100%': { opacity: '1' }
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%':      { transform: 'translateY(-20px)' }
+            },
+            glow: {
+              '0%':   { boxShadow: '0 0 20px rgba(59,130,246,0.3)' },
+              '100%': { boxShadow: '0 0 30px rgba(59,130,246,0.6)' }
+            },
+            slideUp: {
+              '0%':   { transform: 'translateY(50px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)',   opacity: '1' }
+            },
+            fadeIn: {
+              '0%':   { opacity: '0' },
+              '100%': { opacity: '1' }
+            }
           }
         }
       }
     }
-          }
-    </script>
+  </script>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-br
-             from-bg-gradient-start
-             via-bg-gradient-mid
-             to-bg-gradient-end
-             min-h-screen text-white overflow-x-hidden">
+
+<!-- 🟦 new gradient utility in action -->
+<body class="bg-discord-hero min-h-screen text-white overflow-x-hidden">
     <!-- Navigation -->
     <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
         <div class="max-w-7xl mx-auto px-6 py-4">

@@ -6,7 +6,7 @@
     "gen": "node src/build.mjs",          
     "build": "npm run gen && npx webpack",
     "dev": "npx webpack --mode development --watch",
-    "package": "npm run build && cd dist && zip -r ../prompt-scrubber-v$(node -p \"require('../package.json').version\").zip .",
+    "package": "npm run build && node scripts/package.mjs",
     "preversion": "npm test",
     "version": "npm run build && git add -A dist",
     "postversion": "git push && git push --tags"
@@ -14,6 +14,7 @@
   "devDependencies": {
     "webpack": "^5.98.0",
     "webpack-cli": "^5.1.4",
-    "babel-loader": "^9.1.3"
+    "babel-loader": "^9.1.3",
+    "archiver": "^7.0.1"
   }
 }

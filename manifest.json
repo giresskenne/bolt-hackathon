@@ -21,9 +21,7 @@
     "service_worker": "src/bg.js"
   },
   "permissions": [
-    "storage",
-    "unlimitedStorage",
-    "activeTab"
+    "storage"
   ],
   "action": {
     "default_popup": "popup/popup.html",

@@ -1,82 +1,99 @@
-import React from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react'
+import { ChevronDown, ChevronUp, MessageCircle, Mail, Phone } from 'lucide-react'
 
-const FAQPage = () => {
-  const [openItems, setOpenItems] = useState({});
+export default function FAQPage() {
+  const [openItems, setOpenItems] = useState({})
 
   const toggleItem = (index) => {
     setOpenItems(prev => ({
       ...prev,
       [index]: !prev[index]
-    }));
-  };
+    }))
+  }
 
   const faqData = [
     {
-      question: "What is this service?",
-      answer: "Our service provides advanced text processing and content management solutions to help you streamline your workflow and improve productivity."
+      question: "What happens when I reach my quota?",
+      answer: "On the Free plan, scrubbing will be disabled until the next month. Pro users have unlimited scrubs. You'll receive notifications as you approach your limits."
     },
     {
-      question: "How does pricing work?",
-      answer: "We offer flexible pricing plans to suit different needs. You can choose from our Basic, Pro, or Enterprise plans, each with different features and usage limits."
+      question: "Can I change plans anytime?",
+      answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any billing adjustments."
     },
     {
-      question: "Is there a free trial?",
-      answer: "Yes, we offer a free trial period so you can explore our features and see how our service fits your needs before committing to a paid plan."
+      question: "Is my data secure?",
+      answer: "Absolutely. All processing happens locally in your browser. We never see, store, or transmit your sensitive data. Your custom rules are encrypted and stored locally on your device."
     },
     {
-      question: "How secure is my data?",
-      answer: "We take data security seriously. All data is encrypted in transit and at rest, and we follow industry best practices for data protection and privacy."
+      question: "Do you offer refunds?",
+      answer: "Yes, we offer a 30-day money-back guarantee for all paid plans, no questions asked. Contact our support team to process your refund."
     },
     {
-      question: "Can I cancel my subscription anytime?",
-      answer: "Yes, you can cancel your subscription at any time. Your access will continue until the end of your current billing period."
+      question: "How does the extension work?",
+      answer: "Prompt-Scrubber runs locally in your browser and scans text as you type. When sensitive data is detected, it highlights the text and offers a 'Scrub' button to mask the information before you send it."
     },
     {
-      question: "Do you offer customer support?",
-      answer: "We provide comprehensive customer support through multiple channels including email, chat, and our knowledge base."
+      question: "Which websites are supported?",
+      answer: "Free plan supports ChatGPT, Claude, Gemini, and Copilot. Pro plan works on any website via allow-list. Enterprise includes organization-wide policy control."
+    },
+    {
+      question: "Can I add custom patterns?",
+      answer: "Yes! You can create custom rules to detect organization-specific sensitive data. Free plan includes 25 custom rules, Pro includes 100, and Enterprise has unlimited rules."
+    },
+    {
+      question: "How accurate is the detection?",
+      answer: "Our detection engine uses 30+ built-in patterns with high accuracy. Pro plan includes AI heuristic detection for even better results. You can also fine-tune with custom rules."
+    },
+    {
+      question: "Does it work offline?",
+      answer: "Yes! All detection and masking happens locally in your browser, so it works even without an internet connection. Only license validation requires connectivity."
+    },
+    {
+      question: "Can I recover scrubbed data?",
+      answer: "Pro and Enterprise plans include encrypted local history with undelete functionality. Free plan keeps history for 24 hours. You can always undo recent scrub actions."
     }
-  ];
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="max-w-4xl mx-auto px-4 py-16">
+    <div className="min-h-screen text-white py-20 px-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Frequently Asked Questions
+          <h1 className="text-4xl lg:text-5xl font-bold mb-6">
+            Frequently Asked <span className="text-primary-light">Questions</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Find answers to common questions about our service, pricing, and features.
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Find answers to common questions about Prompt-Scrubber, our pricing, features, and how we protect your sensitive data.
           </p>
         </div>
 
-        <div className="space-y-4">
+        {/* FAQ Items */}
+        <div className="space-y-4 mb-16">
           {faqData.map((item, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 hover:shadow-md"
+              className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden transition-all duration-300 hover:border-primary/30"
             >
               <button
                 onClick={() => toggleItem(index)}
-                className="w-full px-6 py-5 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                className="w-full px-8 py-6 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-inset group"
               >
-                <h3 className="text-lg font-semibold text-gray-900 pr-4">
+                <h3 className="text-lg font-semibold text-white pr-4 group-hover:text-primary-light transition-colors">
                   {item.question}
                 </h3>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 p-2 rounded-lg bg-white/5 group-hover:bg-primary/20 transition-colors">
                   {openItems[index] ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
+                    <ChevronUp className="w-5 h-5 text-primary-light" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-5 h-5 text-gray-400 group-hover:text-primary-light transition-colors" />
                   )}
                 </div>
               </button>
               
               {openItems[index] && (
-                <div className="px-6 pb-5">
-                  <div className="border-t border-gray-100 pt-4">
-                    <p className="text-gray-600 leading-relaxed">
+                <div className="px-8 pb-6">
+                  <div className="border-t border-white/10 pt-6">
+                    <p className="text-gray-300 leading-relaxed">
                       {item.answer}
                     </p>
                   </div>
@@ -86,22 +103,64 @@ const FAQPage = () => {
           ))}
         </div>
 
-        <div className="mt-16 text-center">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Still have questions?
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Can't find the answer you're looking for? Our support team is here to help.
+        {/* Contact Support Section */}
+        <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <MessageCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-4">Still have questions?</h2>
+            <p className="text-gray-300 mb-8">
+              Can't find the answer you're looking for? Our support team is here to help you get the most out of Prompt-Scrubber.
             </p>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200">
-              Contact Support
-            </button>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 hover:border-primary/30 transition-all group">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                  <Mail className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">Email Support</h3>
+                  <p className="text-sm text-gray-400">Get help via email</p>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm mb-4">
+                Send us a detailed message and we'll get back to you within 24 hours.
+              </p>
+              <button className="bg-primary hover:bg-primary-dark px-6 py-3 rounded-lg font-semibold transition-colors w-full">
+                Contact Support
+              </button>
+            </div>
+
+            <div className="bg-white/5 rounded-2xl p-6 border border-white/10 hover:border-green-500/30 transition-all group">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
+                  <Phone className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">Live Chat</h3>
+                  <p className="text-sm text-gray-400">Chat with our team</p>
+                </div>
+              </div>
+              <p className="text-gray-300 text-sm mb-4">
+                Get instant help from our support team during business hours.
+              </p>
+              <button className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition-colors w-full">
+                Start Chat
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-400">
+              <strong>Business Hours:</strong> Monday - Friday, 9 AM - 6 PM PST<br />
+              <strong>Average Response Time:</strong> Under 4 hours
+            </p>
           </div>
         </div>
       </div>
     </div>
-  );
-};
-
-export default FAQPage;
+  )
+}

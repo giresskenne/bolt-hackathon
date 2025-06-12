@@ -1,188 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt-Scrubber - Protect Your Sensitive Data</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',
-                        'primary-light': '#60A5FA',
-                        'primary-dark': '#1D4ED8',
-                        'bg-gradient-start': '#1e1b4b',
-                        'bg-gradient-end': '#312e81'
-                    },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                        'slide-up': 'slideUp 0.8s ease-out',
-                        'fade-in': 'fadeIn 1s ease-out'
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-20px)' }
-                        },
-                        glow: {
-                            '0%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' },
-                            '100%': { boxShadow: '0 0 30px rgba(59, 130, 246, 0.6)' }
-                        },
-                        slideUp: {
-                            '0%': { transform: 'translateY(50px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' }
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' }
-                        }
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt-Scrubber – Protect Your Sensitive Data</title>
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind customisation -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          /* brand colours – unchanged */
+          colors: {
+            primary:         '#3B82F6',
+            'primary-light': '#60A5FA',
+            'primary-dark':  '#1D4ED8'
+          },
+
+          /* 👉 exact ColorZilla gradient */
+          backgroundImage: {
+            'discord-hero': 'linear-gradient(135deg, #0b143a 23%, #0b143a 23%, #2857ff 100%)'
+          },
+
+          /* existing animations & keyframes */
+          animation: {
+            float:    'float 6s ease-in-out infinite',
+            glow:     'glow 2s ease-in-out infinite alternate',
+            'slide-up': 'slideUp 0.8s ease-out',
+            'fade-in':  'fadeIn 1s ease-out'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%':      { transform: 'translateY(-20px)' }
+            },
+            glow: {
+              '0%':   { boxShadow: '0 0 20px rgba(59,130,246,0.3)' },
+              '100%': { boxShadow: '0 0 30px rgba(59,130,246,0.6)' }
+            },
+            slideUp: {
+              '0%':   { transform: 'translateY(50px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)',   opacity: '1' }
+            },
+            fadeIn: {
+              '0%':   { opacity: '0' },
+              '100%': { opacity: '1' }
             }
+          }
         }
-    </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+      }
+    }
+  </script>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
 </head>
-<body class="bg-gradient-to-br from-bg-gradient-start via-purple-900 to-bg-gradient-end min-h-screen text-white overflow-x-hidden">
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center animate-glow">
-                        <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <span class="text-xl font-bold">Prompt-Scrubber</span>
-                </div>
-                
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#home" class="hover:text-primary-light transition-colors">Home</a>
-                    <a href="#features" class="hover:text-primary-light transition-colors">Features</a>
-                    <a href="#demo" class="hover:text-primary-light transition-colors">Demo</a>
-                    <a href="#download" class="hover:text-primary-light transition-colors">Download</a>
-                    <a href="textarea.html" class="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg transition-colors">Try Demo</a>
-                </div>
 
-                <button class="md:hidden" id="mobile-menu-btn">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
+<!-- 🟦 new gradient utility in action -->
+<body class="bg-discord-hero min-h-screen text-white overflow-x-hidden">
 
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="fixed inset-0 z-40 bg-black/90 backdrop-blur-lg hidden">
-        <div class="flex flex-col items-center justify-center h-full space-y-8 text-xl">
-            <a href="#home" class="hover:text-primary-light transition-colors">Home</a>
-            <a href="#features" class="hover:text-primary-light transition-colors">Features</a>
-            <a href="#demo" class="hover:text-primary-light transition-colors">Demo</a>
-            <a href="#download" class="hover:text-primary-light transition-colors">Download</a>
-            <a href="textarea.html" class="bg-primary hover:bg-primary-dark px-6 py-3 rounded-lg transition-colors">Try Demo</a>
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center animate-glow">
+            <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+          </div>
+          <span class="text-xl font-bold">Prompt-Scrubber</span>
         </div>
+
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="#home"      class="hover:text-primary-light transition-colors">Home</a>
+          <a href="#features"  class="hover:text-primary-light transition-colors">Features</a>
+          <a href="#demo"      class="hover:text-primary-light transition-colors">Demo</a>
+          <a href="#download"  class="hover:text-primary-light transition-colors">Download</a>
+          <a href="textarea.html" class="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg transition-colors">Try Demo</a>
+        </div>
+
+        <button class="md:hidden" id="mobile-menu-btn">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
     </div>
+  </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="pt-32 pb-20 px-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                <!-- Left Content -->
-                <div class="animate-slide-up">
-                    <h1 class="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
-                        Protect Your
-                        <span class="bg-gradient-to-r from-primary-light to-purple-400 bg-clip-text text-transparent">
-                            Sensitive Data
-                        </span>
-                    </h1>
-                    <p class="text-xl text-gray-300 mb-8 leading-relaxed">
-                        Automatically detect confidential information as you type or paste
-                        while offering you the freedom to set your own custom rules
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <button class="bg-primary hover:bg-primary-dark px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 animate-glow">
-                            <i data-lucide="download" class="w-5 h-5 inline mr-2"></i>
-                            Get Started
-                        </button>
-                        <button class="border border-white/30 hover:border-primary px-8 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center">
-                            <i data-lucide="play" class="w-5 h-5 mr-2"></i>
-                            Watch Demo
-                        </button>
-                    </div>
-                </div>
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="fixed inset-0 z-40 bg-black/90 backdrop-blur-lg hidden">
+    <div class="flex flex-col items-center justify-center h-full space-y-8 text-xl">
+      <a href="#home"      class="hover:text-primary-light transition-colors">Home</a>
+      <a href="#features"  class="hover:text-primary-light transition-colors">Features</a>
+      <a href="#demo"      class="hover:text-primary-light transition-colors">Demo</a>
+      <a href="#download"  class="hover:text-primary-light transition-colors">Download</a>
+      <a href="textarea.html" class="bg-primary hover:bg-primary-dark px-6 py-3 rounded-lg transition-colors">Try Demo</a>
+    </div>
+  </div>
 
-                <!-- Right Content - New Chat AI Image -->
-                <div class="relative animate-float">
-                    <div class="relative">
-                        <!-- Main Chat AI Image -->
-                        <img 
-                            src="icons/image copy.png" 
-                            alt="Chat AI Interface with Prompt-Scrubber Protection" 
-                            class="w-full h-auto rounded-3xl shadow-2xl border border-white/20"
-                        />
-                        
-                        <!-- Floating Protection Badge -->
-                        <div class="absolute top-4 right-4 bg-primary/90 backdrop-blur-lg rounded-full px-4 py-2 border border-white/20 animate-glow">
-                            <div class="flex items-center space-x-2">
-                                <i data-lucide="shield-check" class="w-4 h-4 text-white"></i>
-                                <span class="text-sm font-semibold text-white">Protected</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Floating Stats -->
-                        <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
-                            <div class="flex items-center space-x-4">
-                                <div class="text-center">
-                                    <div class="text-lg font-bold text-primary">30+</div>
-                                    <div class="text-xs text-gray-300">Patterns</div>
-                                </div>
-                                <div class="w-px h-8 bg-white/20"></div>
-                                <div class="text-center">
-                                    <div class="text-lg font-bold text-green-400">100%</div>
-                                    <div class="text-xs text-gray-300">Local</div>
-                                </div>
-                                <div class="w-px h-8 bg-white/20"></div>
-                                <div class="text-center">
-                                    <div class="text-lg font-bold text-yellow-400">Real-time</div>
-                                    <div class="text-xs text-gray-300">Detection</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Floating Feature Highlights -->
-                        <div class="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle">
-                            <div class="flex items-center space-x-2">
-                                <i data-lucide="eye" class="w-4 h-4 text-primary"></i>
-                                <span class="text-sm font-medium">Auto-detect</span>
-                            </div>
-                        </div>
-                        
-                        <div class="absolute -right-4 top-1/3 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle" style="animation-delay: 1s;">
-                            <div class="flex items-center space-x-2">
-                                <i data-lucide="zap" class="w-4 h-4 text-yellow-400"></i>
-                                <span class="text-sm font-medium">One-click</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <!-- Hero Section -->
+  <section id="home" class="pt-32 pb-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <!-- Left Content -->
+        <div class="animate-slide-up">
+          <h1 class="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+            Protect Your
+            <span class="bg-gradient-to-r from-primary-light to-purple-400 bg-clip-text text-transparent">
+              Sensitive Data
+            </span>
+          </h1>
+          <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+            Automatically detect confidential information as you type or paste
+            while offering you the freedom to set your own custom rules
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button class="bg-primary hover:bg-primary-dark px-8 py-4 rounded-xl text-lg font-semibold transition-all transform hover:scale-105 animate-glow">
+              <i data-lucide="download" class="w-5 h-5 inline mr-2"></i>
+              Get Started
+            </button>
+            <button class="border border-white/30 hover:border-primary px-8 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center">
+              <i data-lucide="play" class="w-5 h-5 mr-2"></i>
+              Watch Demo
+            </button>
+          </div>
         </div>
-    </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-20 px-6">
-        <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl lg:text-5xl font-bold mb-6">
-                    Powerful <span class="text-primary-light">Protection</span> Features
-                </h2>
-                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-                    Advanced detection algorithms protect your sensitive information across all platforms
-                </p>
+       <!-- Right Content - New Chat AI Image -->
+        <div class="relative animate-float">
+          <div class="relative">
+            <!-- Main Chat AI Image -->
+            <img src="icons/image copy.png"
+                 alt="Chat AI Interface with Prompt-Scrubber Protection"
+                 class="w-full h-auto rounded-3xl shadow-2xl border border-white/20" />
+
+            <!-- Floating Protection Badge -->
+
+            <div class="absolute top-4 right-4 bg-primary/90 backdrop-blur-lg rounded-full px-4 py-2 border border-white/20 animate-glow">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="shield-check" class="w-4 h-4 text-white"></i>
+                <span class="text-sm font-semibold text-white">Protected</span>
+              </div>
+            </div>
+             
+            <!-- Floating Stats -->
+
+            <div class="absolute bottom-4 left-4 bg-black/60 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+              <div class="flex items-center space-x-4">
+                <div class="text-center">
+                  <div class="text-lg font-bold text-primary">30+</div>
+                  <div class="text-xs text-gray-300">Patterns</div>
+                </div>
+                <div class="w-px h-8 bg-white/20"></div>
+                <div class="text-center">
+                  <div class="text-lg font-bold text-green-400">100%</div>
+                  <div class="text-xs text-gray-300">Local</div>
+                </div>
+                <div class="w-px h-8 bg-white/20"></div>
+                <div class="text-center">
+                  <div class="text-lg font-bold text-yellow-400">Real-time</div>
+                  <div class="text-xs text-gray-300">Detection</div>
+                </div>
+              </div>
             </div>
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+               <!-- Floating Feature Highlights -->
+            <div class="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="eye" class="w-4 h-4 text-primary"></i>
+                <span class="text-sm font-medium">Auto-detect</span>
+              </div>
+            </div>
+
+            <div class="absolute -right-4 top-1/3 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-bounce-subtle" style="animation-delay:1s;">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="zap" class="w-4 h-4 text-yellow-400"></i>
+                <span class="text-sm font-medium">One-click</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl lg:text-5xl font-bold mb-6">
+          Powerful <span class="text-primary-light">Protection</span> Features
+        </h2>
+        <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+          Advanced detection algorithms protect your sensitive information across all platforms
+        </p>
+      </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
                 <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-primary/30 transition-all group">
                     <div class="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/30 transition-colors">
@@ -237,10 +251,10 @@
                     <p class="text-gray-300">Works across ChatGPT, Claude, Gemini, Copilot, and any website with text inputs.</p>
                 </div>
             </div>
-        </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Demo Section -->
+   <!-- Demo Section -->
     <section id="demo" class="py-20 px-6 bg-black/20">
         <div class="max-w-7xl mx-auto text-center">
             <h2 class="text-4xl lg:text-5xl font-bold mb-6">
@@ -356,7 +370,7 @@
         </div>
     </footer>
 
-    <!-- Load Lucide JavaScript library before using it -->
+   <!-- Load Lucide JavaScript library before using it -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
     <script>
         // Wait for DOM content to be loaded and Lucide library to be available

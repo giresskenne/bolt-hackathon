@@ -55,7 +55,7 @@ export default function FAQPage() {
   ]
 
   return (
-    <div className="min-h-screen text-white py-20 px-6">
+    <div className="min-h-screen bg-discord-hero text-white py-8 px-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
@@ -106,7 +106,7 @@ export default function FAQPage() {
         {/* Contact Support Section */}
         <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-glow">
               <MessageCircle className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-2xl font-bold mb-4">Still have questions?</h2>

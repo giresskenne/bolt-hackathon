@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen text-white py-20 px-6">
+    <div className="min-h-screen bg-discord-hero text-white py-8 px-6">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
         <div className="prose prose-invert max-w-none">

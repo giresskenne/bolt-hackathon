@@ -93,7 +93,7 @@ export default function EnterprisePage() {
   ]
 
   return (
-    <div className="min-h-screen text-white py-20 px-6">
+    <div className="min-h-screen bg-discord-hero text-white py-8 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Hero Section */}
         <div className="text-center mb-16">

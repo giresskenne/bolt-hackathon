@@ -47,7 +47,7 @@ export default function DocsPage() {
   ]
 
   return (
-    <div className="min-h-screen text-white py-8 px-6">
+    <div className="min-h-screen bg-discord-hero text-white py-8 px-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">

@@ -118,7 +118,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen text-white py-8 px-6">
+    <div className="min-h-screen bg-discord-hero text-white py-8 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">

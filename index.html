@@ -66,8 +66,12 @@
     <div class="max-w-7xl mx-auto px-6 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center animate-glow">
-            <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+          <!-- Logo placeholder -->
+          <div class="w-8 h-8 bg-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
+            <img src="icons/logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="w-full h-full bg-primary rounded-lg flex items-center justify-center" style="display: none;">
+              <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+            </div>
           </div>
           <span class="text-xl font-bold">Prompt-Scrubber</span>
         </div>
@@ -104,12 +108,21 @@
       <div class="grid lg:grid-cols-2 gap-12 items-center">
         <!-- Left Content -->
         <div class="animate-slide-up">
-          <h1 class="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
-            Protect Your
-            <span class="bg-gradient-to-r from-primary-light to-purple-400 bg-clip-text text-transparent">
-              Sensitive Data
-            </span>
-          </h1>
+          <div class="flex items-center space-x-3 mb-6">
+            <!-- Logo placeholder for hero section -->
+            <div class="w-12 h-12 bg-gray-300 rounded-xl flex items-center justify-center overflow-hidden">
+              <img src="icons/logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="w-full h-full bg-primary rounded-xl flex items-center justify-center" style="display: none;">
+                <i data-lucide="shield-check" class="w-7 h-7 text-white"></i>
+              </div>
+            </div>
+            <h1 class="text-5xl lg:text-7xl font-bold leading-tight">
+              Protect Your
+              <span class="bg-gradient-to-r from-primary-light to-purple-400 bg-clip-text text-transparent">
+                Sensitive Data
+              </span>
+            </h1>
+          </div>
           <p class="text-xl text-gray-300 mb-8 leading-relaxed">
             Automatically detect confidential information as you type or paste
             while offering you the freedom to set your own custom rules

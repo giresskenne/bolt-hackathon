@@ -299,7 +299,7 @@ export default function DashboardPage() {
                   <div key={rule.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{rule.value}</p>
-                      <p className="text-sm text-gray-400">→ {rule.label}</p>
+                      <p className="text-sm text-gray-400">→ &lt;{rule.label}&gt;</p>
                     </div>
                     <div className="flex items-center space-x-2 ml-4">
                       <button

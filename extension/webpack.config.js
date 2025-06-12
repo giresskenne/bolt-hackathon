@@ -1,4 +1,4 @@
-// webpack.config.js - Extension bundling
+// webpack.config.js
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,15 +9,15 @@ export default {
   mode: 'production',
   entry: {
     contentScript: [
-      './src/redactor.js',
+      './src/redactor.js', // imports redactor.js
       './src/contentScript.js'
     ],
-    bg: './src/bg.js'
+    bg:            './src/bg.js'             // MV3 service-worker
   },
   output: {
-    path: path.resolve(__dirname, 'dist/src'),
-    filename: '[name].js',
-    iife: true
+    path:    path.resolve(__dirname, 'dist/src'),  // Output to dist/src/
+    filename:'[name].js',                          // contentScript.js, bg.js
+    iife:    true                                  // produce classic scripts
   },
   devtool: false,
   module: {
@@ -25,10 +25,7 @@ export default {
       {
         test: /\.m?js$/,
         exclude: /node_modules/,
-        use: { 
-          loader: 'babel-loader', 
-          options: { presets: [] } 
-        }
+        use: { loader: 'babel-loader', options: { presets: [] } }
       }
     ]
   }

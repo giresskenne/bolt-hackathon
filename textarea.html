@@ -1,152 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt-Scrubber Demo - Interactive Textarea</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B82F6',
-                        'primary-light': '#60A5FA',
-                        'primary-dark': '#1D4ED8',
-                        'bg-gradient-start': '#1e1b4b',
-                        'bg-gradient-end': '#312e81'
-                    },
-                    animation: {
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                        'pulse-slow': 'pulse 3s ease-in-out infinite',
-                        'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite'
-                    },
-                    keyframes: {
-                        glow: {
-                            '0%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' },
-                            '100%': { boxShadow: '0 0 30px rgba(59, 130, 246, 0.6)' }
-                        },
-                        bounceSubtle: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-5px)' }
-                        }
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt-Scrubber Demo - Interactive Textarea</title>
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tailwind customisation -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          /* brand colours – unchanged */
+          colors: {
+            primary:         '#3B82F6',
+            'primary-light': '#60A5FA',
+            'primary-dark':  '#1D4ED8'
+          },
+
+          /* Discord-style hero gradient (same as index.html) */
+          backgroundImage: {
+            'discord-hero':
+              'linear-gradient(135deg, #0b143a 23%, #0b143a 23%, #2857ff 100%)'
+          },
+
+          /* existing animations & keyframes */
+          animation: {
+            glow:          'glow 2s ease-in-out infinite alternate',
+            'pulse-slow':  'pulse 3s ease-in-out infinite',
+            'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite'
+          },
+          keyframes: {
+            glow: {
+              '0%':   { boxShadow: '0 0 20px rgba(59,130,246,0.3)' },
+              '100%': { boxShadow: '0 0 30px rgba(59,130,246,0.6)' }
+            },
+            bounceSubtle: {
+              '0%,100%': { transform: 'translateY(0)' },
+              '50%':     { transform: 'translateY(-5px)' }
             }
+          }
         }
-    </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+      }
+    }
+  </script>
+
+  <!-- Lucide icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
 </head>
-<body class="bg-gradient-to-br from-bg-gradient-start via-purple-900 to-bg-gradient-end min-h-screen text-white">
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center animate-glow">
-                        <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
-                    </div>
-                    <span class="text-xl font-bold">Prompt-Scrubber Demo</span>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <a href="index.html" class="hover:text-primary-light transition-colors">← Back to Home</a>
-                    <button id="clearBtn" class="bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg transition-colors border border-red-500/30">
-                        <i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i>
-                        Clear
-                    </button>
-                </div>
-            </div>
+
+<!-- ✅ uses the new gradient utility -->
+<body class="bg-discord-hero min-h-screen text-white">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center animate-glow">
+            <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+          </div>
+          <span class="text-xl font-bold">Prompt-Scrubber Demo</span>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="pt-24 pb-12 px-6">
-        <div class="max-w-6xl mx-auto">
-            <!-- Header -->
-            <div class="text-center mb-12">
-                <h1 class="text-4xl lg:text-5xl font-bold mb-6">
-                    Interactive <span class="text-primary-light">Demo</span>
-                </h1>
-                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
-                    Try typing or pasting sensitive information to see how Prompt-Scrubber detects and protects your data in real-time
-                </p>
+        <div class="flex items-center space-x-4">
+          <a href="index.html" class="hover:text-primary-light transition-colors">← Back to Home</a>
+          <button id="clearBtn"
+                  class="bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg transition-colors border border-red-500/30">
+            <i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i>
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="pt-24 pb-12 px-6">
+    <div class="max-w-6xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl lg:text-5xl font-bold mb-6">
+          Interactive <span class="text-primary-light">Demo</span>
+        </h1>
+        <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+          Try typing or pasting sensitive information to see how Prompt-Scrubber detects and protects your data in real-time
+        </p>
+      </div>
+
+      <!-- Demo Interface -->
+      <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Chat Interface -->
+        <div class="lg:col-span-2">
+          <div class="bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10 overflow-hidden">
+            <!-- Chat Header -->
+            <div class="bg-white/5 px-6 py-4 border-b border-white/10">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                  <i data-lucide="bot" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">AI Assistant</h3>
+                  <p class="text-sm text-gray-400">Protected by Prompt-Scrubber</p>
+                </div>
+                <div class="ml-auto flex items-center space-x-2">
+                  <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow"></div>
+                  <span class="text-sm text-green-400">Protected</span>
+                </div>
+              </div>
             </div>
 
-            <!-- Demo Interface -->
-            <div class="grid lg:grid-cols-3 gap-8">
-                <!-- Chat Interface -->
-                <div class="lg:col-span-2">
-                    <div class="bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10 overflow-hidden">
-                        <!-- Chat Header -->
-                        <div class="bg-white/5 px-6 py-4 border-b border-white/10">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                                    <i data-lucide="bot" class="w-5 h-5 text-white"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-semibold">AI Assistant</h3>
-                                    <p class="text-sm text-gray-400">Protected by Prompt-Scrubber</p>
-                                </div>
-                                <div class="ml-auto flex items-center space-x-2">
-                                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse-slow"></div>
-                                    <span class="text-sm text-green-400">Protected</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Chat Messages -->
-                        <div class="p-6 space-y-4 min-h-[300px]" id="chatMessages">
-                            <div class="flex items-start space-x-3">
-                                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <i data-lucide="bot" class="w-4 h-4 text-white"></i>
-                                </div>
-                                <div class="bg-white/10 rounded-2xl px-4 py-3 max-w-md">
-                                    <p class="text-sm">Hello! I'm here to help. Feel free to share any information - Prompt-Scrubber will protect your sensitive data automatically.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Input Area -->
-                        <div class="p-6 border-t border-white/10">
-                            <div class="relative">
-                                <textarea 
-                                    id="chatInput" 
-                                    placeholder="Type your message here... Try entering an email, phone number, or API key to see the protection in action!"
-                                    class="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 pr-20 text-white placeholder-gray-400 resize-none focus:outline-none focus:border-primary transition-colors min-h-[100px]"
-                                    rows="3"
-                                ></textarea>
-                                
-                                <!-- Scrub Button (appears when sensitive data detected) -->
-                                <button 
-                                    id="scrubBtn" 
-                                    class="absolute bottom-3 right-3 bg-primary hover:bg-primary-dark px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-2 opacity-0 pointer-events-none animate-glow"
-                                >
-                                    <i data-lucide="shield-check" class="w-4 h-4"></i>
-                                    <span>Scrub</span>
-                                </button>
-
-                                <!-- Send Button -->
-                                <button 
-                                    id="sendBtn" 
-                                    class="absolute bottom-3 right-3 bg-primary hover:bg-primary-dark px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-2"
-                                >
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                    <span>Send</span>
-                                </button>
-                            </div>
-
-                            <!-- Detection Status -->
-                            <div id="detectionStatus" class="mt-3 text-sm text-gray-400 opacity-0 transition-opacity">
-                                <div class="flex items-center space-x-2">
-                                    <i data-lucide="shield-alert" class="w-4 h-4 text-yellow-400"></i>
-                                    <span id="statusText">Sensitive data detected</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Chat Messages -->
+            <div class="p-6 space-y-4 min-h-[300px]" id="chatMessages">
+              <div class="flex items-start space-x-3">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i data-lucide="bot" class="w-4 h-4 text-white"></i>
                 </div>
+                <div class="bg-white/10 rounded-2xl px-4 py-3 max-w-md">
+                  <p class="text-sm">
+                    Hello! I'm here to help. Feel free to share any information – Prompt-Scrubber will protect your sensitive data automatically.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-6 border-t border-white/10">
+              <div class="relative">
+                <textarea id="chatInput"
+                          placeholder="Type your message here... Try entering an email, phone number, or API key to see the protection in action!"
+                          class="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 pr-20 text-white placeholder-gray-400 resize-none focus:outline-none focus:border-primary transition-colors min-h-[100px]"
+                          rows="3"></textarea>
+
+                <!-- Scrub Button (appears when sensitive data detected) -->
+                <button id="scrubBtn"
+                        class="absolute bottom-3 right-3 bg-primary hover:bg-primary-dark px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-2 opacity-0 pointer-events-none animate-glow">
+                  <i data-lucide="shield-check" class="w-4 h-4"></i>
+                  <span>Scrub</span>
+                </button>
+
+                <!-- Send Button -->
+                <button id="sendBtn"
+                        class="absolute bottom-3 right-3 bg-primary hover:bg-primary-dark px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center space-x-2">
+                  <i data-lucide="send" class="w-4 h-4"></i>
+                  <span>Send</span>
+                </button>
+              </div>
+
+              <!-- Detection Status -->
+              <div id="detectionStatus" class="mt-3 text-sm text-gray-400 opacity-0 transition-opacity">
+                <div class="flex items-center space-x-2">
+                  <i data-lucide="shield-alert" class="w-4 h-4 text-yellow-400"></i>
+                  <span id="statusText">Sensitive data detected</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
                 <!-- Sidebar -->
                 <div class="space-y-6">

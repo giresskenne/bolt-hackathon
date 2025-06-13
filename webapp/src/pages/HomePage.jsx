@@ -1,6 +1,8 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Shield, Download, Play, Eye, Palette, MousePointerClick, Settings, Globe, Activity, Clipboard } from 'lucide-react'
+import { Download, Play, Eye, Palette, MousePointerClick, Settings, Globe, Shield } from 'lucide-react'
+import Logo from '/extension/icons/Logo.png'
+import HeroImage from '/assets/image copy-BoyRcw_C.png'
 
 export default function HomePage() {
   return (
@@ -30,7 +32,7 @@ export default function HomePage() {
                   Get Started Free
                 </Link>
                 <Link
-                  to="/docs"
+                  to="/demo"
                   className="border border-white/30 hover:border-primary px-8 py-4 rounded-xl text-lg font-semibold transition-all flex items-center justify-center"
                 >
                   <Play className="w-5 h-5 mr-2" />
@@ -40,22 +42,38 @@ export default function HomePage() {
             </div>
 
             {/* Right Content - Hero Image */}
-            <div className="relative animate-float">
-              <div className="relative">
+            <div className="relative">
+              <div className="relative animate-bounce-slow">
                 <img 
-                  src="/assets/image copy-BoyRcw_C.png"
+                  src={HeroImage}
                   alt="Chat AI Interface with Prompt-Scrubber Protection"
-                  className="w-full h-auto rounded-3xl shadow-2xl border border-white/20" 
+                  className="w-full h-auto rounded-3xl shadow-2xl border border-white/20"
                 />
 
-                {/* Floating Protection Badge */}
-                <div className="absolute top-4 right-4 bg-primary/90 backdrop-blur-lg rounded-full px-4 py-2 border border-white/20 animate-glow">
+                {/* Auto-detect Badge */}
+                <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-float-badge-delay">
                   <div className="flex items-center space-x-2">
-                    <Shield className="w-4 h-4 text-white" />
-                    <span className="text-sm font-semibold text-white">Protected</span>
+                    <i data-lucide="eye" className="w-4 h-4 text-primary"></i>
+                    <span className="text-sm font-medium">Auto-detect</span>
                   </div>
                 </div>
-                
+
+                {/* One-click Badge */}
+                <div className="absolute -right-4 top-1/3 bg-white/10 backdrop-blur-lg rounded-2xl p-3 border border-white/20 animate-float-badge-delay">
+                  <div className="flex items-center space-x-2">
+                    <i data-lucide="eye" className="w-4 h-4 text-primary"></i>
+                    <span className="text-sm font-medium">One-click</span>
+                  </div>
+                </div>
+
+                {/* Protected Badge */}
+                <div className="absolute top-6 right-6">
+                  <div className="bg-blue-600/90 backdrop-blur-sm rounded-xl px-4 py-1.5 flex items-center space-x-2">
+                    <Shield className="w-4 h-4 text-white" />
+                    <span className="text-sm font-normal text-white">Protected</span>
+                  </div>
+                </div>
+
                 {/* Floating Stats */}
                 <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
                   <div className="flex items-center space-x-4">
@@ -171,8 +189,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+              <div className="w-8 h-8">
+                <img src={Logo} alt="Prompt-Scrubber Logo" className="w-full h-full" />
               </div>
               <span className="text-xl font-bold">Prompt-Scrubber</span>
             </div>

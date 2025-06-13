@@ -15,6 +15,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import TermsOfServicePage from './pages/TermsOfServicePage'
 import CookiePolicyPage from './pages/CookiePolicyPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import TextArea from './components/TextArea'
 
 function App() {
   const { isAuthenticated, isLoading } = useAuthStore()
@@ -40,6 +41,7 @@ function App() {
         <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="terms-of-service" element={<TermsOfServicePage />} />
         <Route path="cookie-policy" element={<CookiePolicyPage />} />
+        <Route path="demo" element={<TextArea />} />
         
         {/* Protected Routes */}
         <Route path="dashboard" element={

@@ -11,6 +11,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
+import { globalLimiter, authLimiter, apiLimiter, licensePingLimiter } from './rateLimit.js';
 
 dotenv.config();
 
@@ -21,13 +22,77 @@ const PORT = process.env.PORT || 3001;
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.FRONTEND_URL || 'http://localhost:3000']
+    }
+  },
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: true,
+  crossOriginResourcePolicy: { policy: "same-site" },
+  dnsPrefetchControl: true,
+  frameguard: { action: "deny" },
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  ieNoOpen: true,
+  noSniff: true,
+  permittedCrossDomainPolicies: { permittedPolicies: "none" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  xssFilter: true
+}));
+
+// Configure CORS with more restrictive options
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  credentials: true,
+  maxAge: 600 // Reduce preflight caching to 10 minutes
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.raw({ type: 'application/json', limit: '10mb' }));
+
+// Parse JSON with size limits and validation
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
+
+app.use(express.raw({ 
+  type: 'application/json', 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    if (buf.length === 0) return;
+    try {
+      JSON.parse(buf);
+    } catch (e) {
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
+
+// Apply global rate limiter to all routes
+app.use(globalLimiter);
+
+// Apply authentication rate limiter to auth routes
+app.use('/api/auth', authLimiter);
+
+// Apply API rate limiter with path exclusions
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/auth/') || req.path.startsWith('/webhooks/')) {
+    return next();
+  }
+  apiLimiter(req, res, next);
+});
 
 // In-memory storage (replace with database in production)
 const users = new Map();
@@ -97,12 +162,51 @@ app.post('/api/auth/signup', async (req, res) => {
 
     // Validate input
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+      return res.status(400).json({ 
+        error: 'Email and password are required',
+        fields: {
+          email: !email ? 'Email is required' : null,
+          password: !password ? 'Password is required' : null
+        }
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        error: 'Invalid email format',
+        fields: { email: 'Please enter a valid email address' }
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({ 
+        error: 'Password too short',
+        fields: { password: 'Password must be at least 8 characters long' }
+      });
+    }
+
+    // Check for common passwords
+    const commonPasswords = ['password', 'password123', '123456', 'qwerty'];
+    if (commonPasswords.includes(password.toLowerCase())) {
+      return res.status(400).json({ 
+        error: 'Password too weak',
+        fields: { password: 'Please choose a stronger password' }
+      });
+    }
+
+    // Validate plan
+    if (!['free', 'pro', 'enterprise'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid plan selected' });
     }
 
     // Check if user already exists
     const existingUser = Array.from(users.values()).find(u => u.email === email);
     if (existingUser) {
+      // Add random delay to prevent user enumeration
+      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
       return res.status(400).json({ error: 'User already exists' });
     }
 
@@ -154,15 +258,23 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     // Find user
     const user = Array.from(users.values()).find(u => u.email === email);
     if (!user) {
+      recordFailedAttempt(req.ip);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Add delay to prevent timing attacks
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Verify password
+    // Verify password with constant-time comparison
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
+      recordFailedAttempt(req.ip);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Add delay to prevent timing attacks
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -202,7 +314,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 });
 
 // License Ping Route
-app.post('/api/license/ping', authenticateToken, (req, res) => {
+app.post('/api/license/ping', authenticateToken, licensePingLimiter, (req, res) => {
   try {
     const { userId, plan, scrubCountThisMonth, timestamp, version } = req.body;
     const user = users.get(req.user.id);
@@ -459,9 +571,12 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Only start the server if this file is run directly
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
 
 export default app;

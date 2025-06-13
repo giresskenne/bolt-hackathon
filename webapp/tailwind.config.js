@@ -19,19 +19,25 @@ export default {
       animation: {
         'glow': 'glow 2s ease-in-out infinite alternate',
         'pulse-slow': 'pulse 3s ease-in-out infinite',
-        'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite'
+        'bounce-slow': 'bounce-slow 3s ease-in-out infinite',
+        'float-badge': 'float-badge 4s ease-in-out infinite',
+        'float-badge-delay': 'float-badge 4s ease-in-out infinite 2s',
       },
       keyframes: {
-        glow: {
-          '0%': { boxShadow: '0 0 20px rgba(59,130,246,0.3)' },
-          '100%': { boxShadow: '0 0 30px rgba(59,130,246,0.6)' }
+        bounce: {
+          '0%, 100%': { transform: 'translateY(-10%)' },
+          '50%': { transform: 'translateY(0)' },
         },
-        bounceSubtle: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' }
-        }
-      }
-    },
+        'bounce-slow': {
+          '0%, 100%': { transform: 'translateY(-2%)' },
+          '50%': { transform: 'translateY(0)' },
+        },
+        'float-badge': {
+          '0%, 100%': { transform: 'translateY(-15%)' },
+          '50%': { transform: 'translateY(0)' },
+        },
+      },
+    }
   },
-  plugins: [],
+  plugins: []
 }

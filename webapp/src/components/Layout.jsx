@@ -1,7 +1,8 @@
 import React from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { Shield, Menu, X, User, LogOut } from 'lucide-react'
+import { Menu, X, User, LogOut } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import Logo from '/extension/icons/Logo.png'
 
 export default function Layout() {
   const location = useLocation()
@@ -13,6 +14,7 @@ export default function Layout() {
     { name: 'Pricing', href: '/pricing' },
     { name: 'Docs', href: '/docs' },
     { name: 'FAQ', href: '/faq' },
+    { name: 'Try Demo', href: '/demo' },
   ]
 
   const userNavigation = [
@@ -28,9 +30,7 @@ export default function Layout() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center animate-glow">
-                <Shield className="w-5 h-5 text-white" />
-              </div>
+              <img src={Logo} alt="Prompt-Scrubber Logo" className="w-8 h-8" />
               <span className="text-xl font-bold text-white">Prompt-Scrubber</span>
             </Link>
 
@@ -40,11 +40,15 @@ export default function Layout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`transition-colors ${
-                    location.pathname === item.href
-                      ? 'text-primary-light font-semibold'
-                      : 'text-white hover:text-primary-light'
-                  }`}
+                  className={
+                    item.name === 'Try Demo'
+                      ? 'bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white transition-colors'
+                      : `transition-colors ${
+                          location.pathname === item.href
+                            ? 'text-primary-light font-semibold'
+                            : 'text-white hover:text-primary-light'
+                        }`
+                  }
                 >
                   {item.name}
                 </Link>
@@ -116,7 +120,11 @@ export default function Layout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className="block text-white hover:text-primary-light transition-colors"
+                  className={
+                    item.name === 'Try Demo'
+                      ? 'block bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white transition-colors text-center'
+                      : 'block text-white hover:text-primary-light transition-colors'
+                  }
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}

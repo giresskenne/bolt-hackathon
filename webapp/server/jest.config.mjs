@@ -14,9 +14,7 @@ const config = {
   detectOpenHandles: true,
   forceExit: true,
   automock: false,
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.js'],
-  moduleDirectories: ['node_modules', '<rootDir>/src/__mocks__'],
-  transformIgnorePatterns: ['node_modules/(?!(mongoose|mongodb-memory-server)/)']
+  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.js']
 };
 
 export default config;

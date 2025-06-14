@@ -1,7 +1,6 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Logo from '../../../extension/icons/Logo.png';
 
 const TextArea = () => {
   return (
@@ -12,7 +11,7 @@ const TextArea = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img 
-                src={Logo}
+                src="/extension/icons/Logo.png"
                 alt="Prompt-Scrubber Logo"
                 className="w-8 h-8"
               />

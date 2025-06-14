@@ -15,7 +15,8 @@ const config = {
   forceExit: true,
   automock: false,
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.js'],
-  moduleDirectories: ['node_modules', '<rootDir>/src/__mocks__']
+  moduleDirectories: ['node_modules', '<rootDir>/src/__mocks__'],
+  transformIgnorePatterns: ['node_modules/(?!(mongoose|mongodb-memory-server)/)']
 };
 
 export default config;

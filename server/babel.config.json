@@ -4,8 +4,21 @@
       "@babel/preset-env",
       {
         "targets": { "node": "current" },
-        "modules": false
+        "modules": false        // keep ESM for runtime
       }
     ]
-  ]
+  ],
+  "env": {
+    "test": {
+      "presets": [
+        [
+          "@babel/preset-env",
+          {
+            "targets": { "node": "current" },
+            "modules": "commonjs"   // <-- ONLY for Jest
+          }
+        ]
+      ]
+    }
+  }
 }

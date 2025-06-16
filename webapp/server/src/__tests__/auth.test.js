@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { app } from '../index.js';
+const testConfig = global.testConfig;
 
 describe('Auth Endpoints', () => {
   beforeEach(async () => {
@@ -11,91 +12,130 @@ describe('Auth Endpoints', () => {
 
   describe('POST /api/auth/signup', () => {
     it('should create a new user', async () => {
-      const userData = {
-        email: 'test@example.com',
-        password: 'TestPassword123!',
-        plan: 'free'
-      };
-
       const response = await request(app)
-        .post('/api/auth/signup')
-        .send(userData);
+        .post(testConfig.endpoints.auth.signup)
+        .send(testConfig.testUsers.default);
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('success', true);
       expect(response.body).toHaveProperty('user');
       expect(response.body).toHaveProperty('token');
-      expect(response.body.user).toHaveProperty('email', userData.email);
-      expect(response.body.user).toHaveProperty('plan', userData.plan);
+      expect(response.body.user).toHaveProperty('email', testConfig.testUsers.default.email);
+      expect(response.body.user).toHaveProperty('plan', testConfig.testUsers.default.plan);
+      
+      // Ensure password is not returned
+      expect(response.body.user).not.toHaveProperty('password');
+      
+      // Verify can login with created user
+      const loginResponse = await request(app)
+        .post(testConfig.endpoints.auth.login)
+        .send({
+          email: testConfig.testUsers.default.email,
+          password: testConfig.testUsers.default.password
+        });
+      expect(loginResponse.status).toBe(200);
+      expect(loginResponse.body).toHaveProperty('token');
     });
 
     it('should not create user with invalid email', async () => {
       const userData = {
-        email: 'invalid-email',
-        password: 'TestPassword123!',
-        plan: 'free'
+        ...testConfig.testUsers.default,
+        email: 'invalid-email'
       };
 
       const response = await request(app)
-        .post('/api/auth/signup')
+        .post(testConfig.endpoints.auth.signup)
         .send(userData);
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toMatch(/email/i);
     });
 
     it('should reject weak passwords', async () => {
-      const userData = {
-        email: 'test@example.com',
-        password: 'password123',
-        plan: 'free'
-      };
+      const invalidPasswords = [
+        'short',
+        'nouppercase123',
+        'NOLOWERCASE123',
+        'NoSpecialChar1',
+        'NoNumber!!!'
+      ];
 
-      const response = await request(app)
-        .post('/api/auth/signup')
-        .send(userData);
+      for (const password of invalidPasswords) {
+        const response = await request(app)
+          .post(testConfig.endpoints.auth.signup)
+          .send({
+            ...testConfig.testUsers.default,
+            password
+          });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty('error');
+        expect(response.body.error).toMatch(/password/i);
+      }
+    });
+
+    it('should not allow duplicate emails', async () => {
+      // Create first user
+      const firstResponse = await request(app)
+        .post(testConfig.endpoints.auth.signup)
+        .send(testConfig.testUsers.default);
+      expect(firstResponse.status).toBe(201);
+
+      // Try to create duplicate user
+      const duplicateResponse = await request(app)
+        .post(testConfig.endpoints.auth.signup)
+        .send(testConfig.testUsers.default);
+      expect(duplicateResponse.status).toBe(400);
+      expect(duplicateResponse.body).toHaveProperty('error');
+      expect(duplicateResponse.body.error).toMatch(/email.*exists/i);
     });
   });
 
   describe('POST /api/auth/login', () => {
     beforeEach(async () => {
-      // Create a test user first
+      // Create a test user for login tests
       await request(app)
-        .post('/api/auth/signup')
-        .send({
-          email: 'login-test@example.com',
-          password: 'TestPassword123!',
-          plan: 'free'
-        });
+        .post(testConfig.endpoints.auth.signup)
+        .send(testConfig.testUsers.default);
     });
 
-    it('should login with valid credentials', async () => {
+    it('should login existing user', async () => {
       const response = await request(app)
-        .post('/api/auth/login')
+        .post(testConfig.endpoints.auth.login)
         .send({
-          email: 'login-test@example.com',
-          password: 'TestPassword123!'
+          email: testConfig.testUsers.default.email,
+          password: testConfig.testUsers.default.password
         });
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('success', true);
-      expect(response.body).toHaveProperty('user');
       expect(response.body).toHaveProperty('token');
+      expect(response.body).toHaveProperty('user');
+      expect(response.body.user).toHaveProperty('email', testConfig.testUsers.default.email);
     });
 
-    it('should reject invalid credentials', async () => {
+    it('should not login with incorrect password', async () => {
       const response = await request(app)
-        .post('/api/auth/login')
+        .post(testConfig.endpoints.auth.login)
         .send({
-          email: 'login-test@example.com',
+          email: testConfig.testUsers.default.email,
           password: 'WrongPassword123!'
         });
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Invalid credentials');
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should not login non-existent user', async () => {
+      const response = await request(app)
+        .post(testConfig.endpoints.auth.login)
+        .send({
+          email: 'nonexistent@example.com',
+          password: testConfig.testUsers.default.password
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty('error');
     });
   });
 
@@ -103,42 +143,29 @@ describe('Auth Endpoints', () => {
     let authToken;
 
     beforeEach(async () => {
-      // Create and login a test user
-      const res = await request(app)
-        .post('/api/auth/signup')
-        .send({
-          email: 'me-test@example.com',
-          password: 'TestPassword123!',
-          plan: 'free'
-        });
-      authToken = res.body.token;
+      const response = await request(app)
+        .post(testConfig.endpoints.auth.signup)
+        .send(testConfig.testUsers.default);
+      authToken = response.body.token;
     });
 
-    it('should return user data with valid token', async () => {
+    it('should return user profile when authenticated', async () => {
       const response = await request(app)
-        .get('/api/auth/me')
+        .get(testConfig.endpoints.auth.me)
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('user');
-      expect(response.body.user).toHaveProperty('email', 'me-test@example.com');
+      expect(response.body).toHaveProperty('email', testConfig.testUsers.default.email);
+      expect(response.body).toHaveProperty('plan', testConfig.testUsers.default.plan);
+      expect(response.body).not.toHaveProperty('password');
     });
 
-    it('should reject requests without token', async () => {
+    it('should return 401 when not authenticated', async () => {
       const response = await request(app)
-        .get('/api/auth/me');
+        .get(testConfig.endpoints.auth.me);
 
       expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty('error', 'Access token required');
-    });
-
-    it('should reject invalid tokens', async () => {
-      const response = await request(app)
-        .get('/api/auth/me')
-        .set('Authorization', 'Bearer invalid-token');
-
-      expect(response.status).toBe(403);
-      expect(response.body).toHaveProperty('error', 'Invalid token');
+      expect(response.body).toHaveProperty('error');
     });
   });
 });

@@ -1,42 +1,47 @@
 import express from 'express';
-import { body } from 'express-validator';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import { body, validationResult } from 'express-validator';
+import { signup, login, getMe } from '../controllers/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Register route
-router.post('/register', [
-  body('email').isEmail(),
-  body('password').isLength({ min: 6 })
-], async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.create({ email, password });
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
-    res.status(201).json({ token });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+// Validation middleware
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
   }
-});
+  next();
+};
+
+// Register route
+router.post('/signup', [
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email format')
+    .normalizeEmail(),
+  body('password')
+    .isString()
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+  validate
+], signup);
 
 // Login route
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    const isValid = await user.comparePassword(password);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
-    res.json({ token });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
+router.post('/login', [
+  body('email')
+    .isEmail()
+    .withMessage('Invalid email format')
+    .normalizeEmail(),
+  body('password')
+    .exists()
+    .withMessage('Password is required'),
+  validate
+], login);
+
+// Me route
+router.get('/me', authenticateToken, getMe);
 
 export default router;

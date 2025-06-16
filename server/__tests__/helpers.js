@@ -8,10 +8,10 @@ export async function makeMultipleRequests(app, endpoint, count, options = {}) {
   // If count is undefined or invalid, use a safe default
   const safeCount = typeof count === 'number' && count > 0 ? count : 1;
   
+  const path =
+    typeof endpoint === 'string' && endpoint.trim().length ? endpoint : '/';
   const requests = Array(safeCount).fill().map(() =>
-    request(app)
-      .get(endpoint)
-      .set(options.headers || {})
+    request(app).get(path).set(options.headers || {})
   );
   return Promise.all(requests);
 }

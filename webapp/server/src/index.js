@@ -7,9 +7,11 @@ import Stripe from 'stripe';
 import authRoutes from './routes/auth.js';
 import subscriptionRoutes from './routes/subscription.js';
 import usageRoutes from './routes/usage.js';
+import healthRoutes from './routes/health.js';
 import { authenticateToken } from './middleware/auth.js';
 import { handleStripeWebhook } from './services/webhook.js';
 import { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET } from './config/constants.js';
+import { authRateLimit, apiRateLimit, licenseRateLimit } from './middleware/rateLimit.js';
 
 dotenv.config();
 
@@ -32,10 +34,25 @@ app.use(cors({
 app.use('/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/subscription', authenticateToken, subscriptionRoutes);
-app.use('/api/usage', usageRoutes);
+// Routes with auth and rate limiting
+app.use('/api/auth', authRateLimit, authRoutes);
+app.use('/api/subscription', authenticateToken, apiRateLimit, subscriptionRoutes);
+app.use('/api/usage', apiRateLimit, usageRoutes);
+
+// Health endpoint with optional auth
+app.use('/api/health', (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    authenticateToken(req, res, next);
+  } else {
+    next();
+  }
+}, apiRateLimit, healthRoutes);
+
+// License endpoint with rate limiting
+app.post('/api/license/ping', licenseRateLimit, (req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // Stripe webhook
 app.post('/webhook', async (req, res) => {

@@ -1,10 +1,7 @@
 /** @type {import('jest').Config} */
 const config = {
   testEnvironment: 'node',
-  transform: {
-    '^.+\\.js$': ['babel-jest']
-  },
-  moduleFileExtensions: ['js'],
+  transform: {},  // No transform needed for ES modules
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
@@ -13,7 +10,6 @@ const config = {
   verbose: true,
   detectOpenHandles: true,
   forceExit: true,
-  automock: false,
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.js']
 };
 

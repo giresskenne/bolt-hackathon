@@ -4,10 +4,10 @@
   "description": "Browser extension for Prompt-Scrubber - masks sensitive data in AI prompts",
   "type": "module",
   "scripts": {
-    "build": "node build.mjs && webpack",
+    "build": "node src/build.js && webpack",
     "dev": "webpack --mode development --watch",
-    "gen": "node build.mjs",
-    "package": "npm run build && node package.mjs",
+    "gen": "node src/build.js",
+    "package": "npm run build && node package.js",
     "test": "vitest",
     "lint": "eslint src/ --ext .js"
   },

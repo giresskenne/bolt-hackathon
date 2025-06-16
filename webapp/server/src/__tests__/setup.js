@@ -1,64 +1,194 @@
 import { jest } from '@jest/globals';
 
-// Mock Stripe module
-jest.mock('stripe', () => {
-  return () => ({
-    customers: {
-      create: jest.fn(async (data) => ({ 
-        id: 'cus_test_123',
-        ...data 
-      }))
-    },
-    checkout: {
-      sessions: {
-        create: jest.fn(async (data) => ({
-          id: 'cs_test_123',
-          url: 'https://checkout.stripe.com/test',
-          ...data
-        }))
-      }
-    },
-    billingPortal: {
-      sessions: {
-        create: jest.fn(async (data) => ({
-          id: 'bps_test_123',
-          url: 'https://billing.stripe.com/test',
-          ...data
-        }))
-      }
-    },
-    webhooks: {
-      constructEvent: jest.fn((payload, signature, secret) => ({
-        type: 'test.event',
-        data: { object: JSON.parse(payload) }
-      }))
-    }
-  });
-});
-
 // Test configuration
-beforeEach(() => {
-  jest.setTimeout(30000);
-  
-  // Reset test state
-  global.__TEST_STATE__ = {
-    users: new Map(),
-    subscriptions: new Map(),
-    licensePings: new Map(),
-    rateLimiters: {
-      global: new Map(),
-      auth: new Map(),
-      api: new Map(),
-      license: new Map()
+const testConfig = {
+  rateLimits: {
+    global: { windowMs: 900000, max: 1000 },
+    auth: { windowMs: 900000, max: 5 },
+    api: { windowMs: 60000, max: 100, authenticatedMax: 300 },
+    licensePing: { windowMs: 60000, max: 1 }
+  },
+  endpoints: {
+    health: '/api/health',
+    auth: {
+      signup: '/api/auth/signup',
+      login: '/api/auth/login',
+      me: '/api/auth/me'
+    },
+    license: {
+      ping: '/api/license/ping'
     }
-  };
+  },
+  testUsers: {
+    default: {
+      email: 'test@example.com',
+      password: 'Test123@!',
+      plan: 'free'
+    },
+    pro: {
+      email: 'pro@example.com',
+      password: 'TestPassword123!',
+      plan: 'pro'
+    }
+  },
+  delays: {
+    rateLimit: 100,
+    betweenTests: 500,
+    loginAttempt: 50
+  }
+};
 
-  // Reset all mocks
-  jest.clearAllMocks();
+globalThis.testConfig = testConfig;
+
+// Mock external modules
+jest.unstable_mockModule('../models/User.js', () => ({
+  default: class User {
+    constructor(data) {
+      Object.assign(this, {
+        _id: Math.random().toString(36).substr(2, 9),
+        email: '',
+        password: '',
+        plan: 'free',
+        createdAt: new Date(),
+        ...data
+      });
+    }
+
+    static async findOne(query) {
+      if (global.__TEST_STATE__) {
+        const user = Array.from(global.__TEST_STATE__.users.values())
+          .find(u => u.email === query.email);
+        return user ? new User(user) : null;
+      }
+      return null;
+    }
+
+    static async findById(id) {
+      if (global.__TEST_STATE__) {
+        const user = Array.from(global.__TEST_STATE__.users.values())
+          .find(u => u._id === id);
+        return user ? new User(user) : null;
+      }
+      return null;
+    }
+
+    static async create(data) {
+      const user = new User(data);
+      if (global.__TEST_STATE__) {
+        const existing = await this.findOne({ email: data.email });
+        if (existing) {
+          const error = new Error('Email already exists');
+          error.status = 400;
+          throw error;
+        }
+        global.__TEST_STATE__.users.set(user._id, user);
+      }
+      return user;
+    }
+
+    async save() {
+      return this;
+    }
+
+    async comparePassword(candidatePassword) {
+      return candidatePassword === this.password;
+    }
+
+    toJSON() {
+      const { password, ...userWithoutPassword } = this;
+      return userWithoutPassword;
+    }
+  }
+}));
+
+jest.unstable_mockModule('../models/Subscription.js', () => ({
+  default: class Subscription {
+    constructor(data) {
+      Object.assign(this, {
+        userId: '',
+        plan: 'free',
+        status: 'active',
+        stripeSubscriptionId: null,
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        ...data
+      });
+    }
+
+    static async findOne(query) {
+      return null;
+    }
+
+    static async create(data) {
+      return new Subscription(data);
+    }
+
+    async save() {
+      return this;
+    }
+  }
+}));
+
+jest.unstable_mockModule('stripe', () => ({
+  default: function() {
+    return {
+      customers: {
+        create: jest.fn(async (data) => ({ 
+          id: 'cus_test_123',
+          ...data 
+        }))
+      },
+      checkout: {
+        sessions: {
+          create: jest.fn(async (data) => ({
+            id: 'cs_test_123',
+            url: 'https://checkout.stripe.com/test',
+            ...data
+          }))
+        }
+      },
+      billingPortal: {
+        sessions: {
+          create: jest.fn(async (data) => ({
+            id: 'bps_test_123',
+            url: 'https://billing.stripe.com/test',
+            ...data
+          }))
+        }
+      },
+      webhooks: {
+        constructEvent: jest.fn((payload, signature, secret) => ({
+          type: 'test.event',
+          data: { object: JSON.parse(payload) }
+        }))
+      }
+    };
+  }
+}));
+
+// Test state management
+globalThis.__TEST_STATE__ = {
+  users: new Map(),
+  tokens: new Map(),
+  rateLimiters: {
+    global: new Map(),
+    auth: new Map(),
+    api: new Map(),
+    license: new Map()
+  }
+};
+
+// Reset global state before each test
+beforeEach(() => {
+  jest.setTimeout(testConfig.delays.betweenTests);
+  
+  // Clear test state before each test
+  globalThis.__TEST_STATE__.users.clear();
+  globalThis.__TEST_STATE__.tokens.clear();
+  Object.values(globalThis.__TEST_STATE__.rateLimiters).forEach(limiter => limiter.clear());
 });
 
-// Clean up after tests
-afterAll(async () => {
-  // Clean up any open connections or timers
-  await new Promise(resolve => setTimeout(resolve, 500));
+afterAll(() => {
+  // Clean up after all tests
+  delete globalThis.__TEST_STATE__;
+  delete globalThis.testConfig;
 });

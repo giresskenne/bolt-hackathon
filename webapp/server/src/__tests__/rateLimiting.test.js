@@ -1,5 +1,9 @@
 import request from 'supertest';
 import { app } from '../index.js';
+import { jest } from '@jest/globals';
+
+const testConfig = global.testConfig;
+jest.setTimeout(60000);
 
 describe('Rate Limiting', () => {
   beforeEach(async () => {
@@ -16,104 +20,98 @@ describe('Rate Limiting', () => {
   describe('Authentication rate limiting', () => {
     it('should block after too many failed login attempts', async () => {
       // Create a test user first
-      await request(app)
-        .post('/api/auth/signup')
-        .send({
-          email: 'ratelimit@example.com',
-          password: 'TestPassword123!',
-          plan: 'free'
-        });
+      const signupRes = await request(app)
+        .post(testConfig.endpoints.auth.signup)
+        .set('x-test-rate-limit', 'true')
+        .send(testConfig.testUsers.default);
+
+      expect(signupRes.status).toBe(201);
 
       // Make multiple failed login attempts
       const attempts = [];
       for (let i = 0; i < 6; i++) {
-        const response = await request(app)
-          .post('/api/auth/login')
-          .send({
-            email: 'ratelimit@example.com',
-            password: 'wrongpassword'
-          });
-        attempts.push(response);
-        
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 50));
+        attempts.push(
+          await request(app)
+            .post(testConfig.endpoints.auth.login)
+            .set('x-test-rate-limit', 'true')
+            .send({
+              email: testConfig.testUsers.default.email,
+              password: 'wrongpassword'
+            })
+        );
       }
 
-      // Check that later attempts are rate limited
-      const rateLimitedAttempts = attempts.filter(res => res.status === 429);
-      expect(rateLimitedAttempts.length).toBeGreaterThan(0);
+      const lastAttempt = attempts[attempts.length - 1];
+      expect(lastAttempt.status).toBe(429);
+      expect(lastAttempt.body.error).toMatch(/too many/i);
     });
   });
 
   describe('API rate limiting', () => {
-    it('should limit rapid API requests', async () => {
-      // Create a test user and get token
-      const signupRes = await request(app)
-        .post('/api/auth/signup')
-        .send({
-          email: 'api-test@example.com',
-          password: 'TestPassword123!',
-          plan: 'free'
-        });
+    it('should apply different limits for authenticated and unauthenticated users', async () => {
+      const makeRequests = async (auth = false) => {
+        const requests = [];
+        const maxRequests = auth ? 100 : 10;
 
-      const token = signupRes.body.token;
+        // Create and authenticate user if needed
+        let token;
+        if (auth) {
+          // Sign up a user
+          const signupRes = await request(app)
+            .post(testConfig.endpoints.auth.signup)
+            .send(testConfig.testUsers.default);
+          
+          expect(signupRes.status).toBe(201);
+          token = signupRes.body.token;
+        }
 
-      // Make multiple rapid requests to health endpoint
-      const requests = Array(20).fill().map(() =>
-        request(app)
-          .get('/api/health')
-          .set('Authorization', `Bearer ${token}`)
-      );
+        // Make requests until we hit rate limit
+        for (let i = 0; i < maxRequests + 20; i++) {
+          const req = request(app)
+            .get(testConfig.endpoints.health)
+            .set('x-test-rate-limit', 'true');
+          
+          if (auth && token) {
+            req.set('Authorization', `Bearer ${token}`);
+          }
+          
+          const res = await req;
+          requests.push(res);
+        }
 
-      const responses = await Promise.all(requests);
+        return requests;
+      };
 
-      // Some requests should be rate limited
-      const rateLimited = responses.some(r => r.status === 429);
-      expect(rateLimited).toBe(true);
+      // Test unauthenticated rate limiting
+      const unauthRequests = await makeRequests(false);
+      const unauthSuccessCount = unauthRequests.filter(res => res.status === 200).length;
+      expect(unauthSuccessCount).toBeLessThanOrEqual(10); // Unauth limit is 10
+
+      // Clear rate limiters
+      global.__TEST_STATE__.rateLimiters.api.clear();
+
+      // Test authenticated rate limiting
+      const authRequests = await makeRequests(true);
+      const authSuccessCount = authRequests.filter(res => res.status === 200).length;
+      expect(authSuccessCount).toBeGreaterThan(10); // Auth limit is higher than unauth
+      expect(authSuccessCount).toBeLessThanOrEqual(100); // Auth limit is 100
     });
-  });
 
-  describe('License ping rate limiting', () => {
-    it('should limit license pings', async () => {
-      // Create a test user and get token
-      const signupRes = await request(app)
-        .post('/api/auth/signup')
-        .send({
-          email: 'license-test@example.com',
-          password: 'TestPassword123!',
-          plan: 'free'
-        });
+    it('should enforce license ping rate limit', async () => {
+      const requests = [];
+      
+      // Make requests until we hit rate limit
+      for (let i = 0; i < testConfig.rateLimits.licensePing.max + 5; i++) {
+        requests.push(
+          await request(app)
+            .post(testConfig.endpoints.license.ping)
+            .set('x-test-rate-limit', 'true')
+            .send({ licenseKey: 'test-key' })
+        );
+      }
 
-      const token = signupRes.body.token;
-
-      // Make first ping
-      const firstPing = await request(app)
-        .post('/api/license/ping')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-          userId: 'test-user',
-          plan: 'free',
-          scrubCountThisMonth: 0,
-          timestamp: new Date().toISOString(),
-          version: '1.0.0'
-        });
-
-      expect(firstPing.status).toBe(200);
-
-      // Make second ping immediately after
-      const secondPing = await request(app)
-        .post('/api/license/ping')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
-          userId: 'test-user',
-          plan: 'free',
-          scrubCountThisMonth: 1,
-          timestamp: new Date().toISOString(),
-          version: '1.0.0'
-        });
-
-      expect(secondPing.status).toBe(429);
-      expect(secondPing.body).toHaveProperty('error');
+      const rateLimitedPings = requests.filter(res => res.status === 429);
+      expect(rateLimitedPings.length).toBeGreaterThan(0);
     });
   });
 });

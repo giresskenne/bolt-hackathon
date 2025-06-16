@@ -1,5 +1,5 @@
 /**
- * package.mjs - Creates distributable extension package
+ * package.js - Creates distributable extension package
  */
 
 import fs from 'fs';

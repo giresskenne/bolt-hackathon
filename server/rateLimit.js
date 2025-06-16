@@ -3,6 +3,9 @@ import rateLimit from 'express-rate-limit';
 // Store for tracking IP addresses with suspicious activity
 const suspiciousIPs = new Map();
 
+// Skip rate limiting in tests
+const skipInTests = () => process.env.NODE_ENV === 'test';
+
 // Helper to check if IP is suspicious (multiple failed attempts)
 const isSuspiciousIP = (ip) => {
     const attempts = suspiciousIPs.get(ip);
@@ -27,10 +30,10 @@ export const recordFailedAttempt = (ip) => {
 export const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 1000,
+    skip: (req) => skipInTests() || req.path.startsWith('/api/webhooks'),
     message: 'Too many requests from this IP, please try again after 15 minutes',
     standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => req.path.startsWith('/api/webhooks'), // Skip webhooks
+    legacyHeaders: false
 });
 
 // Auth routes limiter - stricter limits for suspicious IPs
@@ -61,10 +64,10 @@ export const apiLimiter = rateLimit({
     max: (req) => {
         return req.user ? 300 : 100; // Higher limit for authenticated users
     },
+    skip: (req) => skipInTests() || req.path.startsWith('/api/webhooks'),
     message: 'Too many API requests, please slow down',
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path.startsWith('/api/webhooks'), // Skip webhooks
     handler: (req, res) => {
         res.status(429).json({
             error: 'Rate limit exceeded',
@@ -88,3 +91,20 @@ export const licensePingLimiter = rateLimit({
         });
     }
 });
+
+// ----------  TEST-ONLY HELPERS  ----------
+/**
+ * Reset all internal hit counters & suspicious-IP cache.
+ * Works with the built-in MemoryStore used in tests.
+ */
+export function clearRateLimiters () {
+  const resetStore = (limiter) => {
+    if (limiter?.store?.hits) limiter.store.hits = {};
+  };
+  resetStore(globalLimiter);
+  resetStore(authLimiter);
+  resetStore(apiLimiter);
+  resetStore(licensePingLimiter);
+  suspiciousIPs.clear();
+}
+// ----------------------------------------

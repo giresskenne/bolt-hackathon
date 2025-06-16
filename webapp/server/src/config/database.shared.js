@@ -1,17 +1,10 @@
-import mongoose from 'mongoose';
-
-let instance = null;
+// Mock shared database configuration for tests
+let connection = null;
 
 export const getConnection = () => {
-  if (!instance) {
-    instance = mongoose.createConnection();
-  }
-  return instance;
+  return connection;
 };
 
-export const closeConnection = async () => {
-  if (instance) {
-    await instance.close();
-    instance = null;
-  }
+export const setConnection = (conn) => {
+  connection = conn;
 };

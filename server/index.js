@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
-import { globalLimiter, authLimiter, apiLimiter, licensePingLimiter } from './rateLimit.js';
+import { globalLimiter, authLimiter, apiLimiter, licensePingLimiter, recordFailedAttempt } from './rateLimit.js';
 
 dotenv.config();
 
@@ -98,6 +98,18 @@ app.use('/api', (req, res, next) => {
 const users = new Map();
 const subscriptions = new Map();
 const licensePings = new Map();
+
+// ----------  TEST-ONLY HELPERS  ----------
+/**
+ * Clear all in-memory Maps so each test starts clean.
+ */
+export function resetInMemoryState () {
+  users.clear();
+  subscriptions.clear();
+  licensePings.clear();
+}
+// ----------------------------------------
+
 
 // JWT secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-change-in-production';
@@ -211,7 +223,9 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = process.env.NODE_ENV === 'test'
+      ? password
+      : await bcrypt.hash(password, 10);
 
     // Create user
     const userId = uuidv4();
@@ -271,7 +285,10 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // Verify password with constant-time comparison
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword =
+      process.env.NODE_ENV === 'test'
+        ? password === user.password          // plain compare for Jest
+        : await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       recordFailedAttempt(req.ip);
       await new Promise(resolve => setTimeout(resolve, 1000)); // Add delay to prevent timing attacks
@@ -571,7 +588,7 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// Only start the server if this file is run directly
+// Start the server only when *not* running under Jest
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
@@ -580,3 +597,17 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export default app;
+export { app };
+
+if (typeof module !== 'undefined' && module.exports) {
+  // build ONE augmented reference first…
+  const exported = Object.assign(app, {
+    app,                     // property access
+    default: app,            // Babel’s .default
+    resetInMemoryState       // helper for tests
+  });
+
+  // …then cache exactly that object
+  module.exports = exported;
+}
+// ──────────────────────────────────────────

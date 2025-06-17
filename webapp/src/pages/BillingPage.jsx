@@ -57,24 +57,53 @@ export default function BillingPage() {
   }
 
   const handleUpgrade = async (newPlan) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const result = await upgradePlan(newPlan)
-      if (result.success) {
-        toast.success(`Successfully upgraded to ${newPlan}!`)
-      } else {
-        toast.error('Upgrade failed. Please try again.')
-      }
-    } catch (error) {
-      toast.error('An error occurred during upgrade')
-    } finally {
-      setLoading(false)
-    }
-  }
+      // Create Stripe checkout session
+      const response = await fetch('/api/subscription/upgrade', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` 
+        },
+        body: JSON.stringify({ plan: newPlan })
+      });
 
-  const handleManageSubscription = () => {
-    // In real app, this would redirect to Stripe customer portal
-    toast.info('Redirecting to billing portal...')
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const { checkoutUrl } = await response.json();
+      
+      // Redirect to Stripe checkout
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      console.error('Upgrade error:', error);
+      toast.error('Unable to process upgrade. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const response = await fetch('/api/subscription/portal', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create portal session');
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (error) {
+      console.error('Portal error:', error);
+      toast.error('Unable to open billing portal. Please try again.');
+    }
   }
 
   const downloadInvoice = (invoiceId) => {

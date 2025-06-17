@@ -83,20 +83,21 @@ const useSubscriptionStore = create(
         try {
           const response = await fetch('/api/subscription/upgrade', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({ plan: newPlan })
-          })
+          });
           
           if (!response.ok) {
-            throw new Error('Upgrade failed')
+            throw new Error('Upgrade failed');
           }
           
-          const data = await response.json()
-          set({ plan: newPlan })
-          
-          return { success: true, data }
+          const data = await response.json();
+          return { success: true, data };
         } catch (error) {
-          return { success: false, error: error.message }
+          return { success: false, error: error.message };
         }
       }
     }),

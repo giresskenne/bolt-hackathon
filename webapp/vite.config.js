@@ -15,13 +15,19 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
+    port: 5173,
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
-        changeOrigin: true
+        changeOrigin: true,
+        secure: false
       }
     }
+  },
+  // Prevent watching server's .env file
+  envDir: path.resolve(__dirname, './'),
+  optimizeDeps: {
+    exclude: ['./server']
   },
   build: {
     outDir: 'dist',

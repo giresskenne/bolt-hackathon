@@ -1,7 +1,23 @@
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables before other imports
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
+// Debug environment variables
+console.log('Environment variables loaded:', {
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY?.substring(0, 10) + '...',
+  NODE_ENV: process.env.NODE_ENV,
+  ENV_FILE: join(__dirname, '..', '.env')
+});
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { connectDB } from './config/database.js';
 import Stripe from 'stripe';
 import authRoutes from './routes/auth.js';
@@ -12,8 +28,6 @@ import { authenticateToken } from './middleware/auth.js';
 import { handleStripeWebhook } from './services/webhook.js';
 import { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET } from './config/constants.js';
 import { authRateLimit, apiRateLimit, licenseRateLimit } from './middleware/rateLimit.js';
-
-dotenv.config();
 
 // Initialize Stripe
 const stripe = new Stripe(STRIPE_SECRET_KEY);
@@ -73,17 +87,30 @@ app.post('/webhook', async (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something broke!' });
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
 });
 
 const PORT = process.env.PORT || 3001;
 
 // Only start the server if this file is run directly (not in tests)
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  const server = app.listen(PORT)
+    .on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Trying ${PORT + 1}...`);
+        server.listen(PORT + 1);
+      } else {
+        console.error('Server error:', err);
+      }
+    })
+    .on('listening', () => {
+      const address = server.address();
+      console.log(`Server running on port ${address.port}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
 }
 
 export { app };

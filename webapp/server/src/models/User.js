@@ -5,7 +5,13 @@ class User {
     this._id = data._id || Math.random().toString(36).substr(2, 9);
     this.email = data.email || '';
     this.password = data.password || '';
-    this.plan = data.plan || 'free';
+    this.subscription = {
+      plan: data.plan || 'free',
+      status: data.status || 'trial',
+      stripeCustomerId: data.stripeCustomerId,
+      stripeSubscriptionId: data.stripeSubscriptionId,
+      trialEnds: data.trialEnds || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days trial
+    };
     this.createdAt = data.createdAt || new Date();
   }
 
@@ -70,7 +76,7 @@ class User {
     return {
       _id: this._id,
       email: this.email,
-      plan: this.plan,
+      subscription: this.subscription,
       createdAt: this.createdAt
     };
   }

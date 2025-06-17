@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import UserModel from '../models/UserModel.js';
+import { JWT_SECRET } from '../config/constants.js';
 
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -10,9 +11,7 @@ export const authenticateToken = (req, res, next) => {
   }
 
   try {
-    // Use test-secret in test environment
-    const secret = process.env.NODE_ENV === 'test' ? 'test-secret' : process.env.JWT_SECRET;
-    const decoded = jwt.verify(token, secret);
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
@@ -28,7 +27,7 @@ export const authenticateApiKey = async (req, res, next) => {
       return res.status(401).json({ error: 'API key required' });
     }
 
-    const user = await User.findOne({ apiKey });
+    const user = await UserModel.findOne({ apiKey });
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid API key' });

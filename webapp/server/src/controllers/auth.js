@@ -1,14 +1,35 @@
-import User from '../models/User.js';
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../config/constants.js';
+import { userSchema } from '../models/UserModel.js';
 
-const JWT_SECRET = process.env.NODE_ENV === 'test' ? 'test-secret' : process.env.JWT_SECRET;
+const UserModel = mongoose.model('User', userSchema);
 
 export const signup = async (req, res) => {
   try {
+    console.log('Signup request received:', { 
+      body: req.body,
+      headers: req.headers 
+    });
+    
     const { email, password, plan = 'free' } = req.body;
     
+    // Check if user already exists
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: 'User already exists'
+      });
+    }
+    
     // Create new user
-    const user = await User.create({ email, password, plan });
+    console.log('Creating new user with:', { email, plan });
+    const user = await UserModel.create({ 
+      email, 
+      password,
+      subscription: { plan }
+    });
     
     // Generate token
     const token = jwt.sign(
@@ -16,16 +37,22 @@ export const signup = async (req, res) => {
       JWT_SECRET
     );
 
+    console.log('User created successfully:', { userId: user._id });
+
     // Return response
     return res.status(201).json({
       success: true,
-      user: user.toJSON(),
+      user: {
+        email: user.email,
+        subscription: user.subscription
+      },
       token
     });
   } catch (error) {
+    console.error('Signup error:', error);
     return res.status(error.status || 400).json({
       success: false,
-      error: error.message
+      error: error.message || 'Signup failed'
     });
   }
 };
@@ -35,7 +62,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     
     // Find user
-    const user = await User.findOne({ email });
+    const user = await UserModel.findOne({ email });
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -61,20 +88,23 @@ export const login = async (req, res) => {
     // Return response
     return res.status(200).json({
       success: true,
-      user: user.toJSON(),
+      user: {
+        email: user.email,
+        subscription: user.subscription
+      },
       token
     });
   } catch (error) {
     return res.status(error.status || 400).json({
       success: false,
-      error: error.message
+      error: error.message || 'Login failed'
     });
   }
 };
 
 export const getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
+    const user = await UserModel.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -82,15 +112,17 @@ export const getMe = async (req, res) => {
       });
     }
 
-    // Return response
-    const userJson = user.toJSON();
     return res.status(200).json({
-      ...userJson
+      success: true,
+      user: {
+        email: user.email,
+        subscription: user.subscription
+      }
     });
   } catch (error) {
     return res.status(error.status || 400).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to get user info'
     });
   }
 };

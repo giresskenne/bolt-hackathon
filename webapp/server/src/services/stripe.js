@@ -3,6 +3,8 @@ import { STRIPE_SECRET_KEY, STRIPE_PRICE_ID } from '../config/constants.js';
 
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
+export { stripe }; // Export the initialized stripe instance
+
 export const createStripeCustomer = async ({ email, name }) => {
   return await stripe.customers.create({
     email,

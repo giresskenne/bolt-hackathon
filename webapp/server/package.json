@@ -4,21 +4,23 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
     "test:coverage": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:watch": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles"
+    "test": "NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles",
+    "dev": "NODE_ENV=development nodemon src/index.js",
+    "dev:debug": "NODE_ENV=development nodemon --inspect src/index.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "express-validator": "^7.0.1",
-    "helmet": "^7.0.0",
+    "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.0",
-    "stripe": "^12.8.0",
+    "mongoose": "^8.16.0",
+    "stripe": "^12.18.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

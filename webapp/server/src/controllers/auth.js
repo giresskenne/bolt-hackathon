@@ -1,9 +1,6 @@
-import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/constants.js';
-import { userSchema } from '../models/UserModel.js';
-
-const UserModel = mongoose.model('User', userSchema);
+import UserModel from '../models/UserModel.js';
 
 export const signup = async (req, res) => {
   try {
@@ -25,19 +22,19 @@ export const signup = async (req, res) => {
     
     // Create new user
     console.log('Creating new user with:', { email, plan });
-    const user = await UserModel.create({ 
+    const user = await UserModel.create({
       email, 
       password,
-      subscription: { plan }
+      plan
     });
     
     // Generate token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user.id },
       JWT_SECRET
     );
 
-    console.log('User created successfully:', { userId: user._id });
+    console.log('User created successfully:', { userId: user.id });
 
     // Return response
     return res.status(201).json({
@@ -81,7 +78,7 @@ export const login = async (req, res) => {
 
     // Generate token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user.id },
       JWT_SECRET
     );
 

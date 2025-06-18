@@ -32,7 +32,7 @@ import { authRateLimit, apiRateLimit, licenseRateLimit } from './middleware/rate
 // Initialize Stripe
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
-// Connect to MongoDB
+// Connect to Supabase
 connectDB();
 
 const app = express();

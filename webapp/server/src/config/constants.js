@@ -10,6 +10,8 @@ dotenv.config({ path: join(__dirname, '../../.env') });
 
 // Validate required environment variables
 const requiredEnvVars = [
+  'SUPABASE_URL',
+  'SUPABASE_ANON_KEY',
   'STRIPE_SECRET_KEY',
   'STRIPE_PRO_PRICE_ID',
   'STRIPE_ENTERPRISE_PRICE_ID',
@@ -21,6 +23,10 @@ if (missingEnvVars.length > 0) {
   console.error('Missing required environment variables:', missingEnvVars);
   process.exit(1);
 }
+
+// Export Supabase configuration
+export const SUPABASE_URL = process.env.SUPABASE_URL;
+export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // Export Stripe configuration
 export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;

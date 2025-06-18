@@ -2,8 +2,7 @@ import express from 'express';
 import { createPortalSession, createSubscription, stripe } from '../services/stripe.js';
 import { authenticateToken } from '../middleware/auth.js';
 import UserModel from '../models/UserModel.js';
-import Subscription from '../models/Subscription.js';
-import mongoose from 'mongoose';
+import SubscriptionModel from '../models/Subscription.js';
 import { STRIPE_PRICE_ID } from '../config/constants.js';
 
 const router = express.Router();
@@ -15,7 +14,7 @@ router.get('/status', authenticateToken, async (req, res) => {
     
     const [user, subscription] = await Promise.all([
       UserModel.findById(req.user.userId),
-      Subscription.findOne({ userId: req.user.userId })
+      SubscriptionModel.findOne({ userId: req.user.userId })
     ]);
 
     if (!user) {
@@ -64,10 +63,10 @@ router.post('/upgrade', authenticateToken, async (req, res) => {
     const trialEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     // Retrieve or create subscription
-    let subscription = await Subscription.findOne({ userId: user._id });
+    let subscription = await SubscriptionModel.findOne({ userId: user.id });
     if (!subscription) {
-      subscription = await Subscription.create({
-        userId: user._id,
+      subscription = await SubscriptionModel.create({
+        userId: user.id,
         plan: 'free',
         status: 'active',
         currentPeriodEnd: trialEndDate
@@ -101,7 +100,7 @@ router.post('/upgrade', authenticateToken, async (req, res) => {
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
-        metadata: { userId: user._id.toString() }
+        metadata: { userId: user.id.toString() }
       });
       customerId = customer.id;
       subscription.stripeCustomerId = customerId;
@@ -128,9 +127,9 @@ router.post('/upgrade', authenticateToken, async (req, res) => {
       success_url: `${process.env.FRONTEND_URL}/dashboard?upgrade=success`,
       cancel_url: `${process.env.FRONTEND_URL}/billing?upgrade=cancelled`,
       metadata: {
-        userId: user._id.toString(),
+        userId: user.id.toString(),
         plan,
-        subscriptionId: subscription._id.toString()
+        subscriptionId: subscription.id.toString()
       }
     });
 

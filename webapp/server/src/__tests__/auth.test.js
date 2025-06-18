@@ -27,8 +27,17 @@ describe('Auth Endpoints', () => {
       expect(response.body).toHaveProperty('success', true);
       expect(response.body).toHaveProperty('user');
       expect(response.body).toHaveProperty('token');
-      expect(response.body.user).toHaveProperty('email', testConfig.testUsers.default.email);
-      expect(response.body.user).toHaveProperty('plan', testConfig.testUsers.default.plan);
+      expect(response.body.user).toEqual({
+        email: testConfig.testUsers.default.email,
+        plan: testConfig.testUsers.default.plan,
+        subscription: {
+          plan: testConfig.testUsers.default.plan,
+          status: 'trial',
+          stripeCustomerId: null,
+          stripeSubscriptionId: null,
+          trialEnds: expect.any(String)
+        }
+      });
       
       // Ensure password is not returned
       expect(response.body.user).not.toHaveProperty('password');
@@ -162,9 +171,9 @@ describe('Auth Endpoints', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('email', testConfig.testUsers.default.email);
-      expect(response.body).toHaveProperty('plan', testConfig.testUsers.default.plan);
-      expect(response.body).not.toHaveProperty('password');
+      expect(response.body.user).toHaveProperty('email', testConfig.testUsers.default.email);
+      expect(response.body.user).toHaveProperty('plan', testConfig.testUsers.default.plan);
+      expect(response.body.user).not.toHaveProperty('password');
     });
 
     it('should return 401 when not authenticated', async () => {

@@ -1,5 +1,23 @@
 import { jest } from '@jest/globals';
 
+// Test configuration
+global.testConfig = {
+  endpoints: {
+    auth: {
+      signup: '/api/auth/signup',
+      login: '/api/auth/login',
+      me: '/api/auth/me'
+    }
+  },
+  testUsers: {
+    default: {
+      email: 'test@example.com',
+      password: 'Test123@!',
+      plan: 'free'
+    }
+  }
+};
+
 // Initialize mock database for tests
 const testData = {
   users: new Map(),
@@ -7,23 +25,20 @@ const testData = {
 };
 
 // Helper to format user data
-const formatUserData = (user) => {
-  const formattedUser = {
-    id: user.id,
-    email: user.email,
+const formatUserResponse = (user) => {
+  const subscriptionData = {
     plan: user.plan || 'free',
-    subscription: {
-      plan: user.plan || 'free',
-      status: 'trial',
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
-      trialEnds: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString() // 15 days trial
-    }
+    status: 'trial',
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    trialEnds: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
   };
-  if (user.password) {
-    formattedUser.password = user.password;
-  }
-  return formattedUser;
+  
+  return {
+    email: user.email,
+    plan: subscriptionData.plan,
+    subscription: subscriptionData
+  };
 };
 
 // Mock Supabase client with in-memory storage
@@ -34,11 +49,11 @@ global.__TEST_SUPABASE_CLIENT__ = {
         single: jest.fn(async () => {
           // Find the first matching record
           const found = Array.from(testData[table].values()).find(record => record[field] === value);
-          return { data: found ? formatUserData(found) : null, error: null };
+          return { data: found ? { ...found } : null, error: null };
         }),
         execute: jest.fn(async () => {
           const data = Array.from(testData[table].values());
-          return { data: data.map(formatUserData), error: null };
+          return { data: data.map(formatUserResponse), error: null };
         })
       }))
     })),
@@ -48,13 +63,15 @@ global.__TEST_SUPABASE_CLIENT__ = {
           // Check for existing user with same email
           const existingUser = Array.from(testData[table].values()).find(u => u.email === data.email);
           if (existingUser) {
-            return { data: null, error: new Error('User already exists') };
+            const error = new Error('User already exists');
+            error.status = 400;
+            return { data: null, error };
           }
 
           const id = Math.random().toString(36).substr(2, 9);
           const user = { ...data, id };
           testData[table].set(id, user);
-          return { data: formatUserData(user), error: null };
+          return { data: formatUserResponse(user), error: null };
         })
       }))
     })),
@@ -265,6 +282,9 @@ beforeEach(() => {
   globalThis.__TEST_STATE__.users.clear();
   globalThis.__TEST_STATE__.tokens.clear();
   Object.values(globalThis.__TEST_STATE__.rateLimiters).forEach(limiter => limiter.clear());
+
+  // Reset test data
+  Object.values(testData).forEach(map => map.clear());
 });
 
 afterAll(() => {

@@ -1,14 +1,3 @@
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load environment variables based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
-dotenv.config({ path: join(__dirname, '../../', envFile) });
-
 // Validate required environment variables
 const requiredEnvVars = [
   'SUPABASE_URL',

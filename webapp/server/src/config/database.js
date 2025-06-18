@@ -6,9 +6,13 @@ let supabase = null;
 export const connectDB = async () => {
   try {
     if (process.env.NODE_ENV === 'test') {
-      // For tests, we'll use a mock or in-memory setup
-      console.log('Connected to test database (mock)');
-      return null;
+      // For tests, we'll use our mock Supabase client from the mock setup
+      supabase = global.__TEST_SUPABASE_CLIENT__;
+      if (!supabase) {
+        throw new Error('Test Supabase client not initialized');
+      }
+      console.log('Connected to mock Supabase database');
+      return supabase;
     }
 
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

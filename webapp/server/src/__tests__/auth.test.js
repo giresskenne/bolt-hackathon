@@ -3,10 +3,17 @@ import { app } from '../index.js';
 const testConfig = global.testConfig;
 
 describe('Auth Endpoints', () => {
+  beforeAll(async () => {
+    // Ensure database is connected before tests
+    const { connectDB } = await import('../config/database.js');
+    await connectDB();
+  });
+
   beforeEach(async () => {
-    // Clear any existing test data
-    if (global.__TEST_STATE__) {
-      global.__TEST_STATE__.users.clear();
+    // Clear test data before each test
+    if (global.__TEST_SUPABASE_CLIENT__) {
+      global.__TEST_SUPABASE_CLIENT__.from('users').delete().eq('id', '*').execute();
+      global.__TEST_SUPABASE_CLIENT__.from('subscriptions').delete().eq('id', '*').execute();
     }
   });
 

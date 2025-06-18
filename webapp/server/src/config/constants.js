@@ -5,18 +5,25 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables
-dotenv.config({ path: join(__dirname, '../../.env') });
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+dotenv.config({ path: join(__dirname, '../../', envFile) });
 
 // Validate required environment variables
 const requiredEnvVars = [
   'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
-  'STRIPE_SECRET_KEY',
-  'STRIPE_PRO_PRICE_ID',
-  'STRIPE_ENTERPRISE_PRICE_ID',
-  'STRIPE_WEBHOOK_SECRET'
+  'SUPABASE_ANON_KEY'
 ];
+
+// Add production-only required variables
+if (process.env.NODE_ENV !== 'test') {
+  requiredEnvVars.push(
+    'STRIPE_SECRET_KEY',
+    'STRIPE_PRO_PRICE_ID',
+    'STRIPE_ENTERPRISE_PRICE_ID',
+    'STRIPE_WEBHOOK_SECRET'
+  );
+}
 
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingEnvVars.length > 0) {

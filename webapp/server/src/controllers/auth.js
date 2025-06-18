@@ -40,7 +40,9 @@ export const signup = async (req, res) => {
     return res.status(201).json({
       success: true,
       user: {
+        id: user.id,
         email: user.email,
+        plan: user.plan,
         subscription: user.subscription
       },
       token
@@ -86,7 +88,9 @@ export const login = async (req, res) => {
     return res.status(200).json({
       success: true,
       user: {
+        id: user.id,
         email: user.email,
+        plan: user.plan,
         subscription: user.subscription
       },
       token

@@ -1,5 +1,85 @@
 import { jest } from '@jest/globals';
 
+// Initialize mock database for tests
+const testData = {
+  users: new Map(),
+  subscriptions: new Map()
+};
+
+// Helper to format user data
+const formatUserData = (user) => {
+  const formattedUser = {
+    id: user.id,
+    email: user.email,
+    plan: user.plan || 'free',
+    subscription: {
+      plan: user.plan || 'free',
+      status: 'trial',
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      trialEnds: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString() // 15 days trial
+    }
+  };
+  if (user.password) {
+    formattedUser.password = user.password;
+  }
+  return formattedUser;
+};
+
+// Mock Supabase client with in-memory storage
+global.__TEST_SUPABASE_CLIENT__ = {
+  from: (table) => ({
+    select: jest.fn(() => ({
+      eq: jest.fn((field, value) => ({
+        single: jest.fn(async () => {
+          // Find the first matching record
+          const found = Array.from(testData[table].values()).find(record => record[field] === value);
+          return { data: found ? formatUserData(found) : null, error: null };
+        }),
+        execute: jest.fn(async () => {
+          const data = Array.from(testData[table].values());
+          return { data: data.map(formatUserData), error: null };
+        })
+      }))
+    })),
+    insert: jest.fn((data) => ({
+      select: jest.fn(() => ({
+        single: jest.fn(async () => {
+          // Check for existing user with same email
+          const existingUser = Array.from(testData[table].values()).find(u => u.email === data.email);
+          if (existingUser) {
+            return { data: null, error: new Error('User already exists') };
+          }
+
+          const id = Math.random().toString(36).substr(2, 9);
+          const user = { ...data, id };
+          testData[table].set(id, user);
+          return { data: formatUserData(user), error: null };
+        })
+      }))
+    })),
+    update: jest.fn((data) => ({
+      eq: jest.fn(() => ({
+        single: jest.fn(async () => {
+          const existing = Array.from(testData[table].values())[0];
+          if (!existing) return { data: null, error: new Error('Not found') };
+          const updated = { ...existing, ...data };
+          testData[table].set(existing.id, updated);
+          return { data: updated, error: null };
+        })
+      }))
+    })),
+    delete: jest.fn(() => ({
+      eq: jest.fn(() => ({
+        execute: jest.fn(async () => {
+          testData[table].clear();
+          return { data: null, error: null };
+        })
+      }))
+    }))
+  })
+};
+
 // Test configuration
 const testConfig = {
   rateLimits: {

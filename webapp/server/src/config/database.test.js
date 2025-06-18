@@ -1,9 +1,23 @@
-import { setConnection } from './database.shared.js';
+import { jest } from '@jest/globals';
+import { getSupabase, connectDB } from './database.js';
 
-// Mock database for testing - no actual database needed
-class MockDB {
+// Mock Supabase client for testing
+class MockSupabaseDB {
   constructor() {
     this.data = new Map();
+    this.from = jest.fn(() => ({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn().mockReturnThis(),
+      update: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      single: jest.fn().mockImplementation(() => {
+        return { data: this.data, error: null };
+      }),
+      execute: jest.fn().mockImplementation(() => {
+        return { data: Array.from(this.data.values()), error: null };
+      })
+    }));
   }
 
   clear() {

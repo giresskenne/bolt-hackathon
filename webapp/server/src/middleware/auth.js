@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import UserModel from '../models/UserModel.js';
-import { JWT_SECRET } from '../config/constants.js';
+import { getJwtSecret } from '../config/constants.js';
 
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -11,7 +11,7 @@ export const authenticateToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     // Handle both userId and id tokens for backward compatibility
     req.user = {
       userId: decoded.userId || decoded.id,

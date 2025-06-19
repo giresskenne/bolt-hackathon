@@ -1,7 +1,7 @@
 import { stripe } from '../services/stripe.js';
 import UserModel from '../models/UserModel.js';
 import SubscriptionModel from '../models/Subscription.js';
-import { STRIPE_PRICE_ID } from '../config/constants.js';
+import { getStripePriceId } from '../config/constants.js';
 
 // Get subscription status
 export const getSubscriptionStatus = async (req, res) => {
@@ -66,9 +66,7 @@ export const createUpgradeSession = async (req, res) => {
     console.log('Found user:', user.email);
 
     // Get the correct price ID
-    const priceId = plan === 'pro' ? 
-      process.env.STRIPE_PRO_PRICE_ID : 
-      process.env.STRIPE_ENTERPRISE_PRICE_ID;
+    const priceId = getStripePriceId(plan);
 
     if (!priceId) {
       console.error(`Missing price ID for plan: ${plan}`);

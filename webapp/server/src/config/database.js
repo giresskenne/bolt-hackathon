@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './constants.js';
+import { getSupabaseUrl, getSupabaseAnonKey } from './constants.js';
 
 let supabase = null;
 
@@ -15,7 +15,7 @@ export const connectDB = async () => {
       return supabase;
     }
 
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey());
     
     // Test the connection
     const { data, error } = await supabase.from('users').select('count').limit(1);
@@ -23,7 +23,7 @@ export const connectDB = async () => {
       throw error;
     }
     
-    console.log(`Supabase Connected: ${SUPABASE_URL}`);
+    console.log(`Supabase Connected: ${getSupabaseUrl()}`);
     return supabase;
   } catch (error) {
     console.error(`Error: ${error.message}`);
@@ -40,3 +40,8 @@ export const getSupabase = () => {
   }
   return supabase;
 };
+
+// When you need the Supabase URL and anon key, use:
+// getSupabaseUrl() and getSupabaseAnonKey()
+// For example:
+// const supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey());

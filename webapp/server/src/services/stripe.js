@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
-import { STRIPE_SECRET_KEY, STRIPE_PRICE_ID } from '../config/constants.js';
+import { getStripeSecretKey, getStripePriceId } from '../config/constants.js';
 
-const stripe = new Stripe(STRIPE_SECRET_KEY);
+const stripe = new Stripe(getStripeSecretKey());
 
 export { stripe }; // Export the initialized stripe instance
 
@@ -15,7 +15,7 @@ export const createStripeCustomer = async ({ email, name }) => {
   });
 };
 
-export const createSubscription = async ({ customerId, priceId = STRIPE_PRICE_ID }) => {
+export const createSubscription = async ({ customerId, priceId = getStripePriceId() }) => {
   return await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],

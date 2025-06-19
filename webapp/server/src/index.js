@@ -15,6 +15,10 @@ console.log('Environment variables loaded:', {
   ENV_FILE: join(__dirname, '..', '.env')
 });
 
+// Validate env vars BEFORE importing any that depend on them
+import { validateEnvVars } from './config/constants.js';
+validateEnvVars();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -26,11 +30,11 @@ import usageRoutes from './routes/usage.js';
 import healthRoutes from './routes/health.js';
 import { authenticateToken } from './middleware/auth.js';
 import { handleStripeWebhook } from './services/webhook.js';
-import { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET } from './config/constants.js';
+import { getStripeSecretKey, getStripeWebhookSecret } from './config/constants.js';
 import { authRateLimit, apiRateLimit, licenseRateLimit } from './middleware/rateLimit.js';
 
 // Initialize Stripe
-const stripe = new Stripe(STRIPE_SECRET_KEY);
+const stripe = new Stripe(getStripeSecretKey());
 
 // Connect to Supabase
 connectDB();
@@ -75,7 +79,7 @@ app.post('/webhook', async (req, res) => {
     const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
-      STRIPE_WEBHOOK_SECRET
+      getStripeWebhookSecret()
     );
     await handleStripeWebhook(event);
     res.json({ received: true });

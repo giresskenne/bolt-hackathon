@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/constants.js';
+import { getJwtSecret } from '../config/constants.js';
 import UserModel from '../models/UserModel.js';
 
 const validatePassword = (password) => {
@@ -78,7 +78,7 @@ export const signup = async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { userId: user.id },
-      JWT_SECRET
+      getJwtSecret()
     );
 
     console.log('User created successfully:', { userId: user.id || user._id });
@@ -148,7 +148,7 @@ export const login = async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      JWT_SECRET
+      getJwtSecret()
     );
 
     // Return response

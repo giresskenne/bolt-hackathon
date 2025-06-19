@@ -45,13 +45,18 @@ app.use(cors({
 
 // Add request logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, req.body);
+  console.log(`${req.method} ${req.path}`, req.method === 'POST' ? req.body : '');
   next();
 });
 
 // Route-specific middleware
 app.use('/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
+
+// Add a test route to verify server is working
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is working!', timestamp: new Date().toISOString() });
+});
 
 // Routes with auth and rate limiting
 app.use('/api/auth', authRoutes);

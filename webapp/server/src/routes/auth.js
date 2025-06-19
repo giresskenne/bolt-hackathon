@@ -2,6 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { signup, login, getMe } from '../controllers/auth.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { authRateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
@@ -13,6 +14,12 @@ const validate = (req, res, next) => {
   }
   next();
 };
+
+// Add logging middleware for auth routes
+router.use((req, res, next) => {
+  console.log(`Auth route: ${req.method} ${req.path}`, req.body);
+  next();
+});
 
 // Register route
 router.post('/signup', [

@@ -20,7 +20,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => {
+          console.log('Proxying:', path);
+          return path;
+        }
       }
     }
   },

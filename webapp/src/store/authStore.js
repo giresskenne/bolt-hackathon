@@ -11,25 +11,44 @@ const useAuthStore = create(
       login: async (email, password) => {
         set({ isLoading: true })
         try {
+          console.log('Attempting login to:', '/api/auth/login');
           const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
           })
           
+          console.log('Login response status:', response.status);
+          const responseText = await response.text();
+          console.log('Login response text:', responseText);
+          
           if (!response.ok) {
-            throw new Error('Login failed')
+            let errorMessage = 'Login failed';
+            try {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              // Response wasn't JSON, use status text
+              errorMessage = response.statusText || errorMessage;
+            }
+            throw new Error(errorMessage);
           }
           
-          const data = await response.json()
+          const data = JSON.parse(responseText);
           set({ 
             user: data.user, 
             isAuthenticated: true, 
             isLoading: false 
           })
           
+          // Store token in localStorage
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
+          
           return { success: true }
         } catch (error) {
+          console.error('Login error:', error);
           set({ isLoading: false })
           return { success: false, error: error.message }
         }
@@ -38,31 +57,51 @@ const useAuthStore = create(
       signup: async (email, password, plan = 'free') => {
         set({ isLoading: true })
         try {
+          console.log('Attempting signup to:', '/api/auth/signup');
           const response = await fetch('/api/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, plan })
           })
           
+          console.log('Signup response status:', response.status);
+          const responseText = await response.text();
+          console.log('Signup response text:', responseText);
+          
           if (!response.ok) {
-            throw new Error('Signup failed')
+            let errorMessage = 'Signup failed';
+            try {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              // Response wasn't JSON, use status text
+              errorMessage = response.statusText || errorMessage;
+            }
+            throw new Error(errorMessage);
           }
           
-          const data = await response.json()
+          const data = JSON.parse(responseText);
           set({ 
             user: data.user, 
             isAuthenticated: true, 
             isLoading: false 
           })
           
+          // Store token in localStorage
+          if (data.token) {
+            localStorage.setItem('token', data.token);
+          }
+          
           return { success: true }
         } catch (error) {
+          console.error('Signup error:', error);
           set({ isLoading: false })
           return { success: false, error: error.message }
         }
       },
       
       logout: () => {
+        localStorage.removeItem('token');
         set({ user: null, isAuthenticated: false })
       },
       

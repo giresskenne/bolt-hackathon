@@ -23,21 +23,16 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { connectDB } from './config/database.js';
-import Stripe from 'stripe';
 import authRoutes from './routes/auth.js';
 import subscriptionRoutes from './routes/subscription.js';
 import usageRoutes from './routes/usage.js';
 import healthRoutes from './routes/health.js';
 import { authenticateToken } from './middleware/auth.js';
 import { handleStripeWebhook } from './services/webhook.js';
-import { getStripeSecretKey, getStripeWebhookSecret } from './config/constants.js';
 import { authRateLimit, apiRateLimit, licenseRateLimit } from './middleware/rateLimit.js';
 
-// Initialize Stripe
-const stripe = new Stripe(getStripeSecretKey());
-
 // Connect to Supabase
-connectDB();
+await connectDB();
 
 const app = express();
 
@@ -48,12 +43,18 @@ app.use(cors({
   credentials: true
 }));
 
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, req.body);
+  next();
+});
+
 // Route-specific middleware
 app.use('/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
 // Routes with auth and rate limiting
-app.use('/api/auth', authRateLimit, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/subscription', authenticateToken, apiRateLimit, subscriptionRoutes);
 app.use('/api/usage', apiRateLimit, usageRoutes);
 
@@ -73,27 +74,37 @@ app.post('/api/license/ping', licenseRateLimit, (req, res) => {
 });
 
 // Stripe webhook
-app.post('/webhook', async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  try {
-    const event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      getStripeWebhookSecret()
-    );
-    await handleStripeWebhook(event);
-    res.json({ received: true });
-  } catch (err) {
-    console.error('Webhook Error:', err.message);
-    res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-});
+// app.post('/webhook', async (req, res) => {
+//   const sig = req.headers['stripe-signature'];
+//   try {
+//     const event = stripe.webhooks.constructEvent(
+//       req.body,
+//       sig,
+//       getStripeWebhookSecret()
+//     );
+//     await handleStripeWebhook(event);
+//     res.json({ received: true });
+//   } catch (err) {
+//     console.error('Webhook Error:', err.message);
+//     res.status(400).send(`Webhook Error: ${err.message}`);
+//   }
+// });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
+    success: false,
     error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  console.log('404 - Route not found:', req.method, req.originalUrl);
+  res.status(404).json({
+    success: false,
+    error: 'Route not found'
   });
 });
 

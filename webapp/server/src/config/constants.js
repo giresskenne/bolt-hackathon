@@ -2,23 +2,28 @@
 export function validateEnvVars() {
   const requiredEnvVars = [
     'SUPABASE_URL',
-    'SUPABASE_ANON_KEY'
+    'SUPABASE_ANON_KEY',
+    'JWT_SECRET'
   ];
 
-  if (process.env.NODE_ENV !== 'test') {
-    requiredEnvVars.push(
-      'STRIPE_SECRET_KEY',
-      'STRIPE_PRICE_ID', // Fallback for legacy support
-      'STRIPE_PRO_PRICE_ID',
-      'STRIPE_ENTERPRISE_PRICE_ID',
-      'STRIPE_WEBHOOK_SECRET'
-    );
-  }
+  // Only require Stripe keys if we're using Stripe features
+  // if (process.env.NODE_ENV !== 'test') {
+  //   requiredEnvVars.push(
+  //     'STRIPE_SECRET_KEY',
+  //     'STRIPE_PRICE_ID', // Fallback for legacy support
+  //     'STRIPE_PRO_PRICE_ID',
+  //     'STRIPE_ENTERPRISE_PRICE_ID',
+  //     'STRIPE_WEBHOOK_SECRET'
+  //   );
+  // }
 
   const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
   if (missingEnvVars.length > 0) {
     console.error('Missing required environment variables:', missingEnvVars);
-    process.exit(1);
+    // Don't exit in development, just warn
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    }
   }
 }
 

@@ -27,32 +27,22 @@ export const signup = async (req, res) => {
     
     const { email, password, plan = 'free' } = req.body;
     
+    if (!email || !password) {
+      console.log('Missing email or password');
+      return res.status(400).json({
+        success: false,
+        error: 'Email and password are required'
+      });
+    }
+
     if (!validatePassword(password)) {
+      console.log('Password validation failed');
       return res.status(400).json({
         success: false,
         error: 'Password must be at least 8 characters and contain uppercase, lowercase, number and special characters'
       });
     }
     
-    // Check if user already exists
-    const { data: existingUser, error: findError } = await UserModel.findOne({ email });
-    
-    if (findError) {
-      console.error('Error checking existing user:', findError);
-      return res.status(findError.status || 500).json({
-        success: false,
-        error: findError.message || 'Error checking user existence'
-      });
-    }
-    
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email already exists'
-      });
-    }
-    
-    // Create new user
     console.log('Creating new user with:', { email, plan });
     const { data: user, error: createError } = await UserModel.create({
       email, 
@@ -64,11 +54,12 @@ export const signup = async (req, res) => {
       console.error('Error creating user:', createError);
       return res.status(createError.status || 500).json({
         success: false,
-        error: createError.message === 'User already exists' ? 'Email already exists' : (createError.message || 'Failed to create user')
+        error: createError.message === 'Email already exists' ? 'Email already exists' : (createError.message || 'Failed to create user')
       });
     }
 
     if (!user) {
+      console.error('No user returned from create operation');
       return res.status(500).json({
         success: false,
         error: 'Failed to create user - no data returned'
@@ -81,7 +72,7 @@ export const signup = async (req, res) => {
       getJwtSecret()
     );
 
-    console.log('User created successfully:', { userId: user.id || user._id });
+    console.log('User created successfully:', { userId: user.id });
 
     // Return response using UserModel's toJSON method
     return res.status(201).json({
@@ -91,7 +82,7 @@ export const signup = async (req, res) => {
     });
   } catch (error) {
     console.error('Signup error:', error);
-    return res.status(error.status || 400).json({
+    return res.status(error.status || 500).json({
       success: false,
       error: error.message || 'Signup failed'
     });
@@ -102,15 +93,10 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Check rate limiting
-    const ip = req.headers['x-test-rate-limit'] ? 'test-ip' : req.ip;
-    const rateLimitInfo = UserModel.getRateLimitInfo(email, ip);
-    
-    if (rateLimitInfo.blocked) {
-      return res.status(429).json({
+    if (!email || !password) {
+      return res.status(400).json({
         success: false,
-        error: 'Too many login attempts',
-        nextTry: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+        error: 'Email and password are required'
       });
     }
     
@@ -126,19 +112,15 @@ export const login = async (req, res) => {
     }
     
     if (!user) {
-      await UserModel.recordFailedLoginAttempt(email, ip);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
       });
     }
-
-    const userData = user.toJSON();
     
     // Check password
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      await UserModel.recordFailedLoginAttempt(email, ip);
       return res.status(401).json({
         success: false,
         error: 'Invalid credentials'
@@ -159,7 +141,7 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(error.status || 400).json({
+    return res.status(error.status || 500).json({
       success: false,
       error: error.message || 'Login failed'
     });
@@ -193,7 +175,7 @@ export const getMe = async (req, res) => {
     });
   } catch (error) {
     console.error('GetMe error:', error);
-    return res.status(error.status || 400).json({
+    return res.status(error.status || 500).json({
       success: false,
       error: error.message || 'Failed to get user info'
     });

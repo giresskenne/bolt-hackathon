@@ -17,161 +17,160 @@ export class UserModel {
   }
 
   static async findOne(query) {
-    if (process.env.NODE_ENV === 'test' && global.__TEST_STATE__) {
-      if (query.email) {
-        const user = Array.from(global.__TEST_STATE__.users.values())
-          .find(u => u.email === query.email);
-        return { data: user ? new UserModel(user) : null, error: null };
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        throw new Error('Supabase not initialized. Call connectDB() first.');
       }
+      
+      if (query.email) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', query.email)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error finding user:', error);
+          return { data: null, error };
+        }
+        
+        return { data: data ? new UserModel(data) : null, error: null };
+      }
+      
       return { data: null, error: null };
+    } catch (error) {
+      console.error('UserModel.findOne error:', error);
+      return { data: null, error };
     }
+  }
 
-    const supabase = getSupabase();
-    if (!supabase) throw new Error('Supabase not initialized. Call connectDB() first.');
-    
-    if (query.email) {
+  static async findById(id) {
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        return { data: null, error: new Error('Supabase not initialized. Call connectDB() first.') };
+      }
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', query.email)
+        .eq('id', id)
         .single();
       
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
+        console.error('Error finding user by ID:', error);
         return { data: null, error };
       }
       
       return { data: data ? new UserModel(data) : null, error: null };
-    }
-    
-    return { data: null, error: null };
-  }
-
-  static async findById(id) {
-    if (process.env.NODE_ENV === 'test' && global.__TEST_STATE__) {
-      const user = Array.from(global.__TEST_STATE__.users.values())
-        .find(u => u.id === id);
-      return { data: user ? new UserModel(user) : null, error: null };
-    }
-
-    const supabase = getSupabase();
-    if (!supabase) {
-      return { data: null, error: new Error('Supabase not initialized. Call connectDB() first.') };
-    }
-    
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
+    } catch (error) {
+      console.error('UserModel.findById error:', error);
       return { data: null, error };
     }
-    
-    return { data: data ? new UserModel(data) : null, error: null };
   }
 
   static async create(userData) {
-    const supabase = getSupabase();
-    if (!supabase) {
-      return { data: null, error: new Error('Supabase not initialized. Call connectDB() first.') };
-    }
-    
-    // Check if user already exists
-    const { data: existingUser } = await this.findOne({ email: userData.email });
-    if (existingUser) {
-      return { 
-        data: null, 
-        error: { message: 'Email already exists', status: 400 } 
+    try {
+      console.log('Creating user with data:', { email: userData.email, plan: userData.plan });
+      
+      const supabase = getSupabase();
+      if (!supabase) {
+        return { data: null, error: new Error('Supabase not initialized. Call connectDB() first.') };
+      }
+      
+      // Check if user already exists
+      const { data: existingUser } = await this.findOne({ email: userData.email });
+      if (existingUser) {
+        console.log('User already exists:', userData.email);
+        return { 
+          data: null, 
+          error: { message: 'Email already exists', status: 400 } 
+        };
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      console.log('Password hashed successfully');
+
+      // Prepare user data
+      const subscriptionData = {
+        plan: userData.plan || 'free',
+        status: 'trial',
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        trialEnds: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
       };
-    }
 
-    // Hash password in production, use plain password in tests
-    const password = process.env.NODE_ENV === 'test' 
-      ? userData.password
-      : await bcrypt.hash(userData.password, 10);
-
-    // Prepare user data with common fields
-    const subscriptionData = {
-      plan: userData.plan || 'free',
-      status: 'trial',
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
-      trialEnds: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-    };
-
-    if (process.env.NODE_ENV === 'test' && global.__TEST_STATE__) {
-      const id = Math.random().toString(36).substr(2, 9);
-      const user = new UserModel({
-        id,
+      const newUserData = {
         email: userData.email,
-        password: password,
+        password: hashedPassword,
         subscription: subscriptionData
-      });
-      global.__TEST_STATE__.users.set(id, {
-        id,
-        email: userData.email,
-        password: password,
-        subscription: subscriptionData
-      });
-      return { data: user, error: null };
-    }
+      };
 
-    const newUserData = {
-      email: userData.email,
-      password: password,
-      subscription: subscriptionData
-    };
+      console.log('Inserting user into database...');
+      const { data, error } = await supabase
+        .from('users')
+        .insert([newUserData])
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from('users')
-      .insert([newUserData])
-      .select()
-      .single();
+      if (error) {
+        console.error('Database insert error:', error);
+        return { data: null, error };
+      }
 
-    if (error) {
+      console.log('User created successfully:', data.id);
+      return { data: new UserModel(data), error: null };
+    } catch (error) {
+      console.error('UserModel.create error:', error);
       return { data: null, error };
     }
-
-    return { data: new UserModel(data), error: null };
   }
 
   async save() {
-    const supabase = getSupabase();
-    if (!supabase) {
-      return { data: null, error: new Error('Supabase not initialized. Call connectDB() first.') };
-    }
-    
-    if (!this.id) {
-      return { 
-        data: null, 
-        error: new Error('Cannot save user without ID. Use create() for new users.') 
-      };
-    }
+    try {
+      const supabase = getSupabase();
+      if (!supabase) {
+        return { data: null, error: new Error('Supabase not initialized. Call connectDB() first.') };
+      }
+      
+      if (!this.id) {
+        return { 
+          data: null, 
+          error: new Error('Cannot save user without ID. Use create() for new users.') 
+        };
+      }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update({
-        email: this.email,
-        password: this.password,
-        subscription: this.subscription
-      })
-      .eq('id', this.id)
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          email: this.email,
+          password: this.password,
+          subscription: this.subscription
+        })
+        .eq('id', this.id)
+        .select()
+        .single();
 
-    if (error) {
+      if (error) {
+        return { data: null, error };
+      }
+
+      return { data: new UserModel(data), error: null };
+    } catch (error) {
+      console.error('UserModel.save error:', error);
       return { data: null, error };
     }
-
-    return { data: new UserModel(data), error: null };
   }
 
   async comparePassword(candidatePassword) {
-    if (process.env.NODE_ENV === 'test') {
-      return candidatePassword === this.password;
+    try {
+      return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+      console.error('Password comparison error:', error);
+      return false;
     }
-    return bcrypt.compare(candidatePassword, this.password);
   }
 
   toJSON() {
@@ -190,36 +189,15 @@ export class UserModel {
     };
   }
 
+  // Remove test-specific methods since we're not in test mode
   static async recordFailedLoginAttempt(email, ip) {
-    if (global.__TEST_STATE__) {
-      const key = `${ip}:${email}`;
-      const rateLimiter = global.__TEST_STATE__.rateLimiters.auth;
-      const attempts = rateLimiter.get(key) || [];
-      attempts.push(Date.now());
-      
-      // Only keep attempts within the window (15 minutes)
-      const windowMs = 15 * 60 * 1000;
-      const now = Date.now();
-      const recentAttempts = attempts.filter(time => now - time < windowMs);
-      
-      rateLimiter.set(key, recentAttempts);
-      return recentAttempts.length;
-    }
+    // In production, this would be implemented with a proper rate limiting system
+    console.log(`Failed login attempt for ${email} from ${ip}`);
     return 0;
   }
 
   static getRateLimitInfo(email, ip) {
-    if (global.__TEST_STATE__) {
-      const key = `${ip}:${email}`;
-      const rateLimiter = global.__TEST_STATE__.rateLimiters.auth;
-      const attempts = rateLimiter.get(key) || [];
-      const now = Date.now();
-      const recentAttempts = attempts.filter(time => now - time < 15 * 60 * 1000);
-      return {
-        remaining: Math.max(0, 5 - recentAttempts.length),
-        blocked: recentAttempts.length >= 5
-      };
-    }
+    // In production, this would check a proper rate limiting system
     return { remaining: 5, blocked: false };
   }
 }

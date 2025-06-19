@@ -5,15 +5,9 @@ let supabase = null;
 
 export const connectDB = async () => {
   try {
-    if (process.env.NODE_ENV === 'test') {
-      // For tests, we'll use our mock Supabase client from the mock setup
-      supabase = global.__TEST_SUPABASE_CLIENT__;
-      if (!supabase) {
-        throw new Error('Test Supabase client not initialized');
-      }
-      console.log('Connected to mock Supabase database');
-      return supabase;
-    }
+    console.log('Connecting to Supabase...');
+    console.log('Supabase URL:', getSupabaseUrl());
+    console.log('Supabase Key prefix:', getSupabaseAnonKey()?.substring(0, 10) + '...');
 
     supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey());
     
@@ -26,10 +20,7 @@ export const connectDB = async () => {
     console.log(`Supabase Connected: ${getSupabaseUrl()}`);
     return supabase;
   } catch (error) {
-    console.error(`Error: ${error.message}`);
-    if (process.env.NODE_ENV !== 'test') {
-      process.exit(1);
-    }
+    console.error(`Database connection error: ${error.message}`);
     throw error;
   }
 };
@@ -40,8 +31,3 @@ export const getSupabase = () => {
   }
   return supabase;
 };
-
-// When you need the Supabase URL and anon key, use:
-// getSupabaseUrl() and getSupabaseAnonKey()
-// For example:
-// const supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey());

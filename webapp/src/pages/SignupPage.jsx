@@ -26,8 +26,10 @@ export default function SignupPage() {
       return
     }
 
-    if (formData.password.length < 8) {
-      toast.error('Password must be at least 8 characters')
+    // Comprehensive password validation
+    const passwordErrors = validatePassword(formData.password)
+    if (passwordErrors.length > 0) {
+      toast.error(passwordErrors[0]) // Show first error
       return
     }
 
@@ -39,6 +41,39 @@ export default function SignupPage() {
     } else {
       toast.error(result.error || 'Signup failed')
     }
+  }
+
+  const validatePassword = (password) => {
+    const errors = []
+    
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters')
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter')
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter')
+    }
+    
+    if (!/\d/.test(password)) {
+      errors.push('Password must contain at least one number')
+    }
+    
+    if (!/[!@#$%^&*]/.test(password)) {
+      errors.push('Password must contain at least one special character (!@#$%^&*)')
+    }
+    
+    return errors
+  }
+
+  const getPasswordStrength = (password) => {
+    const errors = validatePassword(password)
+    if (errors.length === 0) return 'strong'
+    if (errors.length <= 2) return 'medium'
+    return 'weak'
   }
 
   const handleChange = (e) => {
@@ -109,7 +144,7 @@ export default function SignupPage() {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 pr-12"
-                    placeholder="At least 8 characters"
+                    placeholder="8+ chars, uppercase, lowercase, number, special char"
                   />
                   <button
                     type="button"
@@ -119,6 +154,37 @@ export default function SignupPage() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {formData.password && (
+                  <div className="mt-2">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <div className="flex-1 bg-white/10 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all ${
+                            getPasswordStrength(formData.password) === 'strong' ? 'bg-green-500 w-full' :
+                            getPasswordStrength(formData.password) === 'medium' ? 'bg-yellow-500 w-2/3' :
+                            'bg-red-500 w-1/3'
+                          }`}
+                        />
+                      </div>
+                      <span className={`text-xs ${
+                        getPasswordStrength(formData.password) === 'strong' ? 'text-green-400' :
+                        getPasswordStrength(formData.password) === 'medium' ? 'text-yellow-400' :
+                        'text-red-400'
+                      }`}>
+                        {getPasswordStrength(formData.password) === 'strong' ? 'Strong' :
+                         getPasswordStrength(formData.password) === 'medium' ? 'Medium' : 'Weak'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-400 space-y-1">
+                      {validatePassword(formData.password).map((error, index) => (
+                        <div key={index} className="flex items-center space-x-1">
+                          <span className="text-red-400">•</span>
+                          <span>{error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

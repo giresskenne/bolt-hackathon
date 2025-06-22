@@ -631,6 +631,16 @@ window.addEventListener('message', async (event) => {
     return;
   }
   
+  // Handle extension ping requests
+  if (event.data?.type === 'EXTENSION_PING') {
+    // Respond immediately that extension is ready
+    window.postMessage({
+      type: 'EXTENSION_READY',
+      extensionId: chrome.runtime.id
+    }, event.origin);
+    return;
+  }
+  
   if (event.data?.type === 'EXTENSION_API_REQUEST') {
     try {
       // Forward request to background script

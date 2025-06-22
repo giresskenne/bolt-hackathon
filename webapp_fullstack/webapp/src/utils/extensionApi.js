@@ -41,9 +41,17 @@ class ExtensionApi {
 
   checkExtensionReady() {
     // Send a ping to see if extension is already loaded
+    console.log('[ExtensionApi] Checking if extension is ready...');
     window.postMessage({
       type: 'EXTENSION_PING'
-    }, '*');
+    }, window.location.origin);
+    
+    // Also listen for any existing EXTENSION_READY messages
+    setTimeout(() => {
+      if (!this.isReady) {
+        console.log('[ExtensionApi] Extension not detected after initial check');
+      }
+    }, 1000);
   }
 
   async sendRequest(action, data = null, timeout = 5000) {

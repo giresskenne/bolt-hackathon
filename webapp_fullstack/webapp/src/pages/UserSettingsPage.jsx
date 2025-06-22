@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { useSubscriptionStore } from '../store/subscriptionStore'
 import { 
   Shield, 
   TrendingUp, 
@@ -23,7 +22,6 @@ export default function DashboardPage() {
   const navigate = useNavigate()
   const { 
     plan, 
-    subscriptionStatus,
     isSubscriptionLoading,
     extensionUsage,
     customRules: extensionCustomRules,

@@ -11,6 +11,10 @@ class QuotaTracker {
     this.store = new self.EncryptedStore('quota');
     this.lastPing = null;
     this.pingInterval = 24 * 60 * 60 * 1000; // 24 hours
+    
+    // Bind methods to ensure 'this' context is preserved
+    this.maybePing = this.maybePing.bind(this);
+    this.performLicensePing = this.performLicensePing.bind(this);
   }
 
   /**
@@ -62,6 +66,49 @@ class QuotaTracker {
     await this.maybePing();
     
     return usage;
+  }
+
+  /**
+   * Perform license ping to validate subscription
+   */
+  async performLicensePing() {
+    try {
+      const usage = await this.getCurrentUsage();
+      
+      const pingData = {
+        plan: usage.plan,
+        scrubCountThisMonth: usage.scrubsThisMonth,
+        timestamp: new Date().toISOString(),
+        version: '1.0.0'
+      };
+
+      console.log('[QuotaTracker] License ping data:', pingData);
+      
+      // In extension context, we don't have a backend to ping
+      // Just return success for now
+      await this.store.set('lastPing', new Date().toISOString());
+      
+      return { valid: true, plan: usage.plan };
+    } catch (error) {
+      console.error('[QuotaTracker] License ping failed:', error);
+      // In case of errors, allow continued usage
+      return { valid: true, plan: 'free' };
+    }
+  }
+
+  /**
+   * Maybe perform license ping based on interval
+   */
+  async maybePing() {
+    const lastPing = await this.store.get('lastPing');
+    const now = new Date();
+    
+    if (!lastPing || 
+        (now.getTime() - new Date(lastPing).getTime()) > this.pingInterval) {
+      return await this.performLicensePing();
+    }
+    
+    return null;
   }
 
   /**

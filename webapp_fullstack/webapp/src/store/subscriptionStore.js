@@ -105,7 +105,10 @@ const useSubscriptionStore = create(
 
           // Also fetch extension data after subscription status is loaded
           const { fetchExtensionData } = get();
-          fetchExtensionData();
+          // Fetch extension data with a small delay to allow extension to initialize
+          setTimeout(() => {
+            fetchExtensionData();
+          }, 500);
 
         } catch (error) {
           console.error('Failed to fetch subscription status:', error);
@@ -120,8 +123,11 @@ const useSubscriptionStore = create(
       fetchExtensionData: async () => {
         set({ isExtensionDataLoading: true });
         try {
-          if (!extensionApi.isExtensionReady()) {
-            console.warn('Extension not ready, skipping data fetch');
+          // Wait for extension to be ready with timeout
+          const isReady = await extensionApi.waitForReady(3000);
+          
+          if (!isReady) {
+            console.warn('Extension not ready after timeout, skipping data fetch');
             set({ 
               isExtensionDataLoading: false,
               extensionConnected: false 

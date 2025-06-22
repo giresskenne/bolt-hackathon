@@ -623,7 +623,7 @@ window.addEventListener('message', async (event) => {
   // Only accept messages from same origin or allowed origins
   const allowedOrigins = [
     'http://localhost:5173',
-    'http://localhost:3000',
+    'http://localhost:3001',
     'https://prompt-scrubber.com'
   ];
   

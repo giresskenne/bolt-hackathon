@@ -13,7 +13,10 @@ import {
   Edit,
   Crown,
   Zap,
-  Clock
+  Clock,
+  AlertTriangle,
+  Wifi,
+  WifiOff
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -25,18 +28,21 @@ export default function DashboardPage() {
     plan, 
     subscriptionStatus,
     isSubscriptionLoading,
-    usage, 
-    limits, 
-    updateUsage, 
-    canPerformAction, 
+    extensionUsage,
+    customRules,
+    scrubHistory,
+    isExtensionDataLoading,
+    extensionConnected,
+    limits,
+    fetchExtensionData,
+    addCustomRule,
+    deleteCustomRule,
+    canPerformAction,
     getUsagePercentage,
-    upgradePlan,
-    fetchSubscriptionStatus
+    upgradePlan
   } = useSubscriptionStore()
 
-  const [customRules, setCustomRules] = useState([])
   const [newRule, setNewRule] = useState({ value: '', label: '' })
-  const [recentActivity, setRecentActivity] = useState([])
   const [showAddRule, setShowAddRule] = useState(false)
   const [upgradeLoading, setUpgradeLoading] = useState(false)
 
@@ -57,8 +63,8 @@ export default function DashboardPage() {
         // Show success message
         toast.success('🎉 Successfully upgraded to Pro! Welcome to unlimited scrubbing!')
         
-        // Refresh subscription status to get updated plan
-        fetchSubscriptionStatus()
+        // Refresh extension data to get updated plan
+        fetchExtensionData()
       }
       
       // Clean up URL by removing query parameters (always do this)
@@ -68,60 +74,107 @@ export default function DashboardPage() {
       toast.error('Upgrade cancelled. You can try again anytime.')
       navigate('/dashboard', { replace: true })
     }
-    
-    // Load custom rules from localStorage (encrypted in real implementation)
-    const savedRules = localStorage.getItem('customRules')
-    if (savedRules) {
-      setCustomRules(JSON.parse(savedRules))
-    }
+  }, [searchParams, navigate, fetchExtensionData])
 
-    // Load recent activity
-    const savedActivity = localStorage.getItem('recentActivity')
-    if (savedActivity) {
-      setRecentActivity(JSON.parse(savedActivity))
-    }
-  }, [searchParams, navigate, fetchSubscriptionStatus])
+  // Refresh extension data periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (extensionConnected) {
+        fetchExtensionData()
+      }
+    }, 30000) // Refresh every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [extensionConnected, fetchExtensionData])
 
   const currentLimits = limits[plan]
-  const scrubUsagePercent = getUsagePercentage('scrubsThisMonth')
-  const rulesUsagePercent = getUsagePercentage('customRules')
+  const [scrubUsagePercent, setScrubUsagePercent] = useState(0)
+  const [rulesUsagePercent, setRulesUsagePercent] = useState(0)
 
-  const handleAddRule = (e) => {
+  // Load usage percentages
+  useEffect(() => {
+    const loadUsagePercentages = async () => {
+      try {
+        const [scrubPercent, rulesPercent] = await Promise.all([
+          getUsagePercentage('scrubs'),
+          getUsagePercentage('customRules')
+        ])
+        setScrubUsagePercent(scrubPercent)
+        setRulesUsagePercent(rulesPercent)
+      } catch (error) {
+        console.error('Failed to load usage percentages:', error)
+      }
+    }
+
+    if (extensionConnected) {
+      loadUsagePercentages()
+    }
+  }, [extensionConnected, extensionUsage, getUsagePercentage])
+
+  const handleAddRule = async (e) => {
     e.preventDefault()
     
-    if (!canPerformAction('addCustomRule')) {
-      toast.error(`Custom rule limit reached (${currentLimits.customRules})`)
-      return
-    }
+    try {
+      const canAdd = await canPerformAction('addCustomRule')
+      if (!canAdd) {
+        toast.error(`Custom rule limit reached (${currentLimits.customRules})`)
+        return
+      }
 
-    if (!newRule.value.trim() || !newRule.label.trim()) {
-      toast.error('Please fill in both value and label')
-      return
-    }
+      if (!newRule.value.trim() || !newRule.label.trim()) {
+        toast.error('Please fill in both value and label')
+        return
+      }
 
-    const rule = {
-      id: Date.now(),
-      value: newRule.value.trim(),
-      label: newRule.label.trim(),
-      createdAt: new Date().toISOString()
-    }
+      // Validate label format
+      if (!/^[a-zA-Z0-9_-]+$/.test(newRule.label)) {
+        toast.error('Label can only contain letters, numbers, hyphens, and underscores')
+        return
+      }
 
-    const updatedRules = [...customRules, rule]
-    setCustomRules(updatedRules)
-    localStorage.setItem('customRules', JSON.stringify(updatedRules))
-    
-    updateUsage('customRules', 1)
-    setNewRule({ value: '', label: '' })
-    setShowAddRule(false)
-    toast.success('Custom rule added successfully')
+      // Check for duplicates
+      if (customRules.some(r => 
+        r.label.toLowerCase() === newRule.label.toLowerCase() || 
+        r.value.toLowerCase() === newRule.value.toLowerCase()
+      )) {
+        toast.error('A rule with this label or value already exists')
+        return
+      }
+
+      const result = await addCustomRule({
+        value: newRule.value.trim(),
+        label: newRule.label.trim()
+      })
+
+      if (result.success) {
+        setNewRule({ value: '', label: '' })
+        setShowAddRule(false)
+        toast.success('Custom rule added successfully')
+        // Refresh extension data to get updated usage
+        fetchExtensionData()
+      } else {
+        toast.error(result.error || 'Failed to add custom rule')
+      }
+    } catch (error) {
+      console.error('Add rule error:', error)
+      toast.error('Failed to add custom rule')
+    }
   }
 
-  const handleDeleteRule = (id) => {
-    const updatedRules = customRules.filter(rule => rule.id !== id)
-    setCustomRules(updatedRules)
-    localStorage.setItem('customRules', JSON.stringify(updatedRules))
-    updateUsage('customRules', -1)
-    toast.success('Custom rule deleted')
+  const handleDeleteRule = async (id) => {
+    try {
+      const result = await deleteCustomRule(id)
+      if (result.success) {
+        toast.success('Custom rule deleted')
+        // Refresh extension data to get updated usage
+        fetchExtensionData()
+      } else {
+        toast.error(result.error || 'Failed to delete custom rule')
+      }
+    } catch (error) {
+      console.error('Delete rule error:', error)
+      toast.error('Failed to delete custom rule')
+    }
   }
 
   const handleUpgrade = async () => {
@@ -165,11 +218,43 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-discord-hero text-white py-8 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Loading State */}
-        {isSubscriptionLoading && (
+        {(isSubscriptionLoading || isExtensionDataLoading) && (
           <div className="mb-6 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
             <div className="flex items-center space-x-3">
               <div className="spinner"></div>
-              <span className="text-blue-400">Loading subscription information...</span>
+              <span className="text-blue-400">
+                {isSubscriptionLoading ? 'Loading subscription information...' : 'Loading extension data...'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Extension Connection Status */}
+        {!extensionConnected && !isExtensionDataLoading && (
+          <div className="mb-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <WifiOff className="w-5 h-5 text-yellow-400" />
+              <div>
+                <p className="text-yellow-400 font-semibold">Extension Not Connected</p>
+                <p className="text-sm text-gray-300">
+                  Install the Prompt-Scrubber browser extension to sync your custom rules and usage data.
+                </p>
+              </div>
+              <button
+                onClick={fetchExtensionData}
+                className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+
+        {extensionConnected && (
+          <div className="mb-6 bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <Wifi className="w-5 h-5 text-green-400" />
+              <span className="text-green-400 font-semibold">Extension Connected</span>
             </div>
           </div>
         )}
@@ -210,7 +295,7 @@ export default function DashboardPage() {
                 <Shield className="w-6 h-6 text-primary" />
               </div>
               <span className="text-2xl font-bold">
-                {usage.scrubsThisMonth}
+                {extensionUsage.scrubsThisMonth}
                 {currentLimits.scrubsPerMonth !== -1 && (
                   <span className="text-sm text-gray-400 font-normal">
                     /{currentLimits.scrubsPerMonth}
@@ -301,7 +386,7 @@ export default function DashboardPage() {
               <h2 className="text-xl font-bold">Custom Rules</h2>
               <button
                 onClick={() => setShowAddRule(true)}
-                disabled={!canPerformAction('addCustomRule')}
+                disabled={!extensionConnected}
                 className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
@@ -309,7 +394,18 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {showAddRule && (
+            {!extensionConnected && (
+              <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                  <p className="text-yellow-400 text-sm">
+                    Extension required to manage custom rules
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {showAddRule && extensionConnected && (
               <form onSubmit={handleAddRule} className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                   <div>
@@ -370,7 +466,8 @@ export default function DashboardPage() {
                     <div className="flex items-center space-x-2 ml-4">
                       <button
                         onClick={() => handleDeleteRule(rule.id)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                        disabled={!extensionConnected}
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -386,24 +483,26 @@ export default function DashboardPage() {
             <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
             
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {recentActivity.length === 0 ? (
+              {scrubHistory.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
                   <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>No recent activity</p>
                   <p className="text-sm">Your scrubbing history will appear here</p>
                 </div>
               ) : (
-                recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                scrubHistory.slice(0, 10).map((activity, index) => (
+                  <div key={activity.id || index} className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">
                     <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Shield className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{activity.action}</p>
-                      <p className="text-xs text-gray-400">{activity.timestamp}</p>
+                      <p className="text-sm font-medium">{activity.action || 'Scrub action'}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
                     </div>
                     <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
-                      {activity.count} items
+                      {activity.count || 1} items
                     </span>
                   </div>
                 ))

@@ -2,13 +2,15 @@
   Prompt-Scrubber – src/bg.js   (MV3 background Service Worker)
   • Static import of detectorWorker.js at initial eval
   • Then fetch patterns.json and call prepareDetector()
-  • Replies to “scan” & “ping” messages
+  • Replies to "scan" & "ping" messages
 ─────────────────────────────────────────────────────────────*/
 
 'use strict';
 
 // 1) static import at top‐level (allowed by MV3)
 importScripts(chrome.runtime.getURL('src/detectorWorker.js'));
+importScripts(chrome.runtime.getURL('src/encryptedStore.js'));
+importScripts(chrome.runtime.getURL('src/quotaTracker.js'));
 
 // 2) load the JSON manifest and initialize
 const patternsURL = chrome.runtime.getURL('src/patterns.json');
@@ -20,6 +22,15 @@ fetch(patternsURL)
   })
   .catch(err => console.error('[Scrubber] failed to init detector', err));
 
+// Initialize QuotaTracker
+let quotaTracker;
+try {
+  quotaTracker = new self.QuotaTracker();
+  console.log('[Scrubber] QuotaTracker initialized');
+} catch (err) {
+  console.error('[Scrubber] Failed to initialize QuotaTracker:', err);
+}
+
 // 3) handle incoming messages
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'scan') {
@@ -30,4 +41,80 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     sendResponse({ ready: typeof self.scanDetector === 'function' });
     return true;
   }
+  
+  // Handle extension API requests
+  if (msg?.type === 'extensionApi') {
+    handleExtensionApiRequest(msg, sendResponse);
+    return true; // Keep channel open for async response
+  }
 });
+
+// Handle extension API requests from web app
+async function handleExtensionApiRequest(msg, sendResponse) {
+  try {
+    if (!quotaTracker) {
+      throw new Error('QuotaTracker not initialized');
+    }
+
+    const { action, data } = msg;
+    let result;
+
+    switch (action) {
+      case 'getUsage':
+        result = await quotaTracker.getCurrentUsage();
+        break;
+        
+      case 'getCustomRules':
+        result = await quotaTracker.getCustomRules();
+        break;
+        
+      case 'addCustomRule':
+        result = await quotaTracker.addCustomRule(data);
+        break;
+        
+      case 'updateCustomRule':
+        result = await quotaTracker.updateCustomRule(data.id, data.updates);
+        break;
+        
+      case 'deleteCustomRule':
+        result = await quotaTracker.deleteCustomRule(data.id);
+        break;
+        
+      case 'getScrubHistory':
+        result = await quotaTracker.getScrubHistory(data?.limit);
+        break;
+        
+      case 'addScrubEvent':
+        result = await quotaTracker.addScrubEvent(data);
+        break;
+        
+      case 'updatePlan':
+        result = await quotaTracker.updatePlan(data.plan);
+        break;
+        
+      case 'exportData':
+        result = await quotaTracker.exportData();
+        break;
+        
+      case 'clearAllData':
+        result = await quotaTracker.clearAllData();
+        break;
+        
+      case 'canPerformAction':
+        result = await quotaTracker.canPerformAction(data.action);
+        break;
+        
+      case 'getUsagePercentage':
+        result = await quotaTracker.getUsagePercentage(data.type);
+        break;
+        
+      default:
+        throw new Error(`Unknown action: ${action}`);
+    }
+
+    sendResponse({ success: true, data: result });
+  } catch (error) {
+    console.error('[Scrubber] Extension API error:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}

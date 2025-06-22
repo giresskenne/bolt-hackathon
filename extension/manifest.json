@@ -38,7 +38,9 @@
         "icons/Logo.png",
         "icons/settings.png",
         "src/detectorWorker.js",
-        "src/patterns.json"
+        "src/patterns.json",
+        "src/encryptedStore.js",
+        "src/quotaTracker.js"
       ],
       "matches": ["<all_urls>"]
     }
@@ -51,6 +53,13 @@
       },
       "description": "Mask secrets and PII in the current prompt without automatically sending it"
     }
+  },
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:5173/*",
+      "http://localhost:3000/*",
+      "https://*.prompt-scrubber.com/*"
+    ]
   },
   "icons": {
     "16": "icons/icon-16.png",

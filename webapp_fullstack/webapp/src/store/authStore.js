@@ -201,7 +201,13 @@ const useAuthStore = create(
             
             // Also fetch subscription status when checking auth
             const { useSubscriptionStore } = await import('./subscriptionStore.js');
-            useSubscriptionStore.getState().fetchSubscriptionStatus();
+            const subscriptionStore = useSubscriptionStore.getState();
+            subscriptionStore.fetchSubscriptionStatus();
+            
+            // Fetch extension data after a short delay to ensure extension is ready
+            setTimeout(() => {
+              subscriptionStore.fetchExtensionData();
+            }, 1000);
           } else {
             localStorage.removeItem('token');
             set({ user: null, isAuthenticated: false, isLoading: false })

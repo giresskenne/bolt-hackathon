@@ -1,499 +1,491 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useSubscriptionStore } from '../store/subscriptionStore'
 import { 
-  User, 
-  Mail, 
   Shield, 
-  Bell, 
-  Eye, 
-  EyeOff, 
-  Save,
+  TrendingUp, 
+  Settings, 
+  Calendar, 
+  Activity,
+  Plus,
   Trash2,
-  Download,
-  Upload,
-  Settings,
-  Lock,
-  Globe,
-  Smartphone
+  Edit,
+  Crown,
+  Zap,
+  Clock
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-export default function UserSettingsPage() {
+export default function DashboardPage() {
+  const { user } = useAuthStore()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { user, updateProfile, deleteAccount } = useAuthStore()
-  const { plan } = useSubscriptionStore()
-  
-  const [activeTab, setActiveTab] = useState('profile')
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  
-  const [profileData, setProfileData] = useState({
-    email: user?.email || '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+  const { 
+    plan, 
+    subscriptionStatus,
+    isSubscriptionLoading,
+    extensionUsage,
+    customRules: extensionCustomRules,
+    scrubHistory,
+    extensionConnected,
+    isExtensionDataLoading,
+    addCustomRule,
+    deleteCustomRule,
+    canPerformAction,
+    getExtensionUsagePercentage,
+    limits, 
+    upgradePlan,
+    fetchSubscriptionStatus,
+    fetchExtensionData
+  } = useSubscriptionStore()
+
+  const [newRule, setNewRule] = useState({ value: '', label: '' })
+  const [recentActivity, setRecentActivity] = useState([])
+  const [showAddRule, setShowAddRule] = useState(false)
+  const [upgradeLoading, setUpgradeLoading] = useState(false)
+  const [actionPermissions, setActionPermissions] = useState({
+    canScrub: true,
+    canAddRule: true
   })
 
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    securityAlerts: true,
-    productUpdates: false,
-    darkMode: false,
-    autoScrub: true,
-    showTooltips: true
-  })
+  useEffect(() => {
+    // Handle Stripe success redirect
+    const upgradeStatus = searchParams.get('upgrade')
+    const sessionId = searchParams.get('session_id')
+    
+    if (upgradeStatus === 'success' && sessionId) {
+      // Check if we've already shown a toast for this session ID
+      const toastKey = `upgrade_toast_${sessionId}`
+      const hasShownToast = sessionStorage.getItem(toastKey)
+      
+      if (!hasShownToast) {
+        // Mark this session as having shown a toast
+        sessionStorage.setItem(toastKey, 'true')
+        
+        // Show success message
+        toast.success('🎉 Successfully upgraded to Pro! Welcome to unlimited scrubbing!')
+        
+        // Refresh subscription status to get updated plan
+        fetchSubscriptionStatus()
+      }
+      
+      // Clean up URL by removing query parameters (always do this)
+      navigate('/dashboard', { replace: true })
+    } else if (upgradeStatus === 'cancelled') {
+      // Handle cancelled checkout
+      toast.error('Upgrade cancelled. You can try again anytime.')
+      navigate('/dashboard', { replace: true })
+    }
+    
 
-  const tabs = [
-    { id: 'profile', name: 'Profile', icon: User },
-    { id: 'security', name: 'Security', icon: Shield },
-    { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'preferences', name: 'Preferences', icon: Settings },
-    { id: 'data', name: 'Data & Privacy', icon: Lock }
-  ]
+    // Load recent activity from scrub history
+    if (scrubHistory && scrubHistory.length > 0) {
+      const activities = scrubHistory.slice(0, 10).map(event => ({
+        action: `Scrubbed ${event.itemCount || 1} sensitive items`,
+        timestamp: new Date(event.timestamp).toLocaleString(),
+        
+        toast.success('Data exported successfully')
+      })
+      .catch(error => {
+        console.error('Export error:', error)
+        toast.error('Failed to export data')
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+    }
+  }, [searchParams, navigate, fetchSubscriptionStatus])
 
-  const handleProfileUpdate = async (e) => {
+  const currentLimits = limits[plan]
+  const scrubUsagePercent = getUsagePercentage('scrubsThisMonth')
+  const rulesUsagePercent = getUsagePercentage('customRules')
+
+  const handleAddRule = (e) => {
     e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      // Validate password change if attempted
-      if (profileData.newPassword) {
-        if (profileData.newPassword !== profileData.confirmPassword) {
-          toast.error('New passwords do not match')
-          setIsLoading(false)
-          return
-        }
-        if (profileData.newPassword.length < 8) {
-          toast.error('Password must be at least 8 characters')
-          setIsLoading(false)
-          return
-        }
-        if (!profileData.currentPassword) {
-          toast.error('Current password is required to change password')
-          setIsLoading(false)
-          return
-        }
-      }
-
-      // Call the backend API
-      const result = await updateProfile({
-        currentPassword: profileData.currentPassword || undefined,
-        newPassword: profileData.newPassword || undefined,
-        email: profileData.email !== user?.email ? profileData.email : undefined
-      });
-      
-      if (result.success) {
-        toast.success(result.message || 'Profile updated successfully')
-        setProfileData(prev => ({
-          ...prev,
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        }))
-      } else {
-        toast.error(result.error || 'Failed to update profile')
-      }
-    } catch (error) {
-      console.error('Profile update error:', error)
-      toast.error('Failed to update profile')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handlePreferencesUpdate = async () => {
-    setIsLoading(true)
-    try {
-      // Save preferences to localStorage (in real app, would sync to backend)
-      localStorage.setItem('userPreferences', JSON.stringify(preferences))
-      toast.success('Preferences saved successfully')
-    } catch (error) {
-      toast.error('Failed to save preferences')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleExportData = () => {
-    // Export user data as JSON
-    const userData = {
-      profile: { email: user?.email },
-      preferences,
-      customRules: JSON.parse(localStorage.getItem('customRules') || '[]'),
-      exportDate: new Date().toISOString()
-    }
     
-    const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `prompt-scrubber-data-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    
-    toast.success('Data exported successfully')
-  }
-
-  const handleDeleteAccount = async () => {
-    if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      return
-    }
-    
-    const password = prompt('Enter your password to confirm account deletion:')
-    if (!password) {
-      toast.error('Account deletion cancelled')
+    if (!canPerformAction('addCustomRule')) {
+      toast.error(`Custom rule limit reached (${currentLimits.customRules})`)
       return
     }
 
-    setIsLoading(true)
+    if (!newRule.value.trim() || !newRule.label.trim()) {
+      toast.error('Please fill in both value and label')
+      return
+    }
+
+    const rule = {
+      id: Date.now(),
+      value: newRule.value.trim(),
+      label: newRule.label.trim(),
+      createdAt: new Date().toISOString()
+    }
+
+    const updatedRules = [...customRules, rule]
+    setCustomRules(updatedRules)
+    localStorage.setItem('customRules', JSON.stringify(updatedRules))
+    
+    updateUsage('customRules', 1)
+    setNewRule({ value: '', label: '' })
+    setShowAddRule(false)
+    toast.success('Custom rule added successfully')
+  }
+
+  const handleDeleteRule = (id) => {
+    const updatedRules = customRules.filter(rule => rule.id !== id)
+    setCustomRules(updatedRules)
+    localStorage.setItem('customRules', JSON.stringify(updatedRules))
+    updateUsage('customRules', -1)
+    toast.success('Custom rule deleted')
+  }
+
+  const handleUpgrade = async () => {
+    setUpgradeLoading(true)
     try {
-      const result = await deleteAccount(password)
+      const result = await upgradePlan('pro')
       
-      if (result.success) {
-        toast.success(result.message || 'Account deleted successfully')
-        // Redirect to home page after successful deletion
-        setTimeout(() => {
-          navigate('/')
-        }, 2000)
+      if (result.success && result.data?.checkout_url) {
+        // Show loading message and redirect to Stripe checkout
+        toast.success('Redirecting to checkout...')
+        window.location.href = result.data.checkout_url
       } else {
-        toast.error(result.error || 'Failed to delete account')
+        throw new Error(result.error || 'Failed to create checkout session')
       }
     } catch (error) {
-      console.error('Account deletion error:', error)
-      toast.error('Failed to delete account')
-    } finally {
-      setIsLoading(false)
+      console.error('Upgrade error:', error)
+      toast.error('Unable to process upgrade. Please try again.')
+      setUpgradeLoading(false)
     }
   }
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Profile Information</h3>
-              <form onSubmit={handleProfileUpdate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    disabled
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Email changes require verification</p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Current Password</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={profileData.currentPassword}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 pr-12"
-                        placeholder="Enter current password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                      >
-                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">New Password</label>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={profileData.newPassword}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, newPassword: e.target.value }))}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      placeholder="Enter new password"
-                    />
-                  </div>
-                </div>
-
-                {profileData.newPassword && (
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={profileData.confirmPassword}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                      placeholder="Confirm new password"
-                    />
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bg-primary hover:bg-primary-dark px-6 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="spinner"></div>
-                      <span>Updating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      <span>Update Profile</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-        )
-
-      case 'security':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Security Settings</h3>
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">Two-Factor Authentication <span className="text-sm text-yellow-400 font-normal">(Coming soon)</span></h4>
-                      <p className="text-sm text-gray-400">Add an extra layer of security to your account</p>
-                    </div>
-                    <button className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors">
-                      Enable 2FA
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">Active Sessions</h4>
-                      <p className="text-sm text-gray-400">Manage your active login sessions</p>
-                    </div>
-                    <button className="text-red-400 hover:text-red-300 px-4 py-2 rounded-lg font-semibold transition-colors">
-                      View Sessions
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">API Keys</h4>
-                      <p className="text-sm text-gray-400">Manage API keys for integrations</p>
-                    </div>
-                    <button className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors">
-                      Manage Keys
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-
-      case 'notifications':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Notification Preferences</h3>
-              <div className="space-y-4">
-                {[
-                  { key: 'emailNotifications', label: 'Email Notifications', description: 'Receive important updates via email' },
-                  { key: 'securityAlerts', label: 'Security Alerts', description: 'Get notified about security events' },
-                  { key: 'productUpdates', label: 'Product Updates', description: 'Stay informed about new features' }
-                ].map((setting) => (
-                  <div key={setting.key} className="bg-white/5 rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold">{setting.label}</h4>
-                        <p className="text-sm text-gray-400">{setting.description}</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={preferences[setting.key]}
-                          onChange={(e) => setPreferences(prev => ({ ...prev, [setting.key]: e.target.checked }))}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={handlePreferencesUpdate}
-                disabled={isLoading}
-                className="bg-primary hover:bg-primary-dark px-6 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save Preferences</span>
-              </button>
-            </div>
-          </div>
-        )
-
-      case 'preferences':
-        return (
-            <div>
-                      <h4 className="font-semibold">Coming soon</h4>
-                      <p className="text-sm text-gray-400">Use dark theme for the interface</p>
-                      <p className="text-sm text-gray-400">Automatically scrub detected sensitive data</p>
-                      <p className="text-sm text-gray-400">Display helpful tooltips and hints</p>
-                    </div>
-        )
-    //       <div className="space-y-6">
-    //         <div>
-    //           <h3 className="text-lg font-semibold mb-4">Application Preferences</h3>
-    //           <div className="space-y-4">
-    //             {[
-    //               { key: 'darkMode', label: 'Dark Mode', description: 'Use dark theme for the interface' },
-    //               { key: 'autoScrub', label: 'Auto-Scrub', description: 'Automatically scrub detected sensitive data' },
-    //               { key: 'showTooltips', label: 'Show Tooltips', description: 'Display helpful tooltips and hints' }
-    //             ].map((setting) => (
-    //               <div key={setting.key} className="bg-white/5 rounded-xl p-4 border border-white/10">
-    //                 <div className="flex items-center justify-between">
-    //                   <div>
-    //                     <h4 className="font-semibold">{setting.label}</h4>
-    //                     <p className="text-sm text-gray-400">{setting.description}</p>
-    //                   </div>
-    //                   <label className="relative inline-flex items-center cursor-pointer">
-    //                     <input
-    //                       type="checkbox"
-    //                       checked={preferences[setting.key]}
-    //                       onChange={(e) => setPreferences(prev => ({ ...prev, [setting.key]: e.target.checked }))}
-    //                       className="sr-only peer"
-    //                     />
-    //                     <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-    //                   </label>
-    //                 </div>
-    //               </div>
-    //             ))}
-    //           </div>
-    //           <button
-    //             onClick={handlePreferencesUpdate}
-    //             disabled={isLoading}
-    //             className="bg-primary hover:bg-primary-dark px-6 py-3 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-    //           >
-    //             <Save className="w-4 h-4" />
-    //             <span>Save Preferences</span>
-    //           </button>
-    //         </div>
-    //       </div>
-    //     )
-
-      case 'data':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Data & Privacy</h3>
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">Export Data</h4>
-                      <p className="text-sm text-gray-400">Download a copy of your data</p>
-                    </div>
-                    <button
-                      onClick={handleExportData}
-                      className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Export</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold">Clear Local Data</h4>
-                      <p className="text-sm text-gray-400">Remove all locally stored data</p>
-                    </div>
-                    <button className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-semibold transition-colors">
-                      Clear Data
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-semibold text-red-400">Delete Account</h4>
-                      <p className="text-sm text-gray-400">Permanently delete your account and all data</p>
-                    </div>
-                    <button
-                      onClick={handleDeleteAccount}
-                      className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-
-      default:
-        return null
+  const getPlanBadge = () => {
+    const badges = {
+      free: { text: 'Free', color: 'bg-gray-500', icon: Shield },
+      pro: { text: 'Pro', color: 'bg-primary', icon: Crown },
+      enterprise: { text: 'Enterprise', color: 'bg-purple-600', icon: Zap }
     }
+    
+    const badge = badges[plan]
+    const Icon = badge.icon
+    
+    return (
+      <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-white text-sm font-semibold ${badge.color}`}>
+        <Icon className="w-4 h-4" />
+        <span>{badge.text}</span>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-discord-hero text-white py-8 px-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
+        {/* Loading State */}
+        {isSubscriptionLoading && (
+          <div className="mb-6 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <div className="spinner"></div>
+              <span className="text-blue-400">Loading subscription information...</span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Account Settings</h1>
-          <p className="text-gray-300">Manage your account preferences and security settings</p>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+            <p className="text-gray-300">Welcome back, {user?.email}</p>
+          </div>
+          <div className="flex items-center space-x-4 mt-4 lg:mt-0">
+            {getPlanBadge()}
+            {plan === 'free' && (
+              <button
+                onClick={handleUpgrade}
+                disabled={upgradeLoading}
+                className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {upgradeLoading ? (
+                  <>
+                    <div className="spinner"></div>
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  'Upgrade to Pro'
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 sticky top-8">
-              <nav className="space-y-2">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center space-x-3 p-3 rounded-xl transition-all ${
-                        activeTab === tab.id
-                          ? 'bg-primary text-white'
-                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                      }`}
+        {/* Stats Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Scrubs This Month */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
+                <Shield className="w-6 h-6 text-primary" />
+              </div>
+              <span className="text-2xl font-bold">
+                {usage.scrubsThisMonth}
+                {currentLimits.scrubsPerMonth !== -1 && (
+                  <span className="text-sm text-gray-400 font-normal">
+                    /{currentLimits.scrubsPerMonth}
+                  </span>
+                )}
+              </span>
+            </div>
+            <h3 className="font-semibold mb-2">Scrubs This Month</h3>
+            {currentLimits.scrubsPerMonth !== -1 && (
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-500 ${
+                    scrubUsagePercent > 80 ? 'bg-red-500' : 
+                    scrubUsagePercent > 60 ? 'bg-yellow-500' : 'bg-primary'
+                  }`}
+                  style={{ width: `${Math.min(scrubUsagePercent, 100)}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
+
+          {/* Custom Rules */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                <Settings className="w-6 h-6 text-green-500" />
+              </div>
+              <span className="text-2xl font-bold">
+                {customRules.length}
+                {currentLimits.customRules !== -1 && (
+                  <span className="text-sm text-gray-400 font-normal">
+                    /{currentLimits.customRules}
+                  </span>
+                )}
+              </span>
+            </div>
+            <h3 className="font-semibold mb-2">Custom Rules</h3>
+            {currentLimits.customRules !== -1 && (
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-500 ${
+                    rulesUsagePercent > 80 ? 'bg-red-500' : 
+                    rulesUsagePercent > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${Math.min(rulesUsagePercent, 100)}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
+
+          {/* Built-in Patterns */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                <Activity className="w-6 h-6 text-purple-500" />
+              </div>
+              <span className="text-2xl font-bold">{currentLimits.patterns}</span>
+            </div>
+            <h3 className="font-semibold mb-2">Built-in Patterns</h3>
+            <p className="text-sm text-gray-400">
+              {plan === 'pro' ? 'Advanced + AI detection' : 'Core patterns'}
+            </p>
+          </div>
+
+          {/* Plan Status */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-yellow-500" />
+              </div>
+              <span className="text-sm font-semibold text-green-400">Active</span>
+            </div>
+            <h3 className="font-semibold mb-2">Plan Status</h3>
+            <p className="text-sm text-gray-400">
+              {plan === 'free' ? 'Free forever' : 
+               subscriptionStatus === 'trial' ? 'Trial period' :
+               subscriptionStatus === 'active' ? 'Active subscription' :
+               subscriptionStatus === 'past_due' ? 'Payment overdue' :
+               'Subscription inactive'}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Custom Rules Management */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">Custom Rules</h2>
+              <button
+                onClick={() => setShowAddRule(true)}
+                disabled={!canPerformAction('addCustomRule')}
+                className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Rule</span>
+              </button>
+            </div>
+
+            {showAddRule && (
+              <form onSubmit={handleAddRule} className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Value to Replace</label>
+                    <input
+                      type="text"
+                      value={newRule.value}
+                      onChange={(e) => setNewRule(prev => ({ ...prev, value: e.target.value }))}
+                      placeholder="e.g., my-secret-key"
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-primary"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Label</label>
+                    <input
+                      type="text"
+                      <h4 className="font-semibold">Clear Extension Data</h4>
+                      <p className="text-sm text-gray-400">Remove all extension-stored data (custom rules, history)</p>
+                      placeholder="e.g., api-key"
+                    <button 
+                      onClick={async () => {
+                        if (!extensionConnected) {
+                          toast.error('Extension not connected')
+                          return
+                        }
+                        
+                        if (confirm('Are you sure you want to clear all extension data? This cannot be undone.')) {
+                          setIsLoading(true)
+                          try {
+                            const result = await clearExtensionData()
+                            if (result.success) {
+                              toast.success('Extension data cleared successfully')
+                            } else {
+                              toast.error(result.error || 'Failed to clear extension data')
+                            }
+                          } catch (error) {
+                            toast.error('Failed to clear extension data')
+                          } finally {
+                            setIsLoading(false)
+                          }
+                        }
+                      }}
+                      disabled={!extensionConnected || isLoading}
+                      className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
                     >
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{tab.name}</span>
-                    </button>
-                  )
-                })}
-              </nav>
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="flex space-x-3">
+                  <button
+                    type="submit"
+                    className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    Add Rule
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddRule(false)}
+                    className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {customRules.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No custom rules yet</p>
+                  <p className="text-sm">Add rules to protect your specific sensitive data</p>
+                </div>
+              ) : (
+                customRules.map((rule) => (
+                  <div key={rule.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{rule.value}</p>
+                      <p className="text-sm text-gray-400">→ &lt;{rule.label}&gt;</p>
+                    </div>
+                    <div className="flex items-center space-x-2 ml-4">
+                      <button
+                        onClick={() => handleDeleteRule(rule.id)}
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-              {renderTabContent()}
+          {/* Recent Activity */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
+            
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {recentActivity.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No recent activity</p>
+                  <p className="text-sm">Your scrubbing history will appear here</p>
+                </div>
+              ) : (
+                recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                    <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Shield className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{activity.action}</p>
+                      <p className="text-xs text-gray-400">{activity.timestamp}</p>
+                    </div>
+                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
+                      {activity.count} items
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8 grid md:grid-cols-3 gap-6">
+          <Link
+            to="/account/billing"
+            className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-primary/30 transition-all group"
+          >
+            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-500/30 transition-colors">
+              <TrendingUp className="w-6 h-6 text-green-500" />
+            </div>
+            <h3 className="font-semibold mb-2">Manage Billing</h3>
+            <p className="text-sm text-gray-400">Update payment methods and view invoices</p>
+          </Link>
+
+          <Link
+            to="/docs"
+            className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-primary/30 transition-all group"
+          >
+            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-500/30 transition-colors">
+              <Activity className="w-6 h-6 text-blue-500" />
+            </div>
+            <h3 className="font-semibold mb-2">Documentation</h3>
+            <p className="text-sm text-gray-400">Learn how to get the most out of Prompt-Scrubber</p>
+          </Link>
+
+          <Link
+            to="/faq"
+            className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-primary/30 transition-all group"
+          >
+            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-500/30 transition-colors">
+              <Settings className="w-6 h-6 text-purple-500" />
+            </div>
+            <h3 className="font-semibold mb-2">Help & FAQ</h3>
+            <p className="text-sm text-gray-400">Find answers to common questions</p>
+          </Link>
         </div>
       </div>
     </div>

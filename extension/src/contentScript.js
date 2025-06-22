@@ -616,3 +616,56 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+// Web app communication bridge
+// Listen for messages from web application
+window.addEventListener('message', async (event) => {
+  // Only accept messages from same origin or allowed origins
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://prompt-scrubber.com'
+  ];
+  
+  if (!allowedOrigins.includes(event.origin)) {
+    return;
+  }
+  
+  if (event.data?.type === 'EXTENSION_API_REQUEST') {
+    try {
+      // Forward request to background script
+      const response = await chrome.runtime.sendMessage({
+        type: 'extensionApi',
+        action: event.data.action,
+        data: event.data.data,
+        requestId: event.data.requestId
+      });
+      
+      // Send response back to web app
+      window.postMessage({
+        type: 'EXTENSION_API_RESPONSE',
+        requestId: event.data.requestId,
+        success: response.success,
+        data: response.data,
+        error: response.error
+      }, event.origin);
+      
+    } catch (error) {
+      console.error('[Scrubber] Content script bridge error:', error);
+      
+      // Send error response back to web app
+      window.postMessage({
+        type: 'EXTENSION_API_RESPONSE',
+        requestId: event.data.requestId,
+        success: false,
+        error: error.message
+      }, event.origin);
+    }
+  }
+});
+
+// Notify web app that extension is ready
+window.postMessage({
+  type: 'EXTENSION_READY',
+  extensionId: chrome.runtime.id
+}, '*');

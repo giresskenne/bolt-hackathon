@@ -83,23 +83,15 @@ export default function DashboardPage() {
     if (scrubHistory && scrubHistory.length > 0) {
       const activities = scrubHistory.slice(0, 10).map(event => ({
         action: `Scrubbed ${event.itemCount || 1} sensitive items`,
-        timestamp: new Date(event.timestamp).toLocaleString(),
-        
-        toast.success('Data exported successfully')
-      })
-      .catch(error => {
-        console.error('Export error:', error)
-        toast.error('Failed to export data')
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+        timestamp: new Date(event.timestamp).toLocaleString()
+      }))
+      setRecentActivity(activities)
     }
-  }, [searchParams, navigate, fetchSubscriptionStatus])
+  }, [searchParams, navigate, fetchSubscriptionStatus, scrubHistory])
 
   const currentLimits = limits[plan]
-  const scrubUsagePercent = getUsagePercentage('scrubsThisMonth')
-  const rulesUsagePercent = getUsagePercentage('customRules')
+  const scrubUsagePercent = getExtensionUsagePercentage('scrubsThisMonth')
+  const rulesUsagePercent = getExtensionUsagePercentage('customRules')
 
   const handleAddRule = (e) => {
     e.preventDefault()
@@ -121,21 +113,14 @@ export default function DashboardPage() {
       createdAt: new Date().toISOString()
     }
 
-    const updatedRules = [...customRules, rule]
-    setCustomRules(updatedRules)
-    localStorage.setItem('customRules', JSON.stringify(updatedRules))
-    
-    updateUsage('customRules', 1)
+    addCustomRule(rule)
     setNewRule({ value: '', label: '' })
     setShowAddRule(false)
     toast.success('Custom rule added successfully')
   }
 
   const handleDeleteRule = (id) => {
-    const updatedRules = customRules.filter(rule => rule.id !== id)
-    setCustomRules(updatedRules)
-    localStorage.setItem('customRules', JSON.stringify(updatedRules))
-    updateUsage('customRules', -1)
+    deleteCustomRule(id)
     toast.success('Custom rule deleted')
   }
 
@@ -225,7 +210,7 @@ export default function DashboardPage() {
                 <Shield className="w-6 h-6 text-primary" />
               </div>
               <span className="text-2xl font-bold">
-                {usage.scrubsThisMonth}
+                {extensionUsage?.scrubsThisMonth}
                 {currentLimits.scrubsPerMonth !== -1 && (
                   <span className="text-sm text-gray-400 font-normal">
                     /{currentLimits.scrubsPerMonth}
@@ -254,7 +239,7 @@ export default function DashboardPage() {
                 <Settings className="w-6 h-6 text-green-500" />
               </div>
               <span className="text-2xl font-bold">
-                {customRules.length}
+                {extensionCustomRules?.length}
                 {currentLimits.customRules !== -1 && (
                   <span className="text-sm text-gray-400 font-normal">
                     /{currentLimits.customRules}
@@ -342,35 +327,10 @@ export default function DashboardPage() {
                     <label className="block text-sm font-medium mb-2">Label</label>
                     <input
                       type="text"
-                      <h4 className="font-semibold">Clear Extension Data</h4>
-                      <p className="text-sm text-gray-400">Remove all extension-stored data (custom rules, history)</p>
+                      value={newRule.label}
+                      onChange={(e) => setNewRule(prev => ({ ...prev, label: e.target.value }))}
                       placeholder="e.g., api-key"
-                    <button 
-                      onClick={async () => {
-                        if (!extensionConnected) {
-                          toast.error('Extension not connected')
-                          return
-                        }
-                        
-                        if (confirm('Are you sure you want to clear all extension data? This cannot be undone.')) {
-                          setIsLoading(true)
-                          try {
-                            const result = await clearExtensionData()
-                            if (result.success) {
-                              toast.success('Extension data cleared successfully')
-                            } else {
-                              toast.error(result.error || 'Failed to clear extension data')
-                            }
-                          } catch (error) {
-                            toast.error('Failed to clear extension data')
-                          } finally {
-                            setIsLoading(false)
-                          }
-                        }
-                      }}
-                      disabled={!extensionConnected || isLoading}
-                      className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
-                    >
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-primary"
                       required
                     />
                   </div>
@@ -394,14 +354,14 @@ export default function DashboardPage() {
             )}
 
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {customRules.length === 0 ? (
+              {(!extensionCustomRules || extensionCustomRules.length === 0) ? (
                 <div className="text-center py-8 text-gray-400">
                   <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
                   <p>No custom rules yet</p>
                   <p className="text-sm">Add rules to protect your specific sensitive data</p>
                 </div>
               ) : (
-                customRules.map((rule) => (
+                extensionCustomRules.map((rule) => (
                   <div key={rule.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{rule.value}</p>
@@ -442,9 +402,6 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium">{activity.action}</p>
                       <p className="text-xs text-gray-400">{activity.timestamp}</p>
                     </div>
-                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
-                      {activity.count} items
-                    </span>
                   </div>
                 ))
               )}

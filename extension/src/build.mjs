@@ -130,7 +130,9 @@ if (fs.existsSync(popupSource)) {
 // Copy src files that need to be web accessible
 const srcFiles = [
   { src: 'detectorWorker.js', dest: 'detectorWorker.js' },
-  { src: 'patterns.json', dest: 'patterns.json' }
+  { src: 'patterns.json', dest: 'patterns.json' },
+  { src: 'encryptedStore.js', dest: 'encryptedStore.js' },
+  { src: 'quotaTracker.js', dest: 'quotaTracker.js' }
 ];
 
 srcFiles.forEach(({ src, dest }) => {

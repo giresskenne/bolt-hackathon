@@ -21,30 +21,52 @@ import {
 import toast from 'react-hot-toast'
 
 export default function DashboardPage() {
-  const { user } = useAuthStore()
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+   const { user } = useAuthStore()
+   const [searchParams] = useSearchParams()
+   const navigate = useNavigate()
   const { 
-    plan, 
-    subscriptionStatus,
-    isSubscriptionLoading,
-    extensionUsage,
-    customRules,
-    scrubHistory,
-    isExtensionDataLoading,
-    extensionConnected,
-    limits,
-    fetchExtensionData,
-    addCustomRule,
-    deleteCustomRule,
-    canPerformAction,
-    getUsagePercentage,
-    upgradePlan
+     plan, 
+     subscriptionStatus,
+     isSubscriptionLoading,
+     extensionUsage,
+     customRules,
+     scrubHistory,
+     isExtensionDataLoading,
+     extensionConnected,
+     limits,
+     fetchExtensionData,
+    fetchSubscriptionStatus,
+     addCustomRule,
+     deleteCustomRule,
+     canPerformAction,
+     getUsagePercentage,
+     upgradePlan
   } = useSubscriptionStore()
+
+  // On mount or when user changes, fetch subscription & extension data
+  useEffect(() => {
+    let initialTimer;
+    if (user) {
+      fetchSubscriptionStatus()
+      initialTimer = setTimeout(() => {
+        fetchExtensionData()
+      }, 500)
+    }
+    return () => clearTimeout(initialTimer)
+  }, [user, fetchSubscriptionStatus, fetchExtensionData])
 
   const [newRule, setNewRule] = useState({ value: '', label: '' })
   const [showAddRule, setShowAddRule] = useState(false)
   const [upgradeLoading, setUpgradeLoading] = useState(false)
+
+  // ─────────────────────────────────────────────────────────────
+  const [retryCount, setRetryCount] = useState(0)
+
+  const handleRetry = async () => {
+    await fetchExtensionData()
+    if (!extensionConnected) setRetryCount((n) => n + 1)   // bump on failure
+  }
+  // ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
     // Handle Stripe success redirect
@@ -79,7 +101,7 @@ export default function DashboardPage() {
   // Refresh extension data periodically
   useEffect(() => {
     const interval = setInterval(() => {
-      if (extensionConnected) {
+      if (document.visibilityState !== 'hidden' && extensionConnected) {
         fetchExtensionData()
       }
     }, 30000) // Refresh every 30 seconds
@@ -93,14 +115,17 @@ export default function DashboardPage() {
 
   // Load usage percentages
   useEffect(() => {
+    let isMounted = true
     const loadUsagePercentages = async () => {
       try {
         const [scrubPercent, rulesPercent] = await Promise.all([
-          getUsagePercentage('scrubs'),
+          getUsagePercentage('scrubsThisMonth'),
           getUsagePercentage('customRules')
         ])
-        setScrubUsagePercent(scrubPercent)
-        setRulesUsagePercent(rulesPercent)
+        if (isMounted) {
+          setScrubUsagePercent(scrubPercent)
+          setRulesUsagePercent(rulesPercent)
+        }
       } catch (error) {
         console.error('Failed to load usage percentages:', error)
       }
@@ -109,7 +134,8 @@ export default function DashboardPage() {
     if (extensionConnected) {
       loadUsagePercentages()
     }
-  }, [extensionConnected, extensionUsage, getUsagePercentage])
+    return () => { isMounted = false }
+  }, [extensionConnected, getUsagePercentage])
 
   const handleAddRule = async (e) => {
     e.preventDefault()
@@ -230,25 +256,47 @@ export default function DashboardPage() {
         )}
 
         {/* Extension Connection Status */}
+
+
         {!extensionConnected && !isExtensionDataLoading && (
-          <div className="mb-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
-            <div className="flex items-center space-x-3">
-              <WifiOff className="w-5 h-5 text-yellow-400" />
-              <div>
-                <p className="text-yellow-400 font-semibold">Extension Not Connected</p>
-                <p className="text-sm text-gray-300">
-                  Install the Prompt-Scrubber browser extension to sync your custom rules and usage data.
-                </p>
+          <div className="mb-6 rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              {/* icon + copy */}
+              <div className="flex flex-1 items-start gap-3">
+                <WifiOff className="h-5 w-5 shrink-0 text-yellow-400" />
+                <div>
+                  <p className="font-semibold text-yellow-400">Extension Not Connected</p>
+                  <p className="text-sm text-gray-300">
+                    Install or enable the Prompt-Scrubber extension to sync your custom rules and usage data.
+                  </p>
+                
+                  {/* ▼ refresh hint appears after ≥1 failed retry */}
+                  {retryCount > 0 && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      Still not working?{' '}
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="underline hover:text-yellow-300"
+                      >
+                        refresh the page
+                      </button>
+                      .
+                    </p>
+                  )}
+                </div>
               </div>
+                
+              {/* primary action */}
               <button
-                onClick={fetchExtensionData}
-                className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-semibold transition-colors"
+                onClick={handleRetry}
+                className="shrink-0 rounded-lg bg-yellow-600 px-4 py-2 font-semibold transition-colors hover:bg-yellow-700"
               >
                 Retry
               </button>
             </div>
           </div>
         )}
+
 
         {extensionConnected && (
           <div className="mb-6 bg-green-500/10 border border-green-500/20 rounded-xl p-4">

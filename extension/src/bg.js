@@ -63,9 +63,24 @@ async function handleExtensionApiRequest(msg, sendResponse) {
       case 'getUsage':
         result = await quotaTracker.getCurrentUsage();
         break;
-        
+      
       case 'getCustomRules':
-        result = await quotaTracker.getCustomRules();
+        // Read custom rules from sync storage (updated via popup), fallback to encrypted store
+        try {
+          const syncData = await chrome.storage.sync.get(['customRules']);
+          result = syncData.customRules || [];
+        } catch {
+          result = await quotaTracker.getCustomRules();
+        }
+        break;
+
+      // Alias for scrub history
+      case 'getHistory':
+        result = await quotaTracker.getScrubHistory(data?.limit);
+        break;
+
+      case 'getScrubHistory':
+        result = await quotaTracker.getScrubHistory(data?.limit);
         break;
         
       case 'addCustomRule':
@@ -78,10 +93,6 @@ async function handleExtensionApiRequest(msg, sendResponse) {
         
       case 'deleteCustomRule':
         result = await quotaTracker.deleteCustomRule(data.id);
-        break;
-        
-      case 'getScrubHistory':
-        result = await quotaTracker.getScrubHistory(data?.limit);
         break;
         
       case 'addScrubEvent':
@@ -107,11 +118,23 @@ async function handleExtensionApiRequest(msg, sendResponse) {
       case 'getUsagePercentage':
         result = await quotaTracker.getUsagePercentage(data.type);
         break;
-        
+
+      // Batch snapshot for dashboard to reduce IPC
+      case 'getDashboardSnapshot':
+        // Gather usage, rules, and history in one go
+        result = {
+          usage: await quotaTracker.getCurrentUsage(),
+          customRules: await quotaTracker.getCustomRules(),
+          scrubHistory: await quotaTracker.getScrubHistory(data?.limit || 20)
+        };
+        break;
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }
 
+    // Log the response for debugging
+    console.log('[BG] responding to action', action, 'with', result);
     sendResponse({ success: true, data: result });
   } catch (error) {
     console.error('[Scrubber] Extension API error:', error);

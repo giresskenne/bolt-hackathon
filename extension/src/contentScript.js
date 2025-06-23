@@ -553,8 +553,16 @@ function scrubText(target) {
     }).then(response => {
       console.log('[Scrubber] Popup responded:', response);
     }).catch(error => {
-      // This is expected when popup is closed
       console.debug('[Scrubber] Could not send message to popup (popup may be closed):', error.message);
+    });
+
+    // Also notify background worker to record scrub event and update usage
+    chrome.runtime.sendMessage({
+      type: 'extensionApi',
+      action: 'addScrubEvent',
+      data: { count: totalMasked }
+    }, (resp) => {
+      console.log('[Scrubber] Background recorded scrub event:', resp);
     });
   } else {
     toast('No sensitive items detected');
@@ -620,20 +628,22 @@ document.addEventListener('keydown', (e) => {
 // Web app communication bridge
 // Listen for messages from web application
 window.addEventListener('message', async (event) => {
+  console.log('[CS] window message received from page:', event.data);
   // Only accept messages from same origin or allowed origins
   const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
+    'http://localhost:',
+    'https://localhost:',
+    'http://127.0.0.1:',
+    'https://127.0.0.1:',
     'https://prompt-scrubber.com'
   ];
-  
-  if (!allowedOrigins.includes(event.origin)) {
-    return;
-  }
+
+  const isAllowed = allowedOrigins.some((o) => event.origin.startsWith(o));
+  if (!isAllowed) return;
   
   // Handle extension ping requests
   if (event.data?.type === 'EXTENSION_PING') {
-    // Respond immediately that extension is ready
+    console.log('[CS] EXTENSION_PING received, responding EXTENSION_READY');
     window.postMessage({
       type: 'EXTENSION_READY',
       extensionId: chrome.runtime.id
@@ -642,6 +652,7 @@ window.addEventListener('message', async (event) => {
   }
   
   if (event.data?.type === 'EXTENSION_API_REQUEST') {
+    console.log('[CS] EXTENSION_API_REQUEST for', event.data.action, 'id:', event.data.requestId);
     try {
       // Forward request to background script
       const response = await chrome.runtime.sendMessage({
@@ -650,7 +661,7 @@ window.addEventListener('message', async (event) => {
         data: event.data.data,
         requestId: event.data.requestId
       });
-      
+      console.log('[CS] background response for', event.data.requestId, response);
       // Send response back to web app
       window.postMessage({
         type: 'EXTENSION_API_RESPONSE',
@@ -659,6 +670,7 @@ window.addEventListener('message', async (event) => {
         data: response.data,
         error: response.error
       }, event.origin);
+      console.log('[CS] EXTENSION_API_RESPONSE posted for', event.data.requestId);
       
     } catch (error) {
       console.error('[Scrubber] Content script bridge error:', error);
@@ -670,6 +682,7 @@ window.addEventListener('message', async (event) => {
         success: false,
         error: error.message
       }, event.origin);
+      console.log('[CS] EXTENSION_API_RESPONSE error posted for', event.data.requestId);
     }
   }
 });

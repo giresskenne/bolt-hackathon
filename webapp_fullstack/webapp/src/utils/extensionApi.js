@@ -5,9 +5,13 @@
 class ExtensionApi {
   constructor() {
     this.extensionId = null;
-    this.isReady = false;
+    this.readyPromise = null;
+    this.readyResolve = null;
     this.pendingRequests = new Map();
     this.requestCounter = 0;
+    
+    // Create a promise that resolves when extension is ready
+    this.createReadyPromise();
     
     // Listen for extension messages
     window.addEventListener('message', this.handleMessage.bind(this));
@@ -16,11 +20,22 @@ class ExtensionApi {
     this.checkExtensionReady();
   }
 
+  createReadyPromise() {
+    this.readyPromise = new Promise((resolve) => {
+      this.readyResolve = resolve;
+    });
+  }
+
   handleMessage(event) {
     if (event.data?.type === 'EXTENSION_READY') {
       this.extensionId = event.data.extensionId;
-      this.isReady = true;
       console.log('[ExtensionApi] Extension ready:', this.extensionId);
+      
+      // Resolve the ready promise
+      if (this.readyResolve) {
+        this.readyResolve(true);
+        this.readyResolve = null;
+      }
     }
     
     if (event.data?.type === 'EXTENSION_API_RESPONSE') {
@@ -39,23 +54,42 @@ class ExtensionApi {
     }
   }
 
-  checkExtensionReady() {
+  async checkExtensionReady() {
     // Send a ping to see if extension is already loaded
     console.log('[ExtensionApi] Checking if extension is ready...');
     window.postMessage({
       type: 'EXTENSION_PING'
     }, window.location.origin);
     
-    // Also listen for any existing EXTENSION_READY messages
+    // Set a timeout for the readiness check
     setTimeout(() => {
-      if (!this.isReady) {
-        console.log('[ExtensionApi] Extension not detected after initial check');
+      if (this.readyResolve) {
+        console.log('[ExtensionApi] Extension not detected after timeout');
+        this.readyResolve(false);
+        this.readyResolve = null;
       }
-    }, 1000);
+    }, 5000); // 5 second timeout for extension detection
   }
 
-  async sendRequest(action, data = null, timeout = 5000) {
-    if (!this.isReady) {
+  async waitForReady(timeout = 5000) {
+    // If already resolved, return immediately
+    if (this.extensionId) {
+      return true;
+    }
+
+    // Race between ready promise and timeout
+    const timeoutPromise = new Promise((resolve) => {
+      setTimeout(() => resolve(false), timeout);
+    });
+
+    return Promise.race([this.readyPromise, timeoutPromise]);
+  }
+
+  async sendRequest(action, data = null, timeout = 10000) {
+    // Wait for extension to be ready before sending any requests
+    const isReady = await this.waitForReady(5000);
+    
+    if (!isReady) {
       throw new Error('Extension not ready. Please install and enable the Prompt-Scrubber extension.');
     }
 
@@ -144,11 +178,18 @@ class ExtensionApi {
 
   // Utility methods
   isExtensionReady() {
-    return this.isReady;
+    return !!this.extensionId;
   }
 
   getExtensionId() {
     return this.extensionId;
+  }
+
+  // Reset the ready state (useful for testing or reconnection)
+  reset() {
+    this.extensionId = null;
+    this.createReadyPromise();
+    this.pendingRequests.clear();
   }
 }
 

@@ -169,7 +169,7 @@ function getThemeAwareBackground() {
   if (isDarkMode) {
     return 'linear-gradient(90deg, #2a2a2a 0%, #3a1a1a 100%)';
   } else {
-    return 'linear-gradient(90deg, #fff 0%, #fff5f5 100%)';
+    return 'linear-gradient(90deg, #fff 0%, rgb(249, 168, 166) 66.66%, rgb(249, 168, 166) 100%)';
   }
 }
 
@@ -509,7 +509,8 @@ async function autoHighlightSensitive(el) {
 }
 
 /* scrub core */
-function scrubText(target) {
+// Before: function scrubText(target) {
+async function scrubText(target) {
   // CRITICAL: If scrubber is disabled, show message and return
   if (!scrubberEnabled) {
     toast('Scrubber is disabled. Enable it in the extension popup.');
@@ -520,6 +521,33 @@ function scrubText(target) {
   
   const raw = getRaw(target);
   console.log('[Scrubber] Original text:', raw);
+  
+  // Enforce monthly scrub limit via background quotaTracker
+  try {
+    const canPerform = await new Promise(resolve =>
+      chrome.runtime.sendMessage({
+        type: 'extensionApi', action: 'canPerformAction', data: { action: 'scrub' }
+      }, resp => {
+        resolve(resp.success ? resp.data : true);
+      })
+    );
+    if (!canPerform) {
+      toast('Monthly scrub limit reached. Upgrade to Pro for more.');
+      return;
+    }
+    const usagePercent = await new Promise(resolve =>
+      chrome.runtime.sendMessage({
+        type: 'extensionApi', action: 'getUsagePercentage', data: { type: 'scrubs' }
+      }, resp => {
+        resolve(resp.success ? resp.data : 0);
+      })
+    );
+    if (usagePercent >= 80) {
+      toast(`Warning: ${Math.round(usagePercent)}% of your monthly scrubs used.`);
+    }
+  } catch (e) {
+    console.error('[Scrubber] quota check failed:', e);
+  }
   
   const { clean, stats } = self.PromptScrubberRedactor.redact(raw, customRules);
   console.log('[Scrubber] Redacted text:', clean);

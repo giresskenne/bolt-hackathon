@@ -55,8 +55,6 @@ export default function DashboardPage() {
     return () => clearTimeout(initialTimer)
   }, [user, fetchSubscriptionStatus, fetchExtensionData])
 
-  const [newRule, setNewRule] = useState({ value: '', label: '' })
-  const [showAddRule, setShowAddRule] = useState(false)
   const [upgradeLoading, setUpgradeLoading] = useState(false)
 
   // ─────────────────────────────────────────────────────────────
@@ -136,56 +134,6 @@ export default function DashboardPage() {
     }
     return () => { isMounted = false }
   }, [extensionConnected, getUsagePercentage])
-
-  const handleAddRule = async (e) => {
-    e.preventDefault()
-    
-    try {
-      const canAdd = await canPerformAction('addCustomRule')
-      if (!canAdd) {
-        toast.error(`Custom rule limit reached (${currentLimits.customRules})`)
-        return
-      }
-
-      if (!newRule.value.trim() || !newRule.label.trim()) {
-        toast.error('Please fill in both value and label')
-        return
-      }
-
-      // Validate label format
-      if (!/^[a-zA-Z0-9_-]+$/.test(newRule.label)) {
-        toast.error('Label can only contain letters, numbers, hyphens, and underscores')
-        return
-      }
-
-      // Check for duplicates
-      if (customRules.some(r => 
-        r.label.toLowerCase() === newRule.label.toLowerCase() || 
-        r.value.toLowerCase() === newRule.value.toLowerCase()
-      )) {
-        toast.error('A rule with this label or value already exists')
-        return
-      }
-
-      const result = await addCustomRule({
-        value: newRule.value.trim(),
-        label: newRule.label.trim()
-      })
-
-      if (result.success) {
-        setNewRule({ value: '', label: '' })
-        setShowAddRule(false)
-        toast.success('Custom rule added successfully')
-        // Refresh extension data to get updated usage
-        fetchExtensionData()
-      } else {
-        toast.error(result.error || 'Failed to add custom rule')
-      }
-    } catch (error) {
-      console.error('Add rule error:', error)
-      toast.error('Failed to add custom rule')
-    }
-  }
 
   const handleDeleteRule = async (id) => {
     try {
@@ -432,14 +380,6 @@ export default function DashboardPage() {
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">Custom Rules</h2>
-              <button
-                onClick={() => setShowAddRule(true)}
-                disabled={!extensionConnected}
-                className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Rule</span>
-              </button>
             </div>
 
             {!extensionConnected && (
@@ -451,50 +391,6 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-            )}
-
-            {showAddRule && extensionConnected && (
-              <form onSubmit={handleAddRule} className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Value to Replace</label>
-                    <input
-                      type="text"
-                      value={newRule.value}
-                      onChange={(e) => setNewRule(prev => ({ ...prev, value: e.target.value }))}
-                      placeholder="e.g., my-secret-key"
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-primary"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Label</label>
-                    <input
-                      type="text"
-                      value={newRule.label}
-                      onChange={(e) => setNewRule(prev => ({ ...prev, label: e.target.value }))}
-                      placeholder="e.g., api-key"
-                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-primary"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    type="submit"
-                    className="bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-semibold transition-colors"
-                  >
-                    Add Rule
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddRule(false)}
-                    className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-semibold transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
             )}
 
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -511,7 +407,7 @@ export default function DashboardPage() {
                       <p className="font-medium truncate">{rule.value}</p>
                       <p className="text-sm text-gray-400">→ &lt;{rule.label}&gt;</p>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
+                    {/* <div className="flex items-center space-x-2 ml-4">
                       <button
                         onClick={() => handleDeleteRule(rule.id)}
                         disabled={!extensionConnected}
@@ -519,7 +415,7 @@ export default function DashboardPage() {
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
-                    </div>
+                    </div> */}
                   </div>
                 ))
               )}

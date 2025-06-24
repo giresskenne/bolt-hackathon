@@ -27,12 +27,16 @@ function App() {
   // Check authentication on app load
   React.useEffect(() => {
     const { checkAuth } = useAuthStore.getState()
-    checkAuth().then(() => {
-      // Fetch subscription status after auth check
-      if (useAuthStore.getState().isAuthenticated) {
+    checkAuth()
+    
+    // Set up subscription status fetching after auth state changes
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state.isAuthenticated && !state.isLoading) {
         fetchSubscriptionStatus()
       }
     })
+    
+    return unsubscribe
   }, []);
 
   if (isLoading) {

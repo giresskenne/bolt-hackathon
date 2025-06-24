@@ -1,76 +1,113 @@
-import React from 'react';
-import { Shield } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const TextArea = () => {
+export default function TextArea() {
+  /* simple local demo state */
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const inputRef = useRef(null);
+  const scrollAreaRef = useRef(null);
+
+  /* auto-grow the textarea */
+  useEffect(() => {
+    if (!inputRef.current) return;
+    inputRef.current.style.height = 'auto';
+    inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+  }, [input]);
+
+  /* auto-scroll to newest message */
+  useEffect(() => {
+    scrollAreaRef.current?.scrollTo({ top: scrollAreaRef.current.scrollHeight });
+  }, [messages]);
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    setMessages((m) => [...m, input.trim()]);
+    setInput('');
+  };
+
   return (
     <div className="min-h-screen bg-discord-hero text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-black/20 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* ► Logo now links back to Home */}
-            <Link
-              to="/"
-              className="flex items-center space-x-3 hover:opacity-80
-                         focus-visible:outline focus-visible:outline-2
-                         focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              <img
-                src="/extension/icons/Logo.png"
-                alt="Prompt-Scrubber Logo"
-                className="w-8 h-8"
-              />
-              <span className="text-xl font-bold">Prompt-Scrubber Demo</span>
-            </Link>
+      {/* ───────── nav bar ───────── */}
+      <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/20 backdrop-blur-lg">
+        <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+          <Link
+            to="/"
+            className="flex items-center gap-3 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <img src="/extension/icons/Logo.png" alt="Prompt-Scrubber Logo" className="h-8 w-8" />
+            <span className="text-xl font-bold">Prompt-Scrubber Demo</span>
+          </Link>
 
-            {/* Secondary “Back to Home” link */}
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="hover:text-primary-light transition-colors">
-                ← Back to Home
-              </Link>
-            </div>
-          </div>
+          <Link to="/" className="hover:text-primary-light transition-colors">
+            ← Back&nbsp;to&nbsp;Home
+          </Link>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="pt-24 pb-12 px-6">
-        <div className="max-w-3xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl lg:text-5xl font-bold mb-6">
+      {/* ───────── main ───────── */}
+      <main className="pt-24 pb-12 px-6">
+        <div className="mx-auto max-w-3xl">
+          {/* header */}
+          <header className="mb-8 text-center">
+            <h1 className="mb-4 text-4xl font-bold lg:text-5xl">
               Try <span className="text-primary-light">Prompt-Scrubber</span>
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Type or paste any text below to see how Prompt-Scrubber protects your sensitive information in real-time
+            <p className="mx-auto max-w-3xl text-xl text-gray-300">
+              Type or paste any text below to see how Prompt-Scrubber protects your sensitive
+              information in real-time.
             </p>
-          </div>
+          </header>
 
-          {/* Demo Interface */}
-          <div className="bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10 overflow-hidden">
-            <div className="p-6">
-              <textarea
-                className="w-full min-h-[300px] bg-white/10 text-white rounded-xl p-4 border border-white/20 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
-                placeholder="Start typing or paste your text here..."
-              />
+          {/* chat card */}
+          <section className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-lg">
+            {/* scrollable message history */}
+            <div
+              ref={scrollAreaRef}
+              className="max-h-[50vh] overflow-y-auto space-y-4 p-6"
+            >
+              {messages.length === 0 ? (
+                <p className="text-center text-gray-400">No messages yet — start typing below.</p>
+              ) : (
+                messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className="ml-auto max-w-sm rounded-2xl bg-primary/20 px-4 py-2 text-sm text-white"
+                  >
+                    {m}
+                  </div>
+                ))
+              )}
             </div>
-          </div>
 
-          {/* Helper Text */}
+            {/* input bar */}
+            <form onSubmit={handleSend} className="border-t border-white/10 p-4">
+              <textarea
+                ref={inputRef}
+                rows={3}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Start typing…"
+                className="w-full resize-none rounded-xl bg-white px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-primary"
+                style={{ maxHeight: '40vh' }}
+              />
+            </form>
+          </section>
+
+          {/* helper chips */}
           <div className="mt-6 text-center text-gray-400">
             <p>Try entering sensitive information like:</p>
-            <div className="mt-2 flex flex-wrap gap-2 justify-center">
-              <span className="px-3 py-1 bg-white/5 rounded-full text-sm">Email Addresses</span>
-              <span className="px-3 py-1 bg-white/5 rounded-full text-sm">Phone Numbers</span>
-              <span className="px-3 py-1 bg-white/5 rounded-full text-sm">API Keys</span>
-              <span className="px-3 py-1 bg-white/5 rounded-full text-sm">Credit Cards</span>
+            <div className="mt-2 flex flex-wrap justify-center gap-2">
+              {['Email Addresses', 'Phone Numbers', 'API Keys', 'Credit Cards'].map((chip) => (
+                <span key={chip} className="rounded-full bg-white/5 px-3 py-1 text-sm">
+                  {chip}
+                </span>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
-};
-
-export default TextArea;
+}

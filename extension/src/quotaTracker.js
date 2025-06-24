@@ -260,7 +260,7 @@ class QuotaTracker {
   async addScrubEvent(event) {
     const usage = await this.getCurrentUsage();
     const limits = this.getPlanLimits(usage.plan);
-    
+
     let history = await this.store.get('scrubHistory') || [];
     
     // Add new event
@@ -274,12 +274,16 @@ class QuotaTracker {
     const maxHistory = limits.history === '24h' ? 50 : 
                       limits.history === '90d' ? 1000 : 
                       10000; // enterprise
-    
+
     if (history.length > maxHistory) {
       history = history.slice(-maxHistory);
     }
 
     await this.store.set('scrubHistory', history);
+    // Also increment scrub usage count
+    const incrementBy = event.count || 1;
+    await this.incrementUsage('scrub', incrementBy);
+
     return history;
   }
 

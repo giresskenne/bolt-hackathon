@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Prompt-Scrubber",
+  "name": "Scrubber",
   "version": "1.0.0",
   "description": "Mask secrets & PII in any AI prompt before sending.",
   "author": "Giress Kenn",
@@ -14,7 +14,7 @@
         "<all_urls>"
       ],
       "js": ["src/contentScript.js"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
   ],
   "background": {
@@ -54,10 +54,12 @@
       "description": "Mask secrets and PII in the current prompt without automatically sending it"
     }
   },
-  "externally_connectable": {
+   "externally_connectable": {
     "matches": [
-      "http://localhost:5173/*",
-      "http://localhost:3001/*",
+      "http://localhost:*/*",
+      "https://localhost:*/*",
+      "http://127.0.0.1:*/*",
+      "https://127.0.0.1:*/*",
       "https://*.prompt-scrubber.com/*"
     ]
   },

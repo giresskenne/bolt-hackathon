@@ -743,6 +743,7 @@ footer {
   justify-content: center;
   align-items: center;
   margin-bottom: 8px;
+  gap: 8px;
 }
 
 .footer-stats {
@@ -753,6 +754,29 @@ footer {
   font-size: 12px;
   color: var(--text-light);
   line-height: 1.4;
+}
+
+.upgrade-button {
+  padding: 10px 16px;
+  background-color: #FBBF24; /* amber */
+  color: #1F2937; /* dark text */
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upgrade-button:hover {
+  background-color: #F59E0B;
+}
+
+/* Override primary-button when in footer */
+.footer-content .primary-button {
+  width: auto;
+  padding: 10px 16px;
+  font-size: 14px;
 }
 
 .footer-version {

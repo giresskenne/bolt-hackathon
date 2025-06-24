@@ -24,7 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const ruleValueInput = document.getElementById('ruleValue');
   const ruleLabelInput = document.getElementById('ruleLabel');
   const maskedCount = document.getElementById('maskedCount');
-  
+  const planBadge = document.querySelector('.plan-badge');
+  if (planBadge) {
+    chrome.runtime.sendMessage({ type: 'extensionApi', action: 'getUsage' }, (resp) => {
+      if (resp.success && resp.data && resp.data.plan) {
+        const planName = resp.data.plan.charAt(0).toUpperCase() + resp.data.plan.slice(1);
+        planBadge.textContent = planName;
+      }
+    });
+  }
+
   console.log('[Popup] Toggle element found:', !!toggleElement);
   console.log('[Popup] Toggle status element found:', !!toggleStatus);
   
@@ -49,6 +58,39 @@ document.addEventListener('DOMContentLoaded', () => {
   // Clear errors on input
   ruleValueInput?.addEventListener('input', () => clearError('value'));
   ruleLabelInput?.addEventListener('input', () => clearError('label'));
+  
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const dashboardBtn = document.getElementById('dashboardBtn');
+  if (upgradeBtn && dashboardBtn) {
+    chrome.runtime.sendMessage({ type: 'extensionApi', action: 'getUsage' }, (resp) => {
+      if (resp.success && resp.data && resp.data.plan) {
+        const planKey = resp.data.plan;
+        if (planKey !== 'free') {
+          // Hide upgrade on Pro or higher
+          upgradeBtn.style.display = 'none';
+          // Dashboard full width when alone
+          dashboardBtn.style.display = 'block';
+        } else {
+          // Free plan: show both side by side
+          upgradeBtn.style.display = 'inline-flex';
+          dashboardBtn.style.display = 'inline-flex';
+          dashboardBtn.style.marginLeft = '8px';
+        }
+      }
+    });
+
+    // Click handlers
+    upgradeBtn.addEventListener('click', () => {
+      const url = 'https://prompt-scrubber.com/pricing';
+      chrome.tabs.create({ url });
+      window.close();
+    });
+    dashboardBtn.addEventListener('click', () => {
+      const url = 'https://prompt-scrubber.com/dashboard';
+      chrome.tabs.create({ url });
+      window.close();
+    });
+  }
   
   function showSettings() {
     mainView?.classList.add('hidden');

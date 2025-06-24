@@ -68,7 +68,7 @@ class ExtensionApi {
         this.readyResolve(false);
         this.readyResolve = null;
       }
-    }, 3000); // 3 second timeout for extension detection
+    }, 5000); // 5 second timeout for extension detection
   }
 
   async waitForReady(timeout = 5000) {

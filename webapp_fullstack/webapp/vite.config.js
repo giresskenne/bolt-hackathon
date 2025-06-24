@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  root: '.',
   plugins: [react()],
   resolve: {
     alias: {
@@ -38,6 +37,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    rollupOptions: {}
+    rollupOptions: {
+      input: path.resolve(__dirname, 'index.html')
+    }
   }
 })

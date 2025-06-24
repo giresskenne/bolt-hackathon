@@ -125,8 +125,7 @@ const useSubscriptionStore = create(
         try {
           // Wait for extension to be ready with timeout
           // Increase timeout to allow extension more time to initialize
-          const isReady = await extensionApi.waitForReady(5000);
-          
+          const isReady = await extensionApi.waitForReady(5000);         
           if (!isReady) {
             console.warn('Extension not ready after timeout, skipping data fetch');
             set({ 

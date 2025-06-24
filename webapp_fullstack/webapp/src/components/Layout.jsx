@@ -14,7 +14,6 @@ export default function Layout() {
     { name: 'Home', href: '/' },
     { name: 'Pricing', href: '/pricing' },
     { name: 'Contact', href: '/contact' },
-    { name: 'Docs', href: '/docs' },
     { name: 'FAQ', href: '/faq' },
     { name: 'Try Demo', href: '/demo' },
   ]

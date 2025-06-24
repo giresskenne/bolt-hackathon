@@ -198,11 +198,6 @@ const useAuthStore = create(
           if (response.ok) {
             const data = await response.json()
             set({ user: data.user, isAuthenticated: true, isLoading: false })
-            
-            // Also fetch subscription status when checking auth
-            const { useSubscriptionStore } = await import('./subscriptionStore.js');
-            const subscriptionStore = useSubscriptionStore.getState();
-            subscriptionStore.fetchSubscriptionStatus();
           } else {
             localStorage.removeItem('token');
             set({ user: null, isAuthenticated: false, isLoading: false })

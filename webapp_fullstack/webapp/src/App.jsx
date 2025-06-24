@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
+import { useSubscriptionStore } from './store/subscriptionStore'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import PricingPage from './pages/PricingPage'
@@ -21,11 +22,17 @@ import TextArea from './components/TextArea'
 
 function App() {
   const { isAuthenticated, isLoading } = useAuthStore()
+  const { fetchSubscriptionStatus } = useSubscriptionStore()
 
   // Check authentication on app load
   React.useEffect(() => {
-    const { checkAuth } = useAuthStore.getState();
-    checkAuth();
+    const { checkAuth } = useAuthStore.getState()
+    checkAuth().then(() => {
+      // Fetch subscription status after auth check
+      if (useAuthStore.getState().isAuthenticated) {
+        fetchSubscriptionStatus()
+      }
+    })
   }, []);
 
   if (isLoading) {

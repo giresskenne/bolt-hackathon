@@ -9,7 +9,13 @@ if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
 }
 
 // Client for public operations (auth, etc.)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: false, // Server-side, don't persist sessions
+    detectSessionInUrl: false // Server-side, don't detect URL sessions
+  }
+});
 
 // Admin client for server-side operations
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {

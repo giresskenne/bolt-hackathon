@@ -1,7 +1,8 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useSubscriptionStore } from './store/subscriptionStore'
+import { showToast } from './utils/toastUtils'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import PricingPage from './pages/PricingPage'
@@ -20,32 +21,49 @@ import UserSettingsPage from './pages/UserSettingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import TextArea from './components/TextArea'
 
+import { useEffect } from 'react';
+import { supabase } from './store/authStore'       
+
 function App() {
-  const { isAuthenticated, isLoading } = useAuthStore()
-  const { fetchSubscriptionStatus } = useSubscriptionStore()
+  const navigate   = useNavigate();
+  const location   = useLocation();
+  const { fetchSubscriptionStatus } = useSubscriptionStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
-  // Check authentication on app load
-  React.useEffect(() => {
-    const { checkAuth } = useAuthStore.getState()
-    checkAuth()
-    
-    // Set up subscription status fetching after auth state changes
-    const unsubscribe = useAuthStore.subscribe((state) => {
-      if (state.isAuthenticated && !state.isLoading) {
-        fetchSubscriptionStatus()
+  useEffect(() => {
+    const { checkAuth } = useAuthStore.getState();
+
+    const handleRedirectIfNeeded = async () => {
+      // Supabase returns ?code=...&state=... on successful OAuth
+      if (location.search.includes('code=')) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession();
+        // for @supabase/supabase-js < 2.33 use:
+        // const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true })
+
+        if (error) {
+          showToast.error(error.message, { title: 'Google sign-in failed' });
+          return;
+        }
+
+        await checkAuth();                                             // populate the store
+        window.history.replaceState({}, document.title, location.pathname);
+
+        showToast.success('Signed in successfully.', { title: 'Welcome back' });
+        navigate('/dashboard', { replace: true });
+      } else {
+        checkAuth();                                                   // regular startup
       }
-    })
-    
-    return unsubscribe
-  }, []);
+    };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="spinner"></div>
-      </div>
-    )
-  }
+    handleRedirectIfNeeded();
+
+    // once authorized, fetch subscription details
+    const unsub = useAuthStore.subscribe((s) => {
+      if (s.isAuthenticated && !s.isLoading) fetchSubscriptionStatus();
+    });
+    return unsub;                                                      // cleanup
+  }, [location.search, navigate, fetchSubscriptionStatus]);
+
 
   return (
     <Routes>

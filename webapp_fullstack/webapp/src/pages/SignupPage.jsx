@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Shield, Eye, EyeOff, Check } from 'lucide-react'
+import { Shield, Eye, EyeOff, Check, Chrome } from 'lucide-react'
 import { showToast } from '../utils/toastUtils'
+import Logo from '/extension/icons/google_logo.png'
 
 export default function SignupPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { signup, isLoading } = useAuthStore()
+  const { signup, signupWithGoogle, isLoading } = useAuthStore()
   
   const [formData, setFormData] = useState({
     email: '',
@@ -17,6 +18,25 @@ export default function SignupPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const handleGoogleSignup = async () => {
+    try {
+      const result = await signupWithGoogle(formData.plan)
+      
+      if (result.success) {
+        // Google OAuth will redirect to the provider, no need for navigation here
+        showToast.loading('Redirecting to Google...')
+      } else {
+        showToast.error(result.error || 'Google signup failed', {
+          title: 'Google Signup Failed'
+        })
+      }
+    } catch (error) {
+      showToast.error('Unable to connect to Google. Please try again.', {
+        title: 'Connection Error'
+      })
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -93,21 +113,21 @@ export default function SignupPage() {
 
   const planFeatures = {
     free: [
-      '800 scrub actions per month',
-      '25 custom rules',
-      '20 built-in patterns',
+      '500 scrub actions per month',
+      '10 custom rules',
+      '30 built-in patterns',
       'Community support'
     ],
     pro: [
       'Unlimited scrub actions',
-      '100 custom rules',
+      '30+ custom rules',
       '100+ patterns + AI detection',
       'Priority support'
     ]
   }
 
   return (
-    <div className="min-h-screen text-white py-20 px-6">
+    <div className="min-h-screen text-white py-10 px-6">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-glow">
@@ -123,6 +143,28 @@ export default function SignupPage() {
           {/* Signup Form */}
           <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Google Sign-up Button */}
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignup}
+                  disabled={isLoading}
+                  className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-6 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 border border-gray-300"
+                >
+                  <img src={Logo} alt="Google Logo" className="w-5 h-5" />
+                  <span>Continue with Google</span>
+                </button>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/20"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white/5 px-4 text-gray-400">or continue with email</span>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-2">
                   Email Address

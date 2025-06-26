@@ -30,9 +30,9 @@ const useSubscriptionStore = create(
       },
       limits: {
         free: {
-          scrubsPerMonth: 800,
-          customRules: 25,
-          patterns: 20,
+          scrubsPerMonth: 500,
+          customRules: 10,
+          patterns: 30,
           history: '24h',
           sites: ['chatgpt', 'claude', 'gemini', 'copilot']
         },

@@ -79,7 +79,7 @@ export const showToast = {
         />
       ),
       {
-        duration: persistent ? Infinity : 5000,
+        duration: persistent ? Infinity : 3000,
         ...toastOptions
       }
     )
@@ -119,7 +119,7 @@ export const showToast = {
         />
       ),
       {
-        duration: persistent ? Infinity : 7000,
+        duration: persistent ? Infinity : 5000,
         ...toastOptions
       }
     )
@@ -139,7 +139,7 @@ export const showToast = {
         />
       ),
       {
-        duration: persistent ? Infinity : 6000,
+        duration: persistent ? Infinity : 3000,
         ...toastOptions
       }
     )
@@ -218,7 +218,7 @@ export const showToast = {
           minWidth: '320px'
         },
         success: {
-          duration: 5000,
+          duration: 2000,
           style: {
             background: '#F0FDF4',
             border: '2px solid #22C55E',

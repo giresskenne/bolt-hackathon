@@ -1,13 +1,16 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Shield, Eye, EyeOff } from 'lucide-react'
+import { useSubscriptionStore } from '../store/subscriptionStore'
+import { Shield, Eye, EyeOff, Chrome } from 'lucide-react'
 import { showToast } from '../utils/toastUtils'
+import Logo from '/extension/icons/google_logo.png'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, isLoading } = useAuthStore()
+  const { login, loginWithGoogle, isLoading } = useAuthStore()
+  const { upgradePlan } = useSubscriptionStore()
   
   const [formData, setFormData] = useState({
     email: '',
@@ -16,6 +19,25 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
 
   const from = location.state?.from?.pathname || '/dashboard'
+  const intendedPlan = location.state?.plan
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await loginWithGoogle(intendedPlan)
+      
+      if (result.success) {
+        showToast.loading('Redirecting to Google...')
+      } else {
+        showToast.error(result.error || 'Google login failed', {
+          title: 'Google Login Failed'
+        })
+      }
+    } catch (error) {
+      showToast.error('Unable to connect to Google. Please try again.', {
+        title: 'Connection Error'
+      })
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -24,6 +46,29 @@ export default function LoginPage() {
     
     if (result.success) {
       showToast.success('Welcome back!', { title: 'Login Successful' })
+      
+      // Check if user intended to upgrade to a plan
+      if (intendedPlan) {
+        try {
+          const upgradeResult = await upgradePlan(intendedPlan)
+          
+          if (upgradeResult.success && upgradeResult.data?.checkout_url) {
+            showToast.loading('Redirecting to secure checkout...')
+            window.location.href = upgradeResult.data.checkout_url
+            return
+          } else {
+            throw new Error(upgradeResult.error || 'Failed to create checkout session')
+          }
+        } catch (error) {
+          console.error('Post-login upgrade error:', error)
+          showToast.error('Login successful, but unable to process upgrade. Please try again from your dashboard.', {
+            title: 'Upgrade Failed'
+          })
+          navigate('/dashboard', { replace: true })
+          return
+        }
+      }
+      
       navigate(from, { replace: true })
     } else {
       if (result.error?.includes('Email not confirmed')) {
@@ -53,7 +98,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen text-white py-20 px-6">
+    <div className="min-h-screen text-white py-10 px-6">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-12">
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-glow">
@@ -61,12 +106,44 @@ export default function LoginPage() {
           </div>
           <h1 className="text-4xl font-bold mb-4">Welcome Back</h1>
           <p className="text-xl text-gray-300">
-            Sign in to your Privly account
+            {intendedPlan 
+              ? `Sign in to upgrade to ${intendedPlan.charAt(0).toUpperCase() + intendedPlan.slice(1)} plan`
+              : 'Sign in to your Privly account'
+            }
           </p>
+          {intendedPlan && (
+            <div className="mt-4 bg-primary/10 border border-primary/20 rounded-xl p-4">
+              <p className="text-sm text-primary-light">
+                After signing in, you'll be redirected to complete your {intendedPlan} plan upgrade.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Google Login Button */}
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-6 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 border border-gray-300"
+              >
+                <img src={Logo} alt="Google Logo" className="w-5 h-5" />
+                <span>Continue with Google</span>
+              </button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/20"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-white/5 px-4 text-gray-400">or continue with email</span>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
                 Email Address

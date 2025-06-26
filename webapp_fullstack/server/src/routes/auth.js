@@ -4,6 +4,106 @@ import { authenticateUser } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// // Google OAuth initiation
+// router.get('/google', async (req, res) => {
+//   try {
+//     const { plan = 'free', redirect } = req.query;
+    
+//     // Validate redirect URL for security
+//     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+//     const redirectUrl = redirect || `${frontendUrl}/dashboard`;
+    
+//     // Ensure redirect URL is to our frontend domain for security
+//     if (!redirectUrl.startsWith(frontendUrl)) {
+//       return res.status(400).json({ error: 'Invalid redirect URL' });
+//     }
+    
+//     // Add plan parameter to redirect URL if specified
+//     const finalRedirectUrl = plan !== 'free' 
+//       ? `${redirectUrl}?plan=${plan}` 
+//       : redirectUrl;
+    
+//     console.log('Initiating Google OAuth with redirect:', finalRedirectUrl);
+    
+//     // Initiate Google OAuth with Supabase
+//     const { data, error } = await supabase.auth.signInWithOAuth({
+//       provider: 'google',
+//       options: {
+//         redirectTo: finalRedirectUrl,
+//         queryParams: {
+//           access_type: 'offline',
+//           prompt: 'consent',
+//         }
+//       }
+//     });
+    
+//     if (error) {
+//       console.error('Google OAuth initiation error:', error);
+//       return res.status(400).json({ error: error.message });
+//     }
+    
+//     // Redirect user to Google OAuth
+//     if (data?.url) {
+//       res.redirect(data.url);
+//     } else {
+//       res.status(500).json({ error: 'Failed to get OAuth URL' });
+//     }
+//   } catch (error) {
+//     console.error('Google OAuth route error:', error);
+//     res.status(500).json({ error: 'OAuth initiation failed' });
+//   }
+// });
+
+// // Handle OAuth callback (optional - Supabase handles this automatically)
+// router.get('/callback', async (req, res) => {
+//   try {
+//     const { code, state } = req.query;
+    
+//     if (!code) {
+//       return res.status(400).json({ error: 'Authorization code not provided' });
+//     }
+    
+//     // Exchange code for session
+//     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    
+//     if (error) {
+//       console.error('OAuth callback error:', error);
+//       return res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+//     }
+    
+//     // Create or update user profile
+//     if (data.user) {
+//       const { error: profileError } = await supabaseAdmin
+//         .from('users')
+//         .upsert([
+//           {
+//             id: data.user.id,
+//             email: data.user.email,
+//             plan: 'free', // Default plan for OAuth users
+//             subscription_status: 'trial',
+//             trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+//             created_at: new Date().toISOString()
+//           }
+//         ], { 
+//           onConflict: 'id',
+//           ignoreDuplicates: false 
+//         });
+      
+//       if (profileError) {
+//         console.error('Profile upsert error:', profileError);
+//         // Don't fail the OAuth flow for profile errors
+//       }
+//     }
+    
+//     // Redirect to frontend with success
+//     const redirectUrl = state || `${process.env.FRONTEND_URL}/dashboard`;
+//     res.redirect(redirectUrl);
+//   } catch (error) {
+//     console.error('OAuth callback error:', error);
+//     res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
+//   }
+// });
+
 // Sign up
 router.post('/signup', async (req, res) => {
   try {

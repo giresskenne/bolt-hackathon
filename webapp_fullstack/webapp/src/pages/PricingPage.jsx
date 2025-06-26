@@ -1,8 +1,16 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+import { useSubscriptionStore } from '../store/subscriptionStore'
 import { Check, Star, ArrowRight } from 'lucide-react'
+import { showToast } from '../utils/toastUtils'
 
 export default function PricingPage() {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuthStore()
+  const { upgradePlan } = useSubscriptionStore()
+  const [upgradeLoading, setUpgradeLoading] = React.useState(false)
+
   const plans = [
     {
       name: 'Free',
@@ -10,9 +18,9 @@ export default function PricingPage() {
       period: 'forever',
       description: 'Perfect for personal use',
       features: [
-        '800 scrub actions per month',
-        '25 custom regex rules (local only)',
-        '20 curated built-in patterns',
+        '500 scrub actions per month',
+        '10 custom regex rules (local only)',
+        '30 curated built-in patterns',
         'Last 24h scrub history',
         'Fixed site support (ChatGPT, Claude, Gemini, Copilot)',
         'Community forum support'
@@ -25,20 +33,21 @@ export default function PricingPage() {
       name: 'Pro',
       price: '$7',
       period: 'per month',
-      yearlyPrice: '$79',
+      yearlyPrice: '$70',
       yearlyPeriod: 'per year',
       description: 'For power users and professionals',
       features: [
+        'Free for the first 14 days',
         'Unlimited scrub actions',
-        '100 custom regex rules (local only)',
+        '30+ custom regex rules (local only)',
         '100+ advanced built-in patterns',
         'AI heuristic detector (runs locally)',
         '90-day encrypted local history + undelete',
         'Any site via allow-list',
         'Priority email support'
       ],
-      cta: 'Start Free Trial',
-      href: '/signup?plan=pro',
+      cta: isAuthenticated ? 'Upgrade to Pro' : 'Start Free Trial',
+      // href: '/signup?plan=pro', 
       popular: true
     },
     {
@@ -61,6 +70,38 @@ export default function PricingPage() {
       popular: false
     }
   ]
+
+  const handleProPlanClick = async () => {
+    if (!isAuthenticated) {
+      // Redirect to login with intended plan
+      navigate('/login', { 
+        state: { 
+          from: '/pricing',
+          plan: 'pro'
+        }
+      })
+      return
+    }
+
+    // User is authenticated, proceed with upgrade
+    setUpgradeLoading(true)
+    try {
+      const result = await upgradePlan('pro')
+      
+      if (result.success && result.data?.checkout_url) {
+        showToast.loading('Redirecting to secure checkout...')
+        window.location.href = result.data.checkout_url
+      } else {
+        throw new Error(result.error || 'Failed to create checkout session')
+      }
+    } catch (error) {
+      console.error('Upgrade error:', error)
+      showToast.error('Unable to process upgrade. Please try again.', {
+        title: 'Upgrade Failed'
+      })
+      setUpgradeLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen text-white py-20 px-6">
@@ -131,20 +172,40 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <Link
-                to={plan.href}
-                className={`block w-full text-center py-3 px-6 rounded-xl font-semibold transition-all ${
-                  plan.popular
-                    ? 'bg-primary hover:bg-primary-dark text-white'
-                    : plan.comingSoon
-                      ? 'bg-white/5 text-gray-400 border border-white/10 cursor-not-allowed'
-                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-primary'
-                }`}
-                onClick={plan.comingSoon ? (e) => e.preventDefault() : undefined}
-              >
-                {plan.cta}
-                <ArrowRight className="w-4 h-4 inline ml-2" />
-              </Link>
+              {plan.name === 'Pro' ? (
+                <button
+                  onClick={handleProPlanClick}
+                  disabled={upgradeLoading}
+                  className="w-full bg-primary hover:bg-primary-dark text-white py-3 px-6 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {upgradeLoading ? (
+                    <>
+                      <div className="spinner"></div>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{plan.cta}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              ) : (
+                <Link
+                  to={plan.href}
+                  className={`block w-full text-center py-3 px-6 rounded-xl font-semibold transition-all ${
+                    plan.popular
+                      ? 'bg-primary hover:bg-primary-dark text-white'
+                      : plan.comingSoon
+                        ? 'bg-white/5 text-gray-400 border border-white/10 cursor-not-allowed'
+                        : 'bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-primary'
+                  }`}
+                  onClick={plan.comingSoon ? (e) => e.preventDefault() : undefined}
+                >
+                  {plan.cta}
+                  <ArrowRight className="w-4 h-4 inline ml-2" />
+                </Link>
+              )}
             </div>
           ))}
         </div>
@@ -161,19 +222,11 @@ export default function PricingPage() {
               {
                 question: "Can I change plans anytime?",
                 answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately."
-              },
-              {
-                question: "Is my data secure?",
-                answer: "Absolutely. All processing happens locally in your browser. We never see or store your sensitive data."
-              },
-              {
-                question: "Do you offer refunds?",
-                answer: "Yes, we offer a 30-day money-back guarantee for all paid plans, no questions asked."
               }
             ].map((faq, index) => (
-              <div key={index} className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-                <h3 className="font-semibold mb-3">{faq.question}</h3>
-                <p className="text-gray-300">{faq.answer}</p>
+              <div key={index} className="bg-white/5 rounded-xl p-6">
+                <h3 className="text-xl font-semibold mb-3">{faq.question}</h3>
+                <p className="text-gray-400">{faq.answer}</p>
               </div>
             ))}
           </div>

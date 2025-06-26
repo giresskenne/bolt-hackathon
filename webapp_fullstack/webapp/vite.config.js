@@ -39,6 +39,7 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: path.resolve(__dirname, 'index.html')
-    }
+    },
+    assetsDir: 'images'
   }
 })

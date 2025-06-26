@@ -16,7 +16,8 @@ import {
   Clock,
   AlertTriangle,
   Wifi,
-  WifiOff
+  WifiOff,
+  Download
 } from 'lucide-react'
 import { showToast } from '../utils/toastUtils'
 
@@ -244,13 +245,24 @@ export default function DashboardPage() {
                 </div>
               </div>
                 
-              {/* primary action */}
-              <button
-                onClick={handleRetry}
-                className="shrink-0 rounded-lg bg-yellow-600 px-4 py-2 font-semibold transition-colors hover:bg-yellow-700"
-              >
-                Retry
-              </button>
+              {/* action buttons */}
+              <div className="flex shrink-0 gap-3">
+                <a
+                  href="https://chromewebstore.google.com/detail/prompt-scrubber/cpiimgglmignilhbjpkcdflkccjodahn?hl=en-GB&utm_source=ext_sidebar"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 font-semibold text-white transition-colors hover:bg-primary-dark"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download Extension</span>
+                </a>
+                <button
+                  onClick={handleRetry}
+                  className="rounded-lg bg-yellow-600 px-4 py-2 font-semibold transition-colors hover:bg-yellow-700"
+                >
+                  Retry
+                </button>
+              </div>
             </div>
           </div>
         )}

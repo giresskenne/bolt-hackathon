@@ -66,6 +66,38 @@
   @apply animate-spin rounded-full h-6 w-6 border-b-2 border-primary;
 }
 
+/* Toast animations */
+@keyframes toast-enter {
+  0% {
+    transform: translateY(-100%) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-exit {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Enhanced toast visibility */
+.toast-container {
+  animation: toast-enter 0.3s ease-out;
+}
+
+.toast-container[data-visible="false"] {
+  animation: toast-exit 0.2s ease-in;
+}
+
 /* Gradient text */
 .gradient-text {
   @apply bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent;

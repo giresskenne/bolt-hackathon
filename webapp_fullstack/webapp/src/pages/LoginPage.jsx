@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Shield, Eye, EyeOff } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { showToast } from '../utils/toastUtils'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -23,10 +23,25 @@ export default function LoginPage() {
     const result = await login(formData.email, formData.password)
     
     if (result.success) {
-      toast.success('Welcome back!')
+      showToast.success('Welcome back!', { title: 'Login Successful' })
       navigate(from, { replace: true })
     } else {
-      toast.error(result.error || 'Login failed')
+      if (result.error?.includes('Email not confirmed')) {
+        showToast.critical(
+          'Please check your email and click the confirmation link before signing in. If you haven\'t received the email, please check your spam folder.',
+          {
+            title: 'Email Confirmation Required',
+            onAcknowledge: () => {
+              // Could redirect to a resend confirmation page
+              console.log('User acknowledged email confirmation requirement')
+            }
+          }
+        )
+      } else {
+        showToast.error(result.error || 'Login failed', {
+          title: 'Login Failed'
+        })
+      }
     }
   }
 

@@ -18,7 +18,7 @@ import {
   Wifi,
   WifiOff
 } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { showToast } from '../utils/toastUtils'
 
 export default function DashboardPage() {
    const { user } = useAuthStore()
@@ -81,7 +81,13 @@ export default function DashboardPage() {
         sessionStorage.setItem(toastKey, 'true')
         
         // Show success message
-        toast.success('🎉 Successfully upgraded to Pro! Welcome to unlimited scrubbing!')
+        showToast.success(
+          'Welcome to unlimited scrubbing and advanced features!',
+          { 
+            title: '🎉 Successfully Upgraded to Pro',
+            persistent: true
+          }
+        )
         
         // Refresh extension data to get updated plan
         fetchExtensionData()
@@ -91,7 +97,9 @@ export default function DashboardPage() {
       navigate('/dashboard', { replace: true })
     } else if (upgradeStatus === 'cancelled') {
       // Handle cancelled checkout
-      toast.error('Upgrade cancelled. You can try again anytime.')
+      showToast.warning('Upgrade cancelled. You can try again anytime.', {
+        title: 'Upgrade Cancelled'
+      })
       navigate('/dashboard', { replace: true })
     }
   }, [searchParams, navigate, fetchExtensionData])
@@ -139,15 +147,15 @@ export default function DashboardPage() {
     try {
       const result = await deleteCustomRule(id)
       if (result.success) {
-        toast.success('Custom rule deleted')
+        showToast.success('Custom rule deleted successfully')
         // Refresh extension data to get updated usage
         fetchExtensionData()
       } else {
-        toast.error(result.error || 'Failed to delete custom rule')
+        showToast.error(result.error || 'Failed to delete custom rule')
       }
     } catch (error) {
       console.error('Delete rule error:', error)
-      toast.error('Failed to delete custom rule')
+      showToast.error('Failed to delete custom rule')
     }
   }
 
@@ -158,14 +166,16 @@ export default function DashboardPage() {
       
       if (result.success && result.data?.checkout_url) {
         // Show loading message and redirect to Stripe checkout
-        toast.success('Redirecting to checkout...')
+        showToast.loading('Redirecting to secure checkout...')
         window.location.href = result.data.checkout_url
       } else {
         throw new Error(result.error || 'Failed to create checkout session')
       }
     } catch (error) {
       console.error('Upgrade error:', error)
-      toast.error('Unable to process upgrade. Please try again.')
+      showToast.error('Unable to process upgrade. Please try again.', {
+        title: 'Upgrade Failed'
+      })
       setUpgradeLoading(false)
     }
   }

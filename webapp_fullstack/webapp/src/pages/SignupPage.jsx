@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Shield, Eye, EyeOff, Check } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { showToast } from '../utils/toastUtils'
 
 export default function SignupPage() {
   const [searchParams] = useSearchParams()
@@ -29,17 +29,25 @@ export default function SignupPage() {
     // Comprehensive password validation
     const passwordErrors = validatePassword(formData.password)
     if (passwordErrors.length > 0) {
-      toast.error(passwordErrors[0]) // Show first error
+      showToast.error(passwordErrors[0], { title: 'Password Requirements' })
       return
     }
 
     const result = await signup(formData.email, formData.password, formData.plan)
     
     if (result.success) {
-      toast.success('Account created successfully!')
+      showToast.success(
+        'Your account has been created! Please check your email to confirm your account before signing in.',
+        { 
+          title: 'Account Created Successfully',
+          persistent: true
+        }
+      )
       navigate('/dashboard')
     } else {
-      toast.error(result.error || 'Signup failed')
+      showToast.error(result.error || 'Signup failed', {
+        title: 'Signup Failed'
+      })
     }
   }
 

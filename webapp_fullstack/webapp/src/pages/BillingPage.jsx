@@ -12,7 +12,7 @@ import {
   Zap,
   Clock
 } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { showToast } from '../utils/toastUtils'
 
 export default function BillingPage() {
   const navigate = useNavigate()
@@ -99,7 +99,9 @@ export default function BillingPage() {
       window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Upgrade error:', error);
-      toast.error('Unable to process upgrade. Please try again.');
+      showToast.error('Unable to process upgrade. Please try again.', {
+        title: 'Upgrade Failed'
+      });
     } finally {
       setLoading(false);
     }
@@ -128,13 +130,17 @@ export default function BillingPage() {
       window.location.href = data.portal_url;
     } catch (error) {
       console.error('Portal error:', error);
-      toast.error('Unable to open billing portal. Please try again.');
+      showToast.error('Unable to open billing portal. Please try again.', {
+        title: 'Portal Error'
+      });
     }
   }
 
   const downloadInvoice = (invoiceId) => {
     // In real app, this would download the actual invoice
-    toast.success(`Downloading invoice ${invoiceId}`)
+    showToast.success(`Downloading invoice ${invoiceId}`, {
+      title: 'Download Started'
+    })
   }
 
   const getPlanIcon = (planName) => {

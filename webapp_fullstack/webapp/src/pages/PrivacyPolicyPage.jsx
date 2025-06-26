@@ -7,14 +7,14 @@ export default function PrivacyPolicyPage() {
         <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
         <div className="prose prose-invert max-w-none">
           <p className="text-xl text-gray-300 mb-8">
-            Last updated: January 15, 2025
+            Last updated: June 15, 2025
           </p>
 
           <div className="space-y-8">
             <section>
               <h2 className="text-2xl font-bold mb-4">Introduction</h2>
               <p className="text-gray-300 leading-relaxed">
-                At Prompt-Scrubber, we take your privacy seriously. This Privacy Policy explains how we collect, use, 
+                At Privly , we take your privacy seriously. This Privacy Policy explains how we collect, use, 
                 disclose, and safeguard your information when you use our browser extension and web application. 
                 Our core principle is that your sensitive data never leaves your device.
               </p>
@@ -184,9 +184,9 @@ export default function PrivacyPolicyPage() {
               </p>
               <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
                 <p className="text-gray-300">
-                  <strong>Email:</strong> privacy@prompt-scrubber.com<br />
-                  <strong>Address:</strong> [Company Address]<br />
-                  <strong>Data Protection Officer:</strong> dpo@prompt-scrubber.com
+                  <strong>Email:</strong> support@privly.app<br />
+                  <strong>Address:</strong> 198 Lavergne Street, Ottawa, ON, Canada<br />
+                  <strong>Data Protection Officer:</strong> support@privly.app
                 </p>
               </div>
             </section>

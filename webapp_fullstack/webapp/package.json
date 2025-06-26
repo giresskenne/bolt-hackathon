@@ -1,7 +1,7 @@
 {
-  "name": "prompt-scrubber-webapp",
+  "name": "privly-webapp",
   "version": "1.0.0",
-  "description": "SaaS web application for Prompt-Scrubber with subscription management",
+  "description": "SaaS web application for privly with subscription management",
   "type": "module",
   "scripts": {
     "dev": "vite",

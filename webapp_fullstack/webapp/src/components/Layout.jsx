@@ -44,8 +44,8 @@ export default function Layout() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3">
-              <img src={Logo} alt="Prompt-Scrubber Logo" className="w-8 h-8" />
-              <span className="text-xl font-bold text-white">Scrubber</span>
+              <img src={Logo} alt="Privly Logo" className="w-8 h-8" />
+              <span className="text-xl font-bold text-white">Privly</span>
             </Link>
 
             {/* Desktop Navigation */}

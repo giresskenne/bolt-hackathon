@@ -14,7 +14,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-300 leading-relaxed">
-                By accessing and using Prompt-Scrubber ("the Service"), you accept and agree to be bound by the terms 
+                By accessing and using Privly  ("the Service"), you accept and agree to be bound by the terms 
                 and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
               </p>
             </section>
@@ -22,7 +22,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">2. Description of Service</h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                Prompt-Scrubber is a browser extension and web application that helps users identify and mask sensitive 
+                Privly  is a browser extension and web application that helps users identify and mask sensitive 
                 information in text inputs before sharing with AI platforms or other online services.
               </p>
               <p className="text-gray-300 leading-relaxed">
@@ -127,7 +127,7 @@ export default function TermsOfServicePage() {
                 <div>
                   <h3 className="text-xl font-semibold mb-2">Our Rights</h3>
                   <p className="text-gray-300">
-                    The Service and its original content, features, and functionality are owned by Prompt-Scrubber and 
+                    The Service and its original content, features, and functionality are owned by Privly  and 
                     are protected by international copyright, trademark, patent, trade secret, and other intellectual 
                     property laws.
                   </p>
@@ -157,7 +157,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">9. Limitation of Liability</h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                To the maximum extent permitted by law, Prompt-Scrubber shall not be liable for any indirect, incidental, 
+                To the maximum extent permitted by law, Privly  shall not be liable for any indirect, incidental, 
                 special, consequential, or punitive damages, including without limitation, loss of profits, data, use, 
                 goodwill, or other intangible losses.
               </p>
@@ -178,7 +178,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">11. Indemnification</h2>
               <p className="text-gray-300 leading-relaxed">
-                You agree to indemnify and hold harmless Prompt-Scrubber and its officers, directors, employees, and 
+                You agree to indemnify and hold harmless Privly  and its officers, directors, employees, and 
                 agents from any claims, damages, losses, or expenses arising out of your use of the Service or violation 
                 of these Terms.
               </p>
@@ -235,9 +235,8 @@ export default function TermsOfServicePage() {
               </p>
               <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
                 <p className="text-gray-300">
-                  <strong>Email:</strong> legal@prompt-scrubber.com<br />
-                  <strong>Address:</strong> [Company Address]<br />
-                  <strong>Phone:</strong> [Company Phone]
+                  <strong>Email:</strong> support@privly.app<br />
+                  <strong>Address:</strong> 198 Lavergne Street, Ottawa, ON, Canada<br />
                 </p>
               </div>
             </section>

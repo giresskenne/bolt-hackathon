@@ -46,7 +46,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-4xl font-bold mb-4">Welcome Back</h1>
           <p className="text-xl text-gray-300">
-            Sign in to your Prompt-Scrubber account
+            Sign in to your Privly account
           </p>
         </div>
 

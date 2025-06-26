@@ -215,7 +215,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="font-semibold text-yellow-400">Extension Not Connected</p>
                   <p className="text-sm text-gray-300">
-                    Install or enable the Prompt-Scrubber extension to sync your custom rules and usage data.
+                    Install or enable the Privly extension to sync your custom rules and usage data.
                   </p>
                 
                   {/* ▼ refresh hint appears after ≥1 failed retry */}
@@ -476,7 +476,7 @@ export default function DashboardPage() {
               <Activity className="w-6 h-6 text-blue-500" />
             </div>
             <h3 className="font-semibold mb-2">Documentation</h3>
-            <p className="text-sm text-gray-400">Learn how to get the most out of Prompt-Scrubber</p>
+            <p className="text-sm text-gray-400">Learn how to get the most out of Privly</p>
           </Link>
 
           <Link

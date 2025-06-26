@@ -66,7 +66,7 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Prompt-Scrubber backend running on port ${PORT}`);
+  console.log(`🚀 privly backend running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
 });

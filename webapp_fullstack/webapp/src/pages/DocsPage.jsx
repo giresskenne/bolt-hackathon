@@ -55,7 +55,7 @@ export default function DocsPage() {
             Developer <span className="text-primary-light">Documentation</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Everything you need to integrate and customize Prompt-Scrubber for your organization
+            Everything you need to integrate and customize Privly for your organization
           </p>
         </div>
 
@@ -109,7 +109,7 @@ export default function DocsPage() {
                   <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
                     <code className="text-green-400 text-sm">
                       {`# Download the latest release
-wget https://github.com/prompt-scrubber/releases/latest/download/extension.zip
+wget https://github.com/Privly/releases/latest/download/extension.zip
 
 # Extract and load in Chrome
 # 1. Open chrome://extensions/
@@ -205,7 +205,7 @@ Content-Type: application/json
 
               <div className="space-y-6">
                 <p className="text-gray-300">
-                  Prompt-Scrubber uses client-side encryption to protect your sensitive data and custom rules.
+                  Privly uses client-side encryption to protect your sensitive data and custom rules.
                 </p>
 
                 <div>

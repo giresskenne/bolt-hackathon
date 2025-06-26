@@ -1,10 +1,11 @@
 {
-  "name": "prompt-scrubber-backend",
+  "name": "privly-backend",
   "version": "1.0.0",
-  "description": "Lightweight backend for Prompt-Scrubber with Supabase auth and Stripe billing",
+  "description": "Lightweight backend for privly with Supabase auth and Stripe billing",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
+    "build": "echo 'No build step required for Node.js app' && exit 0",
     "start": "node src/index.js",
     "dev": "nodemon --exec \"node -r dotenv/config src/index.js\"",
     "test": "echo \"No tests yet\" && exit 0"

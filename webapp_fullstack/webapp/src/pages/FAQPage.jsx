@@ -31,7 +31,7 @@ export default function FAQPage() {
     },
     {
       question: "How does the extension work?",
-      answer: "Prompt-Scrubber runs locally in your browser and scans text as you type. When sensitive data is detected, it highlights the text and offers a 'Scrub' button to mask the information before you send it."
+      answer: "Privly runs locally in your browser and scans text as you type. When sensitive data is detected, it highlights the text and offers a 'Scrub' button to mask the information before you send it."
     },
     {
       question: "Which websites are supported?",
@@ -64,7 +64,7 @@ export default function FAQPage() {
             Frequently Asked <span className="text-primary-light">Questions</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Find answers to common questions about Prompt-Scrubber, our pricing, features, and how we protect your sensitive data.
+            Find answers to common questions about Privly, our pricing, features, and how we protect your sensitive data.
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default function FAQPage() {
             </div>
             <h2 className="text-2xl font-bold mb-4">Still have questions?</h2>
             <p className="text-gray-300 mb-8">
-              Can't find the answer you're looking for? Our support team is here to help you get the most out of Prompt-Scrubber.
+              Can't find the answer you're looking for? Our support team is here to help you get the most out of Privly.
             </p>
           </div>
 

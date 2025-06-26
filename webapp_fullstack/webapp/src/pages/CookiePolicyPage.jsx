@@ -22,7 +22,7 @@ export default function CookiePolicyPage() {
             <section>
               <h2 className="text-2xl font-bold mb-4">How We Use Cookies</h2>
               <p className="text-gray-300 leading-relaxed mb-4">
-                Prompt-Scrubber uses cookies for the following purposes:
+                Privly  uses cookies for the following purposes:
               </p>
               <ul className="list-disc list-inside text-gray-300 space-y-2">
                 <li><strong>Essential Cookies:</strong> Required for the website to function properly, including authentication and security</li>
@@ -149,9 +149,8 @@ export default function CookiePolicyPage() {
               </p>
               <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
                 <p className="text-gray-300">
-                  <strong>Email:</strong> privacy@prompt-scrubber.com<br />
-                  <strong>Address:</strong> [Company Address]<br />
-                  <strong>Phone:</strong> [Company Phone]
+                  <strong>Email:</strong> support@privly.app<br />
+                  <strong>Address:</strong> 198 Lavergne Street, Ottawa, ON, Canada<br />
                 </p>
               </div>
             </section>

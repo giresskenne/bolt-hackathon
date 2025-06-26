@@ -1,6 +1,6 @@
-# Prompt-Scrubber Backend
+# privly Backend
 
-A lightweight backend service for Prompt-Scrubber that handles user authentication via Supabase and subscription management via Stripe.
+A lightweight backend service for privly that handles user authentication via Supabase and subscription management via Stripe.
 
 ## Key Principles
 
@@ -89,3 +89,20 @@ Make sure to:
 1. Set all environment variables
 2. Configure Stripe webhook URL
 3. Update CORS origin for production domain
+
+# Install Vercel CLI if you haven't
+npm i -g vercel
+
+# Deploy
+vercel
+
+# For production deployment
+vercel --prod
+
+Webhook endpoint: 
+https://your-vercel-app.vercel.app/webhook/stripe
+
+
+
+
+

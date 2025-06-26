@@ -107,7 +107,7 @@ export default function SignupPage() {
           </div>
           <h1 className="text-4xl font-bold mb-4">Create Your Account</h1>
           <p className="text-xl text-gray-300">
-            Join thousands protecting their sensitive data with Prompt-Scrubber
+            Join thousands protecting their sensitive data with Privly
           </p>
         </div>
 

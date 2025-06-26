@@ -19,10 +19,11 @@ export default function HomePage() {
                   {' '}Sensitive Data
                 </span>
               </h1>
-              <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-                Automatically detect confidential information as you type or paste
-                while offering you the freedom to set your own custom rules
-              </p>
+              <div className="text-xl text-gray-300 mb-8 leading-relaxed">
+                <p className="mb-2">
+                  Automatically detect confidential information as you type or paste to AI prompt before sending
+                </p>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
   href="https://chromewebstore.google.com/detail/prompt-scrubber/cpiimgglmignilhbjpkcdflkccjodahn?hl=en-GB&utm_source=ext_sidebar"
@@ -48,7 +49,7 @@ export default function HomePage() {
               <div className="relative animate-bounce-slow">
                 <img 
                   src={HeroImage}
-                  alt="Chat AI Interface with Prompt-Scrubber Protection"
+                  alt="Chat AI Interface with Privly Protection"
                   className="w-full h-auto rounded-3xl shadow-2xl border border-white/20"
                 />
 
@@ -166,7 +167,7 @@ export default function HomePage() {
             Ready to <span className="text-primary-light">Protect</span> Your Data?
           </h2>
           <p className="text-xl text-gray-300 mb-12">
-            Join thousands of users who trust Prompt-Scrubber to keep their sensitive information safe
+            Join thousands of users who trust Privly to keep their sensitive information safe
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -192,9 +193,9 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
               <div className="w-8 h-8">
-                <img src={Logo} alt="Prompt-Scrubber Logo" className="w-full h-full" />
+                <img src={Logo} alt="Privly Logo" className="w-full h-full" />
               </div>
-              <span className="text-xl font-bold">Prompt-Scrubber</span>
+              <span className="text-xl font-bold">Privly</span>
             </div>
             
             <div className="flex items-center space-x-6 text-gray-400">
@@ -205,7 +206,7 @@ export default function HomePage() {
           </div>
           
           <div className="mt-8 pt-8 border-t border-white/10 text-center text-gray-400">
-            <p>&copy; 2025 Prompt-Scrubber. All rights reserved. Stay Safe, Stay Private 🛡️</p>
+            <p>&copy; 2025 Privly. All rights reserved. Stay Safe, Stay Private 🛡️</p>
           </div>
         </div>
       </footer>

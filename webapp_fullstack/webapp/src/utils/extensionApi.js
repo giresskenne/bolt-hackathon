@@ -90,7 +90,7 @@ class ExtensionApi {
     const isReady = await this.waitForReady(5000);
     
     if (!isReady) {
-      throw new Error('Extension not ready. Please install and enable the Prompt-Scrubber extension.');
+      throw new Error('Extension not ready. Please install and enable the Privly extension.');
     }
 
     const requestId = `req_${++this.requestCounter}_${Date.now()}`;

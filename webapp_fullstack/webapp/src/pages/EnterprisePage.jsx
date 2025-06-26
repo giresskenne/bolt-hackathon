@@ -139,7 +139,7 @@ export default function EnterprisePage() {
             <div>
               <h2 className="text-3xl font-bold mb-6">Everything You Need for Enterprise Security</h2>
               <p className="text-xl text-gray-300 mb-8">
-                Prompt-Scrubber Enterprise provides comprehensive data protection for organizations 
+                Privly Enterprise provides comprehensive data protection for organizations 
                 of all sizes, with advanced features and dedicated support.
               </p>
               <div className="grid md:grid-cols-2 gap-4">
@@ -332,7 +332,7 @@ export default function EnterprisePage() {
                     <Mail className="w-5 h-5 text-purple-400" />
                     <div>
                       <p className="font-semibold">Sales Team</p>
-                      <p className="text-gray-400">enterprise@prompt-scrubber.com</p>
+                      <p className="text-gray-400">enterprise@privly.com</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">

@@ -1,12 +1,12 @@
 [[redirects]]
   from = "/api/*"
-  to = "https://privly-backend.vercel.app/api/:splat"
+  to = "https://privly-backend.onrender.com/api/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/webhook/*"
-  to = "https://privly-backend.vercel.app/webhook/:splat"
+  to = "https://privly-backend.onrender.com/webhook/:splat"
   status = 200
   force = true
 

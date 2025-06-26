@@ -36,8 +36,8 @@ export default function TextArea() {
             to="/"
             className="flex items-center gap-3 hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <img src="/extension/icons/Logo.png" alt="Prompt-Scrubber Logo" className="h-8 w-8" />
-            <span className="text-xl font-bold">Prompt-Scrubber Demo</span>
+            <img src="/extension/icons/Logo.png" alt="Privly Logo" className="h-8 w-8" />
+            <span className="text-xl font-bold">Privly Demo</span>
           </Link>
 
           <Link to="/" className="hover:text-primary-light transition-colors">
@@ -52,10 +52,10 @@ export default function TextArea() {
           {/* header */}
           <header className="mb-8 text-center">
             <h1 className="mb-4 text-4xl font-bold lg:text-5xl">
-              Try <span className="text-primary-light">Prompt-Scrubber</span>
+              Try <span className="text-primary-light">Privly</span>
             </h1>
             <p className="mx-auto max-w-3xl text-xl text-gray-300">
-              Type or paste any text below to see how Prompt-Scrubber protects your sensitive
+              Type or paste any text below to see how Privly protects your sensitive
               information in real-time.
             </p>
           </header>

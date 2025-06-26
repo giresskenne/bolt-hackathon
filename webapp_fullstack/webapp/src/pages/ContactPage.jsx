@@ -91,9 +91,9 @@ export default function ContactPage() {
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             {isSalesContact ? (
-              'Ready to protect your organization with Prompt-Scrubber Enterprise? Let\'s discuss your needs.'
+              'Ready to protect your organization with Privly Enterprise? Let\'s discuss your needs.'
             ) : (
-              'Have questions about Prompt-Scrubber? Need help getting started? We\'re here to help.'
+              'Have questions about Privly ? Need help getting started? We\'re here to help.'
             )}
           </p>
         </div>
@@ -294,7 +294,7 @@ export default function ContactPage() {
                       {isSalesContact ? 'Sales Team' : 'Support Team'}
                     </p>
                     <p className="text-gray-400">
-                      {isSalesContact ? 'enterprise@prompt-scrubber.com' : 'support@prompt-scrubber.com'}
+                      {isSalesContact ? 'support@privly.app' : 'support@privly.app'}
                     </p>
                   </div>
                 </div>

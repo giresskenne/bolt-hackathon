@@ -1,0 +1,156 @@
+{
+  "identifiers": [
+    {
+      "name": "AWS Access Key ID",
+      "pattern": "AKIA[0-9A-Z]{16}",
+      "mask": "AKIA****************",
+      "example": "AKIAIOSFODNN7EXAMPLE"
+    },
+    {
+      "name": "AWS Secret Access Key", 
+      "pattern": "(?<![A-Za-z0-9\\/+=])[A-Za-z0-9\\/+=]{40}(?![A-Za-z0-9\\/+=])",
+      "mask": "<AWS_SECRET_KEY>"
+    },
+    {
+      "name": "AWS Account ID",
+      "pattern": "(?<!\\d)\\d{12}(?!\\d)",
+      "mask": "************"
+    },
+    {
+      "name": "AWS ARN",
+      "pattern": "arn:aws:[a-zA-Z0-9-]+:[a-zA-Z0-9-]*:\\d{12}:[a-zA-Z0-9-_/:.]+",
+      "mask": "arn:aws:***:***:************:***"
+    },
+    {
+      "name": "AWS VPC ID",
+      "pattern": "vpc-[0-9a-f]{8,17}",
+      "mask": "vpc-****************"
+    },
+    {
+      "name": "AWS EC2 Instance ID",
+      "pattern": "i-[0-9a-f]{8,17}",
+      "mask": "i-****************"
+    },
+    {
+      "name": "GitHub Personal Access Token",
+      "pattern": "ghp_[A-Za-z0-9]{36}",
+      "mask": "ghp_************************************"
+    },
+    {
+      "name": "GitLab Personal Access Token",
+      "pattern": "glpat-[A-Za-z0-9_-]{20,}",
+      "mask": "glpat-********************"
+    },
+    {
+      "name": "Stripe Secret Key",
+      "pattern": "sk_(?:live|test)_[A-Za-z0-9]{24,}",
+      "mask": "sk_****_************************"
+    },
+    {
+      "name": "Slack Bot Token",
+      "pattern": "xoxb-\\d+-\\d+-[A-Za-z0-9]+",
+      "mask": "xoxb-***-***-***"
+    },
+    {
+      "name": "Google API Key",
+      "pattern": "AIza[A-Za-z0-9_-]{35}",
+      "mask": "AIza***********************************"
+    },
+    {
+      "name": "JWT Token",
+      "pattern": "eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+",
+      "mask": "eyJ***.***.***.***"
+    },
+    {
+      "name": "Email Address",
+      "pattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b",
+      "mask": "<EMAIL>"
+    },
+    {
+      "name": "North American Phone",
+      "pattern": "(?:\\+1[-\\s.]?)?\\(?([0-9]{3})\\)?[-\\s.]?([0-9]{3})[-\\s.]?([0-9]{4})\\b",
+      "mask": "+1-***-***-****"
+    },
+    {
+      "name": "US SSN",
+      "pattern": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+      "mask": "***-**-****"
+    },
+    {
+      "name": "Canadian SIN",
+      "pattern": "\\b\\d{3}-\\d{3}-\\d{3}\\b",
+      "mask": "***-***-***"
+    },
+    {
+      "name": "Passport ID",
+      "pattern": "\\b[A-Z]{2}\\d{7,8}\\b",
+      "mask": "**#######"
+    },
+    {
+      "name": "Credit Card",
+      "pattern": "\\b(?:4\\d{3}(?:[\\s-]?\\d{4}){3}|(?:5[1-5]\\d{2}|22[2-9]\\d|2[3-6]\\d{2}|27[01]\\d|2720)(?:[\\s-]?\\d{4}){3}|3[47]\\d{2}[\\s-]?\\d{6}[\\s-]?\\d{5}|6(?:011|5\\d{2})(?:[\\s-]?\\d{4}){3})\\b",
+      "mask": "****-****-****-****"
+    },
+    {
+      "name": "IBAN",
+      "pattern": "\\b[A-Z]{2}\\d{2}[A-Z0-9]{10,30}\\b",
+      "mask": "**##********************"
+    },
+    {
+      "name": "IPv4 Address",
+      "pattern": "\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b",
+      "mask": "***.***.***.***"
+    },
+    {
+      "name": "IPv6 Address",
+      "pattern": "\\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\\b|\\b(?:[0-9a-fA-F]{1,4}:)*::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}\\b",
+      "mask": "****:****:****:****:****:****:****:****"
+    },
+    {
+      "name": "Private IPv4 RFC1918",
+      "pattern": "\\b(?:10\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|192\\.168\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|172\\.(?:1[6-9]|2[0-9]|3[01])\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))\\b",
+      "mask": "<PRIVATE_IP>"
+    },
+    {
+      "name": "Internal FQDN",
+      "pattern": "\\b[a-zA-Z0-9-]+\\.(?:corp|internal|local|lan|intranet)\\.[a-zA-Z0-9.-]+\\b",
+      "mask": "<INTERNAL_HOST>"
+    },
+    {
+      "name": "URL with Credentials",
+      "pattern": "https?://[^\\s:]+:[^\\s@]+@[^\\s/]+",
+      "mask": "https://***:***@<HOST>"
+    },
+    {
+      "name": "Basic Auth Header",
+      "pattern": "Authorization:\\s*Basic\\s+[A-Za-z0-9+/]+=*",
+      "mask": "Authorization: Basic <REDACTED>"
+    },
+    {
+      "name": "UUID v4",
+      "pattern": "\\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\b",
+      "flags": "i",
+      "mask": "********-****-4***-****-************"
+    },
+    {
+      "name": "CloudWatch Log Group ARN",
+      "pattern": "arn:aws:logs:[a-zA-Z0-9-]+:\\d{12}:log-group:[a-zA-Z0-9-_/:.]+",
+      "mask": "arn:aws:logs:***:************:log-group:***"
+    },
+    {
+      "name": "RDS Endpoint",
+      "pattern": "\\b[a-zA-Z0-9-]+\\.[a-zA-Z0-9]{12}\\.[a-zA-Z0-9-]+\\.rds\\.amazonaws\\.com\\b",
+      "mask": "<RDS_ENDPOINT>"
+    },
+    {
+      "name": "Kubernetes Secret",
+      "pattern": "data:\\s*\\n\\s*[a-zA-Z0-9_-]+:\\s*[A-Za-z0-9+/]+=*",
+      "mask": "data:\\n  <KEY>: <BASE64_VALUE>"
+    },
+    {
+      "name": "Environment Variable Export",
+      "pattern": "export\\s+[A-Z_][A-Z0-9_]*\\s*=\\s*[\"']?[^\\s\"']+[\"']?",
+      "mask": "export <VAR>=<VALUE>"
+    }
+  ]
+}

@@ -298,13 +298,7 @@ export default function ContactPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-semibold">Phone</p>
-                    <p className="text-gray-400">+1 (555) 123-4567</p>
-                  </div>
-                </div>
+            
                 <div className="flex items-center space-x-3">
                   <Clock className="w-5 h-5 text-primary" />
                   <div>

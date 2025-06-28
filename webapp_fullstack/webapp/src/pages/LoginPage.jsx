@@ -2,14 +2,13 @@ import React, { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useSubscriptionStore } from '../store/subscriptionStore'
-import { Shield, Eye, EyeOff, Chrome } from 'lucide-react'
+import { Shield, Eye, EyeOff } from 'lucide-react'
 import { showToast } from '../utils/toastUtils'
-import Logo from '/extension/icons/google_logo.png'
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, loginWithGoogle, isLoading } = useAuthStore()
+  const { login, isLoading } = useAuthStore()
   const { upgradePlan } = useSubscriptionStore()
   
   const [formData, setFormData] = useState({
@@ -20,24 +19,6 @@ export default function LoginPage() {
 
   const from = location.state?.from?.pathname || '/dashboard'
   const intendedPlan = location.state?.plan
-
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await loginWithGoogle(intendedPlan)
-      
-      if (result.success) {
-        showToast.loading('Redirecting to Google...')
-      } else {
-        showToast.error(result.error || 'Google login failed', {
-          title: 'Google Login Failed'
-        })
-      }
-    } catch (error) {
-      showToast.error('Unable to connect to Google. Please try again.', {
-        title: 'Connection Error'
-      })
-    }
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -98,7 +79,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen text-white py-10 px-6">
+    <div className="min-h-screen text-white py-20 px-6">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-12">
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-glow">
@@ -122,28 +103,6 @@ export default function LoginPage() {
 
         <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Google Login Button */}
-            <div className="space-y-4">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
-                className="w-full bg-white hover:bg-gray-50 text-gray-900 py-3 px-6 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 border border-gray-300"
-              >
-                <img src={Logo} alt="Google Logo" className="w-5 h-5" />
-                <span>Continue with Google</span>
-              </button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/20"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="bg-white/5 px-4 text-gray-400">or continue with email</span>
-                </div>
-              </div>
-            </div>
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
                 Email Address

@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useSubscriptionStore } from './store/subscriptionStore'
 import { showToast } from './utils/toastUtils'
+import { supabase } from './store/authStore'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import PricingPage from './pages/PricingPage'
@@ -22,48 +23,79 @@ import ProtectedRoute from './components/ProtectedRoute'
 import TextArea from './components/TextArea'
 
 import { useEffect } from 'react';
-import { supabase } from './store/authStore'       
 
 function App() {
-  const navigate   = useNavigate();
-  const location   = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { fetchSubscriptionStatus } = useSubscriptionStore();
   const { isAuthenticated, isLoading } = useAuthStore();
 
   useEffect(() => {
-    const { checkAuth } = useAuthStore.getState();
+  const { checkAuth } = useAuthStore.getState();
 
-    const handleRedirectIfNeeded = async () => {
-      // Supabase returns ?code=...&state=... on successful OAuth
-      if (location.search.includes('code=')) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession();
-        // for @supabase/supabase-js < 2.33 use:
-        // const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true })
+  // Initialize auth state
+  checkAuth();
 
-        if (error) {
-          showToast.error(error.message, { title: 'Google sign-in failed' });
-          return;
-        }
-
-        await checkAuth();                                             // populate the store
+  // Listen for auth state changes
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('Auth state change:', event, session?.user?.email);
+    console.log('Full session object:', session);
+    console.log('Current URL:', window.location.href);
+    console.log('Local storage token:', localStorage.getItem('token'));
+    
+    if (event === 'SIGNED_IN' && session) {
+      console.log('User signed in successfully:', session.user.email);
+      
+      // Store tokens
+      localStorage.setItem('token', session.access_token);
+      localStorage.setItem('refresh_token', session.refresh_token);
+      
+      // Update auth state
+      await checkAuth();
+      
+      // Clean URL if it has OAuth params
+      if (location.search.includes('code=') || location.hash.includes('access_token=')) {
         window.history.replaceState({}, document.title, location.pathname);
-
-        showToast.success('Signed in successfully.', { title: 'Welcome back' });
-        navigate('/dashboard', { replace: true });
-      } else {
-        checkAuth();                                                   // regular startup
       }
-    };
+      
+      // Show success and navigate to dashboard
+      showToast.success('Signed in successfully!');
+      navigate('/dashboard', { replace: true });
+      
+    } else if (event === 'SIGNED_OUT') {
+      console.log('User signed out');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      await checkAuth(); // This will clear the auth state
+      
+      // Redirect to home if on protected route
+      if (location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/account')) {
+        navigate('/', { replace: true });
+      }
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+      console.log('Token refreshed');
+      localStorage.setItem('token', session.access_token);
+      localStorage.setItem('refresh_token', session.refresh_token);
+    } else if (event === 'INITIAL_SESSION') {
+      console.log('Initial session check completed');
+      if (!session) {
+        console.log('No initial session found');
+      }
+    }
+  });
 
-    handleRedirectIfNeeded();
+  // Cleanup subscription
+  return () => {
+    subscription?.unsubscribe();
+  };
+}, [navigate, location]);
 
-    // once authorized, fetch subscription details
-    const unsub = useAuthStore.subscribe((s) => {
-      if (s.isAuthenticated && !s.isLoading) fetchSubscriptionStatus();
-    });
-    return unsub;                                                      // cleanup
-  }, [location.search, navigate, fetchSubscriptionStatus]);
-
+  // Fetch subscription status when authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      fetchSubscriptionStatus();
+    }
+  }, [isAuthenticated, isLoading, fetchSubscriptionStatus]);
 
   return (
     <Routes>

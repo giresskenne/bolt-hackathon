@@ -40,34 +40,48 @@ export default function BillingPage() {
 
   const loadBillingData = async () => {
     try {
-      // TODO: Replace with real billing data from backend
-      // Mock billing data for now
-      setBillingHistory([
-        {
-          id: 'inv_001',
-          date: '2025-01-01',
-          amount: '$7.00',
-          status: 'paid',
-          description: 'Pro Plan - Monthly'
-        },
-        {
-          id: 'inv_002',
-          date: '2024-12-01',
-          amount: '$7.00',
-          status: 'paid',
-          description: 'Pro Plan - Monthly'
-        }
-      ])
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('No auth token found for billing data');
+        return;
+      }
 
-      setPaymentMethod({
-        type: 'card',
-        last4: '4242',
-        brand: 'visa',
-        expiryMonth: 12,
-        expiryYear: 2025
-      })
+      // Fetch billing history and payment methods in parallel
+      const [invoicesResponse, paymentMethodsResponse] = await Promise.all([
+        fetch('/api/subscription/invoices', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('/api/subscription/payment-methods', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      ]);
+
+      // Handle invoices response
+      if (invoicesResponse.ok) {
+        const invoicesData = await invoicesResponse.json();
+        setBillingHistory(invoicesData);
+      } else {
+        console.error('Failed to fetch invoices:', invoicesResponse.status);
+        setBillingHistory([]);
+      }
+
+      // Handle payment methods response
+      if (paymentMethodsResponse.ok) {
+        const paymentMethodData = await paymentMethodsResponse.json();
+        setPaymentMethod(paymentMethodData);
+      } else {
+        console.error('Failed to fetch payment methods:', paymentMethodsResponse.status);
+        setPaymentMethod(null);
+      }
     } catch (error) {
       console.error('Failed to load billing data:', error)
+      // Set empty states on error
+      setBillingHistory([]);
+      setPaymentMethod(null);
     }
   }
 
@@ -137,10 +151,26 @@ export default function BillingPage() {
   }
 
   const downloadInvoice = (invoiceId) => {
-    // In real app, this would download the actual invoice
-    showToast.success(`Downloading invoice ${invoiceId}`, {
-      title: 'Download Started'
-    })
+    // Find the invoice in billing history
+    const invoice = billingHistory.find(inv => inv.id === invoiceId);
+    
+    if (invoice && invoice.invoice_pdf) {
+      // Open the Stripe-hosted PDF in a new tab
+      window.open(invoice.invoice_pdf, '_blank');
+      showToast.success('Invoice opened in new tab', {
+        title: 'Download Started'
+      });
+    } else if (invoice && invoice.invoice_url) {
+      // Fallback to hosted invoice URL
+      window.open(invoice.invoice_url, '_blank');
+      showToast.success('Invoice opened in new tab', {
+        title: 'Download Started'
+      });
+    } else {
+      showToast.error('Invoice not available for download', {
+        title: 'Download Failed'
+      });
+    }
   }
 
   const getPlanIcon = (planName) => {

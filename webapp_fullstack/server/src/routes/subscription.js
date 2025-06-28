@@ -31,6 +31,97 @@ router.get('/status', authenticateUser, async (req, res) => {
   }
 });
 
+// Get billing history (invoices)
+router.get('/invoices', authenticateUser, async (req, res) => {
+  try {
+    const { data: profile, error } = await supabaseAdmin
+      .from('users')
+      .select('stripe_customer_id')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!profile.stripe_customer_id) {
+      // User doesn't have a Stripe customer ID yet, return empty array
+      return res.json([]);
+    }
+
+    // Fetch invoices from Stripe
+    const invoices = await stripe.invoices.list({
+      customer: profile.stripe_customer_id,
+      limit: 20, // Get last 20 invoices
+      status: 'paid' // Only get paid invoices
+    });
+
+    // Transform Stripe invoice data to our format
+    const billingHistory = invoices.data.map(invoice => ({
+      id: invoice.id,
+      date: new Date(invoice.created * 1000).toISOString().split('T')[0], // Convert timestamp to YYYY-MM-DD
+      amount: `$${(invoice.amount_paid / 100).toFixed(2)}`, // Convert cents to dollars
+      status: invoice.status,
+      description: invoice.lines.data[0]?.description || 'Subscription payment',
+      invoice_url: invoice.hosted_invoice_url,
+      invoice_pdf: invoice.invoice_pdf
+    }));
+
+    res.json(billingHistory);
+  } catch (error) {
+    console.error('Get invoices error:', error);
+    res.status(500).json({ error: 'Failed to get billing history' });
+  }
+});
+
+// Get payment methods
+router.get('/payment-methods', authenticateUser, async (req, res) => {
+  try {
+    const { data: profile, error } = await supabaseAdmin
+      .from('users')
+      .select('stripe_customer_id')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!profile.stripe_customer_id) {
+      // User doesn't have a Stripe customer ID yet, return null
+      return res.json(null);
+    }
+
+    // Fetch payment methods from Stripe
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: profile.stripe_customer_id,
+      type: 'card'
+    });
+
+    if (paymentMethods.data.length === 0) {
+      return res.json(null);
+    }
+
+    // Get the default payment method or the first one
+    const defaultPaymentMethod = paymentMethods.data[0];
+    const card = defaultPaymentMethod.card;
+
+    const paymentMethodData = {
+      id: defaultPaymentMethod.id,
+      type: 'card',
+      last4: card.last4,
+      brand: card.brand,
+      expiryMonth: card.exp_month,
+      expiryYear: card.exp_year,
+      funding: card.funding
+    };
+
+    res.json(paymentMethodData);
+  } catch (error) {
+    console.error('Get payment methods error:', error);
+    res.status(500).json({ error: 'Failed to get payment methods' });
+  }
+});
 // Create checkout session for upgrade
 router.post('/create-checkout', authenticateUser, async (req, res) => {
   try {

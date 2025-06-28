@@ -6,9 +6,54 @@ import HeroImage from '/assets/image copy-BoyRcw_C.png'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen text-white">
+    <>
+      {/* Custom Bolt.new Badge Styles */}
+      <style jsx>{`
+        .bolt-badge {
+          transition: all 0.3s ease;
+        }
+        @keyframes badgeIntro {
+          0% { transform: scale(0.3); opacity: 0; }
+          50% { transform: scale(1.05); }
+          70% { transform: scale(0.9); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .bolt-badge-intro {
+          animation: badgeIntro 0.8s ease-out 1s both;
+        }
+        .bolt-badge-intro.animated {
+          animation: none;
+        }
+        @keyframes badgeHover {
+          0% { transform: scale(1) rotate(0deg); }
+          50% { transform: scale(1.1) rotate(22deg); }
+          100% { transform: scale(1) rotate(0deg); }
+        }
+        .bolt-badge:hover {
+          animation: badgeHover 0.6s ease-in-out;
+        }
+      `}</style>
+      
+      <div className="min-h-screen text-white">
+        {/* Bolt.new Badge */}
+        <div className="fixed bottom-4 right-4 z-50">
+          <a 
+            href="https://bolt.new/?rid=os72mi" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="block transition-all duration-300 hover:shadow-2xl"
+          >
+            <img 
+              src="https://storage.bolt.army/white_circle_360x360.png" 
+              alt="Built with Bolt.new badge" 
+              className="w-20 h-20 md:w-28 md:h-28 rounded-full shadow-lg bolt-badge bolt-badge-intro"
+              onAnimationEnd={(e) => e.target.classList.add('animated')}
+            />
+          </a>
+        </div>
+
       {/* Hero Section */}
-      <section className="pt-12 pb-20 px-6">
+      <section className="pt-12 pb-8 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -76,24 +121,24 @@ export default function HomePage() {
                     <span className="text-sm font-normal text-white">Protected</span>
                   </div>
                 </div>
-
-                {/* Floating Stats */}
-                <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
-                  <div className="flex items-center space-x-4">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-primary">30+</div>
-                      <div className="text-xs text-gray-300">Patterns</div>
-                    </div>
-                    <div className="w-px h-8 bg-white/20"></div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-green-400">100%</div>
-                      <div className="text-xs text-gray-300">Local</div>
-                    </div>
-                    <div className="w-px h-8 bg-white/20"></div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-yellow-400">Real-time</div>
-                      <div className="text-xs text-gray-300">Detection</div>
-                    </div>
+              </div>
+              
+              {/* Floating Stats - Positioned below the image on the left */}
+              <div className="mt-6 mr-auto w-fit bg-black/60 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                <div className="flex items-center space-x-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-primary">30+</div>
+                    <div className="text-xs text-gray-300">Patterns</div>
+                  </div>
+                  <div className="w-px h-8 bg-white/20"></div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-green-400">100%</div>
+                    <div className="text-xs text-gray-300">Local</div>
+                  </div>
+                  <div className="w-px h-8 bg-white/20"></div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-yellow-400">Real-time</div>
+                    <div className="text-xs text-gray-300">Detection</div>
                   </div>
                 </div>
               </div>
@@ -103,7 +148,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6">
+      <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold mb-6">
@@ -161,7 +206,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6">
+      <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl lg:text-5xl font-bold mb-6">
             Ready to <span className="text-primary-light">Protect</span> Your Data?
@@ -188,7 +233,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-white/10">
+      <footer className="py-10 px-6 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
@@ -210,6 +255,7 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   )
 }

@@ -1,13 +1,20 @@
+// webapp_fullstack/webapp/src/store/authStore.js
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'; // Add this import
 
 // Initialize Supabase client for frontend
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Ensure these environment variables are set in your webapp/.env file
+// Example:
+// VITE_SUPABASE_URL="https://your-project-ref.supabase.co"
+// VITE_SUPABASE_ANON_KEY="your-anon-key"
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables for frontend Supabase client.');
+  // You might want to add a more user-friendly error or disable auth features if these are missing.
 }
 
 // Configure Supabase client with PKCE flow for better security
@@ -16,22 +23,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce' // Use PKCE flow for better security and OAuth handling
   }
 });
 
-export const useAuthStore = create(
+const useAuthStore = create(
   persist(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      isLoading: true,
-      _hasHydrated: false,
+      isLoading: false,
 
-      setHasHydrated: (state) => {
-        set({ _hasHydrated: state });
-      },
-
+      // Email/Password Login
       login: async (email, password) => {
         set({ isLoading: true });
         console.log('Starting email/password login for:', email);
@@ -41,6 +44,9 @@ export const useAuthStore = create(
             password
           });
 
+          console.log('Supabase signInWithPassword data:', data);
+          console.log('Supabase signInWithPassword error:', error);
+
           if (error) {
             console.error('Login failed:', error);
             set({ isLoading: false });
@@ -48,9 +54,12 @@ export const useAuthStore = create(
           }
 
           if (data.session) {
+            console.log('Login successful, storing tokens and setting user...');
+            // Store tokens for backend API calls
             localStorage.setItem('token', data.session.access_token);
             localStorage.setItem('refresh_token', data.session.refresh_token);
 
+            // Extract user data from session
             const userData = {
               id: data.user.id,
               email: data.user.email,
@@ -68,6 +77,7 @@ export const useAuthStore = create(
             });
             return { success: true, user: userData };
           } else {
+            console.error('No session returned from Supabase');
             set({ isLoading: false });
             return { success: false, error: 'No session created' };
           }
@@ -78,6 +88,7 @@ export const useAuthStore = create(
         }
       },
 
+      // Email/Password Signup
       signup: async (email, password, plan = 'free') => {
         set({ isLoading: true });
         console.log('Starting email/password signup for:', email, 'with plan:', plan);
@@ -92,6 +103,9 @@ export const useAuthStore = create(
             }
           });
 
+          console.log('Supabase signUp data:', data);
+          console.log('Supabase signUp error:', error);
+
           if (error) {
             console.error('Signup failed:', error);
             set({ isLoading: false });
@@ -99,6 +113,9 @@ export const useAuthStore = create(
           }
 
           if (data.user) {
+            console.log('Signup successful...');
+            
+            // If user is immediately confirmed (no email confirmation required)
             if (data.session) {
               localStorage.setItem('token', data.session.access_token);
               localStorage.setItem('refresh_token', data.session.refresh_token);
@@ -119,6 +136,7 @@ export const useAuthStore = create(
                 isLoading: false 
               });
             } else {
+              // Email confirmation required
               set({ isLoading: false });
             }
 
@@ -128,6 +146,7 @@ export const useAuthStore = create(
               needsConfirmation: !data.session
             };
           } else {
+            console.error('No user returned from Supabase signup');
             set({ isLoading: false });
             return { success: false, error: 'Signup failed - no user created' };
           }
@@ -138,13 +157,17 @@ export const useAuthStore = create(
         }
       },
 
+      // Update User Profile
       updateUser: async (updates) => {
         set({ isLoading: true });
+        console.log('Updating user profile with:', updates);
         try {
+          // Update local user state
           set(state => ({
             user: { ...state.user, ...updates },
             isLoading: false
           }));
+
           return { success: true, user: { ...get().user, ...updates } };
         } catch (error) {
           console.error('Update user error:', error);
@@ -153,13 +176,17 @@ export const useAuthStore = create(
         }
       },
 
+      // Delete Account
       deleteAccount: async (password) => {
         set({ isLoading: true });
+        console.log('Starting account deletion...');
         try {
+          // Clear all auth data
           await supabase.auth.signOut();
           localStorage.removeItem('token');
           localStorage.removeItem('refresh_token');
           set({ user: null, isAuthenticated: false, isLoading: false });
+
           return { success: true };
         } catch (error) {
           console.error('Delete account error:', error);
@@ -168,92 +195,93 @@ export const useAuthStore = create(
         }
       },
 
+      // Google OAuth Login
       loginWithGoogle: async (intendedPlan = null) => {
-        console.log('🔄 Starting Google LOGIN...');
-        set({ isLoading: true });
+        console.log('🚀 loginWithGoogle called with plan:', intendedPlan);
         
         try {
-          const { data, error } = await supabase.auth.signInWithOAuth({
+          console.log('🔍 Supabase client ready:', !!supabase);
+          console.log('📞 Calling supabase.auth.signInWithOAuth...');
+          
+          // Add redirectTo to ensure we go to dashboard after OAuth
+          const result = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: `${window.location.origin}/auth/callback`,
-              queryParams: {
-                access_type: 'offline',
-                prompt: 'select_account',
-              }
+              redirectTo: `${window.location.origin}/dashboard`
             }
           });
 
-          if (error) {
-            console.error('❌ Google OAuth login failed:', error);
-            set({ isLoading: false });
-            return { success: false, error: error.message };
+          console.log('✅ OAuth call completed');
+          console.log('📊 Result:', result);
+
+          if (result.error) {
+            console.error('💥 Google OAuth failed:', result.error);
+            return { success: false, error: result.error.message };
           }
 
-          console.log('✅ Google OAuth login initiated successfully');
+          console.log('🎉 OAuth should redirect now...');
           return { success: true };
         } catch (error) {
-          console.error('❌ Google login error:', error);
-          set({ isLoading: false });
+          console.error('💥 Exception in Google login:', error);
           return { success: false, error: error.message };
         }
       },
 
+      // Google OAuth Signup
       signupWithGoogle: async (plan = 'free') => {
-        console.log('🔄 Starting Google SIGNUP...');
-        set({ isLoading: true });
+        console.log('🚀 signupWithGoogle called with plan:', plan);
         
         try {
-          const { data, error } = await supabase.auth.signInWithOAuth({
+          console.log('🔍 Supabase client ready:', !!supabase);
+          console.log('📞 Calling supabase.auth.signInWithOAuth for signup...');
+          
+          // Add redirectTo to ensure we go to dashboard after OAuth
+          const result = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: `${window.location.origin}/auth/callback`,
-              queryParams: {
-                access_type: 'offline',
-                prompt: 'consent',
-              }
+              redirectTo: `${window.location.origin}/dashboard`
             }
           });
 
-          if (error) {
-            console.error('❌ Google OAuth signup failed:', error);
-            set({ isLoading: false });
-            return { success: false, error: error.message };
+          console.log('✅ OAuth signup call completed');
+          console.log('📊 Result:', result);
+
+          if (result.error) {
+            console.error('💥 Google OAuth signup failed:', result.error);
+            return { success: false, error: result.error.message };
           }
 
-          console.log('✅ Google OAuth signup initiated successfully');
+          console.log('🎉 OAuth signup should redirect now...');
           return { success: true };
         } catch (error) {
-          console.error('❌ Google signup error:', error);
-          set({ isLoading: false });
+          console.error('💥 Exception in Google signup:', error);
           return { success: false, error: error.message };
         }
       },
 
+      // Check Authentication Status
       checkAuth: async () => {
-        console.log('🔄 Starting enhanced auth check...');
-        const state = get();
-        
-        if (!state._hasHydrated || (!state.isAuthenticated && !state.user)) {
-          set({ isLoading: true });
-        }
-        
+        set({ isLoading: true });
+        console.log('🟡 Starting auth check...');
         try {
-          const { data: { session }, error } = await supabase.auth.getSession();
-          console.log('🔄 Supabase getSession session:', session?.user?.email);
+          // Use Supabase client to get the current session
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-          if (error) {
-            console.error('❌ Error getting session:', error);
-            localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
-            set({ user: null, isAuthenticated: false, isLoading: false });
-            return;
+          console.log('🟡 Supabase getSession session:', session);
+          console.log('🟡 Supabase getSession error:', sessionError);
+
+          if (sessionError) {
+            console.error('Session error from Supabase:', sessionError);
+            throw new Error(sessionError.message);
           }
 
           if (session) {
+            console.log('🟡 Valid session found, storing tokens and setting user...');
+            // If session exists, store token and set user data
             localStorage.setItem('token', session.access_token);
             localStorage.setItem('refresh_token', session.refresh_token);
 
+            // Extract user data from session
             const userData = {
               id: session.user.id,
               email: session.user.email,
@@ -264,54 +292,30 @@ export const useAuthStore = create(
               provider: session.user.app_metadata?.provider || 'email'
             };
 
-            if (userData.provider === 'google') {
-              console.log('🔄 Validating Google OAuth user...');
-              
-              if (!userData.email_verified) {
-                console.log('❌ Google user email not verified, signing out...');
-                await supabase.auth.signOut();
-                localStorage.removeItem('token');
-                localStorage.removeItem('refresh_token');
-                set({ user: null, isAuthenticated: false, isLoading: false });
-                return;
-              }
-
-              if (!userData.email || !userData.name || userData.name === userData.email) {
-                console.log('❌ Google user missing required fields, signing out...');
-                await supabase.auth.signOut();
-                localStorage.removeItem('token');
-                localStorage.removeItem('refresh_token');
-                set({ user: null, isAuthenticated: false, isLoading: false });
-                return;
-              }
-
-              console.log('✅ Google user validation passed');
-            }
-
-            set({
-              user: userData,
-              isAuthenticated: true,
-              isLoading: false
-            });
-
-            console.log('✅ User authenticated successfully');
+            console.log('🟡 Setting user data:', userData);
+            set({ user: userData, isAuthenticated: true, isLoading: false });
+            console.log('🟡 Auth state after setting:', { user: userData, isAuthenticated: true });
+            console.log('🟡 Auth check successful - user authenticated');
           } else {
-            console.log('🔄 No session found, clearing auth state...');
+            console.log('🟡 No session found, clearing auth state...');
+            // No session, ensure local storage is clear
             localStorage.removeItem('token');
             localStorage.removeItem('refresh_token');
             set({ user: null, isAuthenticated: false, isLoading: false });
           }
         } catch (error) {
-          console.error('❌ Auth check error:', error);
+          console.error('🟡 Check auth error:', error);
+          console.error('🟡 Auth check failed, clearing all auth data');
           localStorage.removeItem('token');
           localStorage.removeItem('refresh_token');
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
 
+      // Logout
       logout: async () => {
         console.log('Starting logout...');
-        await supabase.auth.signOut();
+        await supabase.auth.signOut(); // Sign out from Supabase
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
         set({ user: null, isAuthenticated: false });
@@ -323,17 +327,9 @@ export const useAuthStore = create(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated
-      }),
-      onRehydrateStorage: () => (state) => {
-        console.log('🔄 Zustand store hydrated from localStorage');
-        if (state) {
-          state.setHasHydrated(true);
-          setTimeout(() => {
-            console.log('🔄 Triggering checkAuth after hydration...');
-            state.checkAuth();
-          }, 0);
-        }
-      }
+      })
     }
   )
 );
+
+export { useAuthStore };

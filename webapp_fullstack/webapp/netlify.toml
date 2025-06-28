@@ -21,3 +21,11 @@
   to   = "/images/:splat"
   status = 200
 
+[[headers]]
+  for = "/*.svg"          
+  [headers.values]
+    Content-Type = "image/svg+xml"
+
+[context.production.environment]
+  VITE_SUPABASE_URL="https://xqguzodjbfrmckrwckpx.supabase.co"
+  VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxZ3V6b2RqYmZybWNrcndja3B4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzNzI3MjAsImV4cCI6MjA2NTk0ODcyMH0.5AWEoxFjDui-bmDbwWmk9xzrvGiyaJHLeh_nxdEBTKw"

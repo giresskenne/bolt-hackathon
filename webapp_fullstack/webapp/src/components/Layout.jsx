@@ -55,7 +55,7 @@ export default function Layout() {
                   key={item.name}
                   to={item.href}
                   className={
-                    item.name === 'Try Privly'
+                    item.name === 'Try Demo'
                       ? 'bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white transition-colors'
                       : `transition-colors ${
                           location.pathname === item.href
@@ -167,7 +167,7 @@ export default function Layout() {
                   key={item.name}
                   to={item.href}
                   className={
-                    item.name === 'Try Demo'
+                    item.name === 'Try Privly'
                       ? 'block bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white transition-colors text-center'
                       : 'block text-white hover:text-primary-light transition-colors'
                   }

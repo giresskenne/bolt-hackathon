@@ -58,6 +58,18 @@ export default function TextArea() {
               Type or paste any text below to see how Privly protects your sensitive
               information in real-time.
             </p>
+            {/* New div for extension download message */}
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-300 text-sm mx-auto max-w-md">
+              <p>To experience real-time protection, please download the Privly extension:</p>
+              <a
+                href="https://chromewebstore.google.com/detail/prompt-scrubber/cpiimgglmignilhbjpkcdflkccjodahn?hl=en-GB&utm_source=ext_sidebar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:underline font-semibold mt-2 inline-block"
+              >
+                Download Privly Extension
+              </a>
+            </div>
           </header>
 
           {/* chat card */}

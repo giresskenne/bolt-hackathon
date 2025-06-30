@@ -55,7 +55,7 @@ export default function Layout() {
                   key={item.name}
                   to={item.href}
                   className={
-                    item.name === 'Try Demo'
+                    item.name === 'Try Privly'
                       ? 'bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-white transition-colors'
                       : `transition-colors ${
                           location.pathname === item.href

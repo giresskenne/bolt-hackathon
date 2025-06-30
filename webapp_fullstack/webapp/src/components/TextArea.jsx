@@ -59,7 +59,7 @@ export default function TextArea() {
               information in real-time.
             </p>
             {/* New div for extension download message */}
-            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-300 text-sm mx-auto max-w-3xl">
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-3xl text-blue-300 text-sm mx-auto max-w-3xl">
               <p>To try it out, please download the Privly extension if you haven’t already</p>
               <a
                 href="https://chromewebstore.google.com/detail/prompt-scrubber/cpiimgglmignilhbjpkcdflkccjodahn?hl=en-GB&utm_source=ext_sidebar"
